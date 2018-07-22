@@ -4,8 +4,8 @@ import java.time.LocalDate;
 
 public class TableParser {
 
-    public static Table parse(String csv, boolean header) {
-        Table.TableBuilder tableBuilder = Table.newBuilder();
+    public static TableImpl parse(String csv, boolean header) {
+        TableImpl.TableBuilder tableBuilder = TableImpl.newBuilder();
         boolean first = true;
         for (String line : csv.split("\n")) {
             String[] parts = line.split("\n");
@@ -29,6 +29,17 @@ public class TableParser {
             }
             tableBuilder.addRow(date,values);
             first = false;
+        }
+        return tableBuilder.build();
+    }
+
+    public static TableImpl solidifyTable(Table table) {
+        TableImpl.TableBuilder tableBuilder = TableImpl.newBuilder();
+        for (int i = 0 ;i<table.getColumnCount();i++) {
+            tableBuilder.column(table.getColumn(i));
+        }
+        for (LocalDate localDate : table.getAllDates()) {
+            tableBuilder.addRow(localDate,table.getExactValues(localDate));
         }
         return tableBuilder.build();
     }

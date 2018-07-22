@@ -2,9 +2,8 @@ package knapp;
 
 import knapp.download.DownloadRequest;
 import knapp.history.Frequency;
-import knapp.history.ValueHistory;
 import knapp.indicator.Indicator;
-import knapp.table.Table;
+import knapp.table.TableImpl;
 import knapp.table.TableParser;
 import knapp.util.CurrentDirectory;
 import knapp.util.Util;
@@ -23,12 +22,12 @@ import static knapp.util.Util.doWithDate;
 
 public class DataRetriever {
 
-    private final Table market;
+    private final TableImpl market;
     private final CurrentDirectory currentDirectory;
-    private final Function<Table,Table.GetMethod> getMethodChooser;
+    private final Function<TableImpl,TableImpl.GetMethod> getMethodChooser;
 
-    public DataRetriever(Table market, CurrentDirectory currentDirectory,
-                         Function<Table,Table.GetMethod> getMethodChooser) {
+    public DataRetriever(TableImpl market, CurrentDirectory currentDirectory,
+                         Function<TableImpl,TableImpl.GetMethod> getMethodChooser) {
         if (market == null) {
             throw new IllegalArgumentException("market data can't be null");
         }
@@ -37,9 +36,9 @@ public class DataRetriever {
         this.currentDirectory = currentDirectory;
     }
 
-    public DataRetriever(Table market, CurrentDirectory currentDirectory) {
-        this(market,currentDirectory,table -> {
-            return Table.GetMethod.LAST_KNOWN_VALUE;
+    public DataRetriever(TableImpl market, CurrentDirectory currentDirectory) {
+        this(market,currentDirectory, tableImpl -> {
+            return TableImpl.GetMethod.LAST_KNOWN_VALUE;
         });
     }
 
@@ -62,7 +61,7 @@ public class DataRetriever {
     public void consolidateData(LocalDate start, LocalDate end, List<Indicator> indicators,
                                 String destinationFile) throws IOException {
         boolean first = true;
-        Map<String,Table> downloadedData = new TreeMap<String,Table>();
+        Map<String,TableImpl> downloadedData = new TreeMap<String,TableImpl>();
         for (Indicator indicator : indicators) {
             if ("NASDAQCOM".equals(indicator.getSeries()) || "SP500".equals(indicator.getSeries())) {
                 // these don't give me accurate data from FRED.
@@ -70,8 +69,8 @@ public class DataRetriever {
             }
             DownloadRequest downloadRequest = indicator.toDownloadRequest();
             String data = DownloadSeries(downloadRequest);
-            Table table = TableParser.parse(data,true);
-            downloadedData.put(indicator.getSeries(),table);
+            TableImpl tableImpl = TableParser.parse(data,true);
+            downloadedData.put(indicator.getSeries(), tableImpl);
         }
 
 
@@ -91,16 +90,16 @@ public class DataRetriever {
             }
             writer.write(marketName);
             writer.write("\n");
-            final Table.GetMethod marketMethod = getMethodChooser.apply(market);
+            final TableImpl.GetMethod marketMethod = getMethodChooser.apply(market);
 
             doWithDate(start,end,Frequency.Monthly, d -> {
                 try {
                     writer.write(d.toString());
                     for (String key : downloadedData.keySet()) {
                         writer.write(",");
-                        Table table = downloadedData.get(key);
-                        Table.GetMethod method = getMethodChooser.apply(table);
-                        double value = table.getValue(d, 1, method);
+                        TableImpl tableImpl = downloadedData.get(key);
+                        TableImpl.GetMethod method = getMethodChooser.apply(tableImpl);
+                        double value = tableImpl.getValue(d, 1, method);
                         writer.write(String.valueOf(value));
                     }
                     writer.write(",");

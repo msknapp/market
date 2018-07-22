@@ -2,12 +2,12 @@ package knapp;
 
 import knapp.history.Frequency;
 import knapp.table.Table;
+import knapp.table.TableImpl;
 import knapp.util.CurrentDirectory;
 import org.apache.commons.math.stat.regression.OLSMultipleLinearRegression;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.Writer;
 import java.time.LocalDate;
 import java.util.function.BiFunction;
@@ -20,10 +20,10 @@ public class TrendFinder {
 
     private final Table market;
     private final CurrentDirectory currentDirectory;
-    private final BiFunction<Table,Integer,Table.GetMethod> getMethodChooser;
+    private final BiFunction<Table,Integer,TableImpl.GetMethod> getMethodChooser;
 
-    public TrendFinder(Table market, CurrentDirectory currentDirectory,
-                       BiFunction<Table,Integer,Table.GetMethod> getMethodChooser) {
+    public TrendFinder(TableImpl market, CurrentDirectory currentDirectory,
+                       BiFunction<Table,Integer,TableImpl.GetMethod> getMethodChooser) {
         if (market == null) {
             throw new IllegalArgumentException("market data can't be null");
         }
@@ -32,7 +32,7 @@ public class TrendFinder {
         this.currentDirectory = currentDirectory;
     }
 
-    public void analyzeTrend(Table inputs, int[] inputColumns, Frequency frequency) throws IOException {
+    public void analyzeTrend(TableImpl inputs, int[] inputColumns, Frequency frequency) throws IOException {
         LocalDate start = LocalDate.of(1979,1,1);
         LocalDate end = LocalDate.of(2018,5,2);
         String text = doWithWriter(w -> {
@@ -43,7 +43,7 @@ public class TrendFinder {
 
     public void analyzeTrend(LocalDate start, LocalDate end, Table inputs, int[] inputColumns, Frequency frequency,
                              String outFileRelativePath, Writer out) throws IOException {
-        Table.GetMethod marketMethod = getMethodChooser.apply(inputs,0);
+        TableImpl.GetMethod marketMethod = getMethodChooser.apply(inputs,0);
         double[][] x = inputs.toDoubleRows(inputColumns,start,end,frequency,marketMethod);
         double[][] yy = market.toDoubleColumns(new int[]{1},start,end,frequency, marketMethod);
         double[] y = yy[0];
@@ -90,7 +90,7 @@ public class TrendFinder {
                 int k = 1;
                 for (int col : inputColumns) {
                     writer.write(",");
-                    Table.GetMethod method = getMethodChooser.apply(inputs,1);
+                    TableImpl.GetMethod method = getMethodChooser.apply(inputs,1);
                     double v = inputs.getValue(d,col, method);
                     writer.write(String.valueOf(v));
                     inputDoubles[k++] = v;
