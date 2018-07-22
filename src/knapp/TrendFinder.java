@@ -22,7 +22,7 @@ public class TrendFinder {
     private final CurrentDirectory currentDirectory;
     private final BiFunction<Table,Integer,TableImpl.GetMethod> getMethodChooser;
 
-    public TrendFinder(TableImpl market, CurrentDirectory currentDirectory,
+    public TrendFinder(Table market, CurrentDirectory currentDirectory,
                        BiFunction<Table,Integer,TableImpl.GetMethod> getMethodChooser) {
         if (market == null) {
             throw new IllegalArgumentException("market data can't be null");

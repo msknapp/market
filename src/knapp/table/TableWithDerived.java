@@ -4,7 +4,6 @@ import knapp.history.Frequency;
 import knapp.util.Util;
 
 import java.time.LocalDate;
-import java.util.function.Function;
 
 public class TableWithDerived implements Table {
 

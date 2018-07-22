@@ -3,6 +3,7 @@ package knapp;
 import knapp.download.DownloadRequest;
 import knapp.history.Frequency;
 import knapp.indicator.Indicator;
+import knapp.table.Table;
 import knapp.table.TableImpl;
 import knapp.table.TableParser;
 import knapp.util.CurrentDirectory;
@@ -15,6 +16,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static knapp.download.Downloader.DownloadSeries;
@@ -22,12 +24,12 @@ import static knapp.util.Util.doWithDate;
 
 public class DataRetriever {
 
-    private final TableImpl market;
+    private final Table market;
     private final CurrentDirectory currentDirectory;
-    private final Function<TableImpl,TableImpl.GetMethod> getMethodChooser;
+    private final BiFunction<Table,Integer,TableImpl.GetMethod> getMethodChooser;
 
-    public DataRetriever(TableImpl market, CurrentDirectory currentDirectory,
-                         Function<TableImpl,TableImpl.GetMethod> getMethodChooser) {
+    public DataRetriever(Table market, CurrentDirectory currentDirectory,
+                         BiFunction<Table,Integer,TableImpl.GetMethod> getMethodChooser) {
         if (market == null) {
             throw new IllegalArgumentException("market data can't be null");
         }
@@ -37,7 +39,7 @@ public class DataRetriever {
     }
 
     public DataRetriever(TableImpl market, CurrentDirectory currentDirectory) {
-        this(market,currentDirectory, tableImpl -> {
+        this(market,currentDirectory, (tableImpl, col) -> {
             return TableImpl.GetMethod.LAST_KNOWN_VALUE;
         });
     }
@@ -73,7 +75,6 @@ public class DataRetriever {
             downloadedData.put(indicator.getSeries(), tableImpl);
         }
 
-
         Frequency frequency = Frequency.Monthly;
 
         File outFile = currentDirectory.toFile(destinationFile);
@@ -93,22 +94,19 @@ public class DataRetriever {
             final TableImpl.GetMethod marketMethod = getMethodChooser.apply(market);
 
             doWithDate(start,end,Frequency.Monthly, d -> {
-                try {
-                    writer.write(d.toString());
-                    for (String key : downloadedData.keySet()) {
-                        writer.write(",");
-                        TableImpl tableImpl = downloadedData.get(key);
-                        TableImpl.GetMethod method = getMethodChooser.apply(tableImpl);
-                        double value = tableImpl.getValue(d, 1, method);
-                        writer.write(String.valueOf(value));
-                    }
+                writer.write(d.toString());
+                for (String key : downloadedData.keySet()) {
                     writer.write(",");
-                    double value = market.getValue(d, 5, marketMethod);
+                    Table table = downloadedData.get(key);
+                    int col = table.getColumn(key);
+                    TableImpl.GetMethod method = getMethodChooser.apply(table,col);
+                    double value = table.getValue(d, 1, method);
                     writer.write(String.valueOf(value));
-                    writer.write("\n");
-                }catch (Exception e) {
-
                 }
+                writer.write(",");
+                double value = market.getValue(d, 5, marketMethod);
+                writer.write(String.valueOf(value));
+                writer.write("\n");
             });
         };
         Util.writeToFile(consumer,outFile);
