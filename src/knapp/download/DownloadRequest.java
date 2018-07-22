@@ -1,15 +1,10 @@
 package knapp.download;
 
+import knapp.history.Frequency;
+
 import java.time.LocalDate;
 
 public class DownloadRequest {
-
-    public enum Frequency {
-        Daily,
-        Monthly,
-        Quarterly,
-        Annual
-    }
 
     private String series;
     private LocalDate start;
@@ -18,6 +13,41 @@ public class DownloadRequest {
 
     public DownloadRequest() {
 
+    }
+
+    public DownloadRequest series(String x) {
+        this.series = x;
+        return this;
+    }
+
+    public DownloadRequest start(String x) {
+        this.start = LocalDate.parse(x);
+        return this;
+    }
+
+    public DownloadRequest end(String x) {
+        this.end = LocalDate.parse(x);
+        return this;
+    }
+
+    public DownloadRequest frequency(String x) {
+        this.frequency = Frequency.valueOf(x);
+        return this;
+    }
+
+    public DownloadRequest start(LocalDate x) {
+        this.start = x;
+        return this;
+    }
+
+    public DownloadRequest end(LocalDate x) {
+        this.end = x;
+        return this;
+    }
+
+    public DownloadRequest frequency(Frequency x) {
+        this.frequency = x;
+        return this;
     }
 
     public String getSeries() {
