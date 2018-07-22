@@ -3,6 +3,7 @@ package knapp.table;
 import knapp.history.Frequency;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 public class TableParser {
 
@@ -37,13 +38,25 @@ public class TableParser {
         return tableBuilder.build();
     }
 
-    public static TableImpl solidifyTable(Table table) {
+    public static Table solidifyTable(Table table) {
         TableImpl.TableBuilder tableBuilder = TableImpl.newBuilder().frequency(table.getFrequency());
         for (int i = 0 ;i<table.getColumnCount();i++) {
             tableBuilder.column(table.getColumn(i));
         }
         for (LocalDate localDate : table.getAllDates()) {
             tableBuilder.addRow(localDate,table.getExactValues(localDate));
+        }
+        return tableBuilder.build();
+    }
+
+    public static Table retainColumns(Table table, Set<String> retainColumns) {
+        TableImpl.TableBuilder tableBuilder = TableImpl.newBuilder().frequency(table.getFrequency());
+        for (String column : retainColumns) {
+            tableBuilder.column(column);
+        }
+        for (LocalDate localDate : table.getAllDates()) {
+            double[] values = TableUtil.getExactValues(table,localDate,retainColumns);
+            tableBuilder.addRow(localDate,values);
         }
         return tableBuilder.build();
     }

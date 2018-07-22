@@ -4,10 +4,11 @@ import knapp.history.Frequency;
 import knapp.util.Util;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 public class TableWithDerived implements Table {
 
-    private Table core;
+    private final Table core;
     private final ValueDeriver valueDeriver;
 
     public interface ValueDeriver {
@@ -16,6 +17,10 @@ public class TableWithDerived implements Table {
     }
 
     public TableWithDerived(Table core, ValueDeriver valueDeriver) {
+        if (core == null) {
+            throw new IllegalArgumentException("null core");
+        }
+        this.core = core;
         this.valueDeriver = valueDeriver;
     }
 
@@ -68,14 +73,6 @@ public class TableWithDerived implements Table {
         }
     }
 
-    public double[][] toDoubleRows(int[] xColumns, LocalDate start, LocalDate end,
-                                   Frequency frequency, final TableImpl.GetMethod getMethod) {
-        return Util.toDoubleRows(xColumns,start,end,frequency,(date, col) -> {
-            double v =  getValue(date,col, getMethod);
-            return String.valueOf(v);
-        });
-    }
-
     @Override
     public LocalDate[] getAllDates() {
         return core.getAllDates();
@@ -94,12 +91,38 @@ public class TableWithDerived implements Table {
     public Frequency getFrequency() {
         return core.getFrequency();
     }
+    @Override
+    public Table withoutColumn(String column) {
+        return new TableWithoutColumn(this,column);
+    }
 
-    public double[][] toDoubleColumns(int[] xColumns, LocalDate start, LocalDate end,
-                                      Frequency frequency, final TableImpl.GetMethod getMethod) {
-        return Util.toDoubleColumns(xColumns,start,end,frequency,(date,col) -> {
-            double v = getValue(date,col, getMethod);
-            return String.valueOf(v);
-        });
+    @Override
+    public Table withDerivedColumn(TableWithDerived.ValueDeriver valueDeriver) {
+        return new TableWithDerived(this,valueDeriver);
+    }
+
+    @Override
+    public Table retainColumns(Set<String> columns) {
+        return TableParser.retainColumns(this,columns);
+    }
+
+    @Override
+    public LocalDate getLastDate() {
+        return core.getLastDate();
+    }
+
+    @Override
+    public LocalDate getFirstDate() {
+        return core.getFirstDate();
+    }
+
+    @Override
+    public Table withLogOf(String column) {
+        return withDerivedColumn(new LogDeriver(column));
+    }
+
+    @Override
+    public Table replaceColumnWithLog(String column) {
+        return withDerivedColumn(new LogDeriver(column)).withoutColumn(column);
     }
 }

@@ -5,14 +5,18 @@ import knapp.history.Frequency;
 import knapp.util.Util;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 public class TableWithoutColumn implements Table {
 
-    private Table core;
+    private final Table core;
 
-    private String removeColumn;
+    private final String removeColumn;
 
     public TableWithoutColumn(Table core, String removeColumn) {
+        if (core == null) {
+            throw new IllegalArgumentException("null core");
+        }
         this.core = core;
         if (core.getColumn(removeColumn) < 0 ) {
             throw new IllegalArgumentException("Can't remove a column that doesn't exist.");
@@ -108,5 +112,39 @@ public class TableWithoutColumn implements Table {
             double v = getValue(date,col, getMethod);
             return String.valueOf(v);
         });
+    }
+    @Override
+    public Table withoutColumn(String column) {
+        return new TableWithoutColumn(this,column);
+    }
+
+    @Override
+    public Table withDerivedColumn(TableWithDerived.ValueDeriver valueDeriver) {
+        return new TableWithDerived(this,valueDeriver);
+    }
+
+    @Override
+    public Table retainColumns(Set<String> columns) {
+        return TableParser.retainColumns(this,columns);
+    }
+
+    @Override
+    public LocalDate getLastDate() {
+        return core.getLastDate();
+    }
+
+    @Override
+    public LocalDate getFirstDate() {
+        return core.getFirstDate();
+    }
+
+    @Override
+    public Table withLogOf(String column) {
+        return withDerivedColumn(new LogDeriver(column));
+    }
+
+    @Override
+    public Table replaceColumnWithLog(String column) {
+        return withDerivedColumn(new LogDeriver(column)).withoutColumn(column);
     }
 }

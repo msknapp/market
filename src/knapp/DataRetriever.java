@@ -100,7 +100,11 @@ public class DataRetriever {
                     Table table = downloadedData.get(key);
                     TableImpl.GetMethod method = getMethodChooser.apply(table,0);
                     double value = table.getValue(d, 0, method);
-                    writer.write(String.valueOf(value));
+                    String sValue = String.valueOf(value);
+                    if ("Infinity".equals(sValue)) {
+                        throw new IllegalArgumentException("got an infinity (not like the car).");
+                    }
+                    writer.write(sValue);
                 }
                 writer.write(",");
                 double value = market.getValue(d, 5, marketMethod);

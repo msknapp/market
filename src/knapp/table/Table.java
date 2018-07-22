@@ -3,6 +3,8 @@ package knapp.table;
 import knapp.history.Frequency;
 
 import java.time.LocalDate;
+import java.time.chrono.ChronoLocalDate;
+import java.util.Set;
 
 public interface Table {
 
@@ -13,12 +15,17 @@ public interface Table {
     double getValue(LocalDate date, String column, TableImpl.GetMethod getMethod);
     double getValue(LocalDate date, int column, TableImpl.GetMethod getMethod);
     int getColumnCount();
-    double[][] toDoubleColumns(int[] xColumns, LocalDate start, LocalDate end,
-                                      Frequency frequency, final TableImpl.GetMethod getMethod);
-    double[][] toDoubleRows(int[] xColumns, LocalDate start, LocalDate end,
-                                   Frequency frequency, final TableImpl.GetMethod getMethod);
     LocalDate[] getAllDates();
     double[] getExactValues(LocalDate date);
 
     Frequency getFrequency();
+
+    Table withoutColumn(String column);
+    Table withDerivedColumn(TableWithDerived.ValueDeriver valueDeriver);
+    Table withLogOf(String column);
+    Table replaceColumnWithLog(String column);
+    Table retainColumns(Set<String> columns);
+
+    LocalDate getLastDate();
+    LocalDate getFirstDate();
 }

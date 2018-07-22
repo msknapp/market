@@ -6,6 +6,8 @@ import knapp.util.Util;
 import java.time.LocalDate;
 import java.util.*;
 
+import static java.time.temporal.ChronoUnit.DAYS;
+
 public class TableImpl implements Table {
 
     private final List<String> columns;
@@ -53,6 +55,7 @@ public class TableImpl implements Table {
     }
 
     public enum GetMethod {
+        EXACT,
         LAST_KNOWN_VALUE,
         EXTRAPOLATE,
         INTERPOLATE;
@@ -60,13 +63,6 @@ public class TableImpl implements Table {
 
     public double getValue(LocalDate date,String column,GetMethod getMethod) {
         return getValue(date,getColumn(column), getMethod);
-    }
-
-    private static class FourDates {
-        LocalDate secondLastBefore = null;
-        LocalDate lastBefore = null;
-        LocalDate firstAfter = null;
-        LocalDate secondAfter = null;
     }
 
     public double getValue(LocalDate date,int column,GetMethod getMethod) {
@@ -78,68 +74,95 @@ public class TableImpl implements Table {
         }
         if (rows.containsKey(date)) {
             return rows.get(date).values[column];
+        } else if (getMethod == GetMethod.EXACT) {
+            throw new IllegalArgumentException("There is no record on that date.");
         }
         if (getMethod == GetMethod.LAST_KNOWN_VALUE) {
+            if (date.isBefore(rows.firstKey())) {
+                return 0;
+            }
             return getLastKnownValue(date, column);
         }
-        FourDates fourDates = new FourDates();
-        for (LocalDate d : this.rows.keySet()) {
-            if (d.isBefore(date)) {
-                fourDates.secondLastBefore = fourDates.lastBefore;
-                fourDates.lastBefore = d;
+        if (date.isBefore(rows.firstKey())) {
+            if (date.isBefore(rows.firstKey())) {
+                return 0;
             }
-            if (d.isAfter(date)) {
-                if (fourDates.firstAfter == null) {
-                    fourDates.firstAfter = d;
-                } else {
-                    fourDates.secondAfter = d;
-                    break;
-                }
-            }
+            return extrapolateDataBeforeStart(date,column);
+        }
+        if (date.isAfter(rows.lastKey())) {
+            return extrapolateDataAfterEnd(date,column);
         }
         if (getMethod == GetMethod.EXTRAPOLATE) {
-            return extrapolateValue(date, fourDates);
+            return extrapolateValue(date, column);
         } else if (getMethod == GetMethod.INTERPOLATE) {
-            return interpolateValue(date, fourDates);
+            return interpolateValue(date, column);
         }
         return 0;
     }
 
     public double getLastKnownValue(LocalDate date,int column) {
-        LocalDate lastBefore = null;
-        for (LocalDate d : this.rows.keySet()) {
-            if (d.isBefore(date)) {
-                lastBefore = d;
-            } else {
-                break;
-            }
-        }
-        if (lastBefore == null) {
+        LocalDate lb = getDateBefore(date);
+        if (lb == null) {
             return 0;
         }
-        return rows.get(lastBefore).values[column];
+        return rows.get(lb).values[column];
     }
 
-    private double extrapolateValue(LocalDate date,FourDates fourDates) {
-        if (fourDates.lastBefore != null && fourDates.firstAfter != null) {
-
-        } else if (fourDates.lastBefore != null) {
-
-        } else if (fourDates.firstAfter != null) {
-
-        }
-        throw new UnsupportedOperationException("extrapolation is not supported yet.");
+    private double extrapolateDataBeforeStart(LocalDate date,int column) {
+        Iterator<LocalDate> iter = rows.keySet().iterator();
+        LocalDate first = iter.next();
+        LocalDate second= iter.next();
+        double firstValue = rows.get(first).values[column];
+        double secondValue = rows.get(first).values[column];
+        long days = DAYS.between(first,second);
+        double slope = (secondValue - firstValue) / days;
+        long x = - DAYS.between(date,first);
+        return firstValue + (x * slope);
     }
 
-    private double interpolateValue(LocalDate date,FourDates fourDates) {
-        if (fourDates.lastBefore != null && fourDates.firstAfter != null) {
-
-        } else if (fourDates.lastBefore != null) {
-
-        } else if (fourDates.firstAfter != null) {
-
+    private double extrapolateDataAfterEnd(LocalDate date,int column) {
+        LocalDate secondLast = null;
+        LocalDate last = null;
+        for (LocalDate d : rows.keySet()) {
+            secondLast = last;
+            last = d;
         }
-        throw new UnsupportedOperationException("interpolation is not supported yet.");
+        double firstValue = rows.get(secondLast).values[column];
+        double secondValue = rows.get(last).values[column];
+        long days = DAYS.between(secondLast,last);
+        double slope = (secondValue - firstValue) / days;
+        long x = DAYS.between(last,date);
+        return secondValue + (x * slope);
+    }
+
+    private LocalDate getDateBefore(LocalDate date) {
+        return rows.headMap(date).lastKey();
+    }
+
+    private LocalDate getDateAfter(LocalDate date) {
+        return rows.tailMap(date).firstKey();
+    }
+
+    private double extrapolateValue(LocalDate date, int column) {
+        LocalDate second = getDateBefore(date);
+        LocalDate first = getDateBefore(second);
+        double firstVal = rows.get(first).values[column];
+        double secondVal = rows.get(second).values[column];
+        long days = DAYS.between(first,second);
+        double slope = (secondVal - firstVal) / days;
+        long elapsed = DAYS.between(second,date);
+        return slope * elapsed + secondVal;
+    }
+
+    private double interpolateValue(LocalDate date, int column) {
+        LocalDate first = getDateBefore(date);
+        LocalDate second = getDateAfter(date);
+        double firstVal = rows.get(first).values[column];
+        double secondVal = rows.get(second).values[column];
+        long days = DAYS.between(first,second);
+        double slope = (secondVal - firstVal) / days;
+        long elapsed = DAYS.between(first,date);
+        return slope * elapsed + firstVal;
     }
 
     public int getColumnCount() {
@@ -172,6 +195,41 @@ public class TableImpl implements Table {
     @Override
     public Frequency getFrequency() {
         return frequency;
+    }
+
+    @Override
+    public Table withoutColumn(String column) {
+        return new TableWithoutColumn(this,column);
+    }
+
+    @Override
+    public Table withDerivedColumn(TableWithDerived.ValueDeriver valueDeriver) {
+        return new TableWithDerived(this,valueDeriver);
+    }
+
+    @Override
+    public Table withLogOf(String column) {
+        return withDerivedColumn(new LogDeriver(column));
+    }
+
+    @Override
+    public Table replaceColumnWithLog(String column) {
+        return withDerivedColumn(new LogDeriver(column)).withoutColumn(column);
+    }
+
+    @Override
+    public Table retainColumns(Set<String> columns) {
+        return TableParser.retainColumns(this,columns);
+    }
+
+    @Override
+    public LocalDate getLastDate() {
+        return rows.lastKey();
+    }
+
+    @Override
+    public LocalDate getFirstDate() {
+        return rows.firstKey();
     }
 
     public double[][] toDoubleColumns(int[] xColumns, LocalDate start, LocalDate end,
