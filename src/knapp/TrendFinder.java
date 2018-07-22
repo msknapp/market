@@ -58,22 +58,24 @@ public class TrendFinder {
         double sigma = regression.estimateRegressionStandardError();
 
         for (int i = 0; i < beta.length;i++) {
-            System.out.printf("Parameter %d: %d; residual: %d",i,beta[i],residuals[i]);
+            System.out.printf("Parameter %d: %f; residual: %f%n",i,beta[i],residuals[i]);
         }
-        out.write("Regressand variance: "+regressandVariance);
-        out.write("R Squared: "+rSquared);
-        out.write("Sigma: "+sigma);
+        out.write("Regressand variance: "+regressandVariance+"\n");
+        out.write("R Squared: "+rSquared+"\n");
+        out.write("Sigma: "+sigma+"\n");
 
         out.write("The inputs are: ");
         for (int i : inputColumns) {
-            System.out.println(inputs.getColumn(i));
+            out.write("\n");
+            out.write(inputs.getColumn(i));
         }
+        out.write("\n");
         out.write("The last known values are: ");
         double[] t = x[x.length-1];
         for (int i = 0;i<t.length;i++) {
             out.write(t[i]+", ");
         }
-        out.write("");
+        out.write("\n");
 
         File outFile = currentDirectory.toFile(outFileRelativePath);
         writeToFile(writer -> {

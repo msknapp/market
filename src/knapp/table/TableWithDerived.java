@@ -53,7 +53,7 @@ public class TableWithDerived implements Table {
     @Override
     public double getValue(LocalDate date, String column, TableImpl.GetMethod getMethod) {
         if (valueDeriver.getColumnName().equals(column)) {
-
+            return valueDeriver.deriveValue(core,date,getMethod);
         } else {
             return core.getValue(date,column,getMethod);
         }
@@ -83,7 +83,16 @@ public class TableWithDerived implements Table {
 
     @Override
     public double[] getExactValues(LocalDate date) {
-        return core.getExactValues(date);
+        double[] x = core.getExactValues(date);
+        double[] y = new double[x.length+1];
+        System.arraycopy(x,0,y,0,x.length);
+        y[y.length-1] = valueDeriver.deriveValue(core,date,TableImpl.GetMethod.LAST_KNOWN_VALUE);
+        return y;
+    }
+
+    @Override
+    public Frequency getFrequency() {
+        return core.getFrequency();
     }
 
     public double[][] toDoubleColumns(int[] xColumns, LocalDate start, LocalDate end,

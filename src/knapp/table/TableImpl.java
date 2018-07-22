@@ -114,6 +114,9 @@ public class TableImpl implements Table {
                 break;
             }
         }
+        if (lastBefore == null) {
+            return 0;
+        }
         return rows.get(lastBefore).values[column];
     }
 
@@ -164,6 +167,11 @@ public class TableImpl implements Table {
         double[] d = new double[r.values.length];
         System.arraycopy(r.values,0,d,0,r.values.length);
         return d;
+    }
+
+    @Override
+    public Frequency getFrequency() {
+        return frequency;
     }
 
     public double[][] toDoubleColumns(int[] xColumns, LocalDate start, LocalDate end,

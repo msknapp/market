@@ -63,7 +63,7 @@ public class DataRetriever {
     public void consolidateData(LocalDate start, LocalDate end, List<Indicator> indicators,
                                 String destinationFile) throws IOException {
         boolean first = true;
-        Map<String,TableImpl> downloadedData = new TreeMap<String,TableImpl>();
+        Map<String,Table> downloadedData = new TreeMap<String,Table>();
         for (Indicator indicator : indicators) {
             if ("NASDAQCOM".equals(indicator.getSeries()) || "SP500".equals(indicator.getSeries())) {
                 // these don't give me accurate data from FRED.
@@ -71,8 +71,8 @@ public class DataRetriever {
             }
             DownloadRequest downloadRequest = indicator.toDownloadRequest();
             String data = DownloadSeries(downloadRequest);
-            TableImpl tableImpl = TableParser.parse(data,true);
-            downloadedData.put(indicator.getSeries(), tableImpl);
+            Table table = TableParser.parse(data,true,indicator.getFrequency());
+            downloadedData.put(indicator.getSeries(), table);
         }
 
         Frequency frequency = Frequency.Monthly;
@@ -91,16 +91,15 @@ public class DataRetriever {
             }
             writer.write(marketName);
             writer.write("\n");
-            final TableImpl.GetMethod marketMethod = getMethodChooser.apply(market);
+            final TableImpl.GetMethod marketMethod = getMethodChooser.apply(market,1);
 
             doWithDate(start,end,Frequency.Monthly, d -> {
                 writer.write(d.toString());
                 for (String key : downloadedData.keySet()) {
                     writer.write(",");
                     Table table = downloadedData.get(key);
-                    int col = table.getColumn(key);
-                    TableImpl.GetMethod method = getMethodChooser.apply(table,col);
-                    double value = table.getValue(d, 1, method);
+                    TableImpl.GetMethod method = getMethodChooser.apply(table,0);
+                    double value = table.getValue(d, 0, method);
                     writer.write(String.valueOf(value));
                 }
                 writer.write(",");

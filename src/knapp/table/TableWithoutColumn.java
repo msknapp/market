@@ -1,5 +1,6 @@
 package knapp.table;
 
+import com.sun.deploy.util.SyncAccess;
 import knapp.history.Frequency;
 import knapp.util.Util;
 
@@ -88,7 +89,17 @@ public class TableWithoutColumn implements Table {
 
     @Override
     public double[] getExactValues(LocalDate date) {
-        return core.getExactValues(date);
+        double[] x = core.getExactValues(date);
+        double[] y = new double[x.length-1];
+        int i = core.getColumn(removeColumn);
+        System.arraycopy(x,0,y,0,i);
+        System.arraycopy(x,i+1,y,0,y.length-i);
+        return y;
+    }
+
+    @Override
+    public Frequency getFrequency() {
+        return core.getFrequency();
     }
 
     public double[][] toDoubleColumns(int[] xColumns, LocalDate start, LocalDate end,

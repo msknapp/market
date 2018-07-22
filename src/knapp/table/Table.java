@@ -19,4 +19,6 @@ public interface Table {
                                    Frequency frequency, final TableImpl.GetMethod getMethod);
     LocalDate[] getAllDates();
     double[] getExactValues(LocalDate date);
+
+    Frequency getFrequency();
 }

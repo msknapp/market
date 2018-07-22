@@ -27,13 +27,13 @@ public class Market {
 
             TrendFinder tf = marketContext.getTrendFinder();
             String inputText = marketContext.getCurrentDirectory().toText("good-inputs.csv");
-            Table tmpInput = TableParser.parse(inputText,true);
-            tmpInput = new TableWithoutColumn(tmpInput,"Nasdaq");
+            Table tmpInput = TableParser.parse(inputText,true,Frequency.Monthly);
+            tmpInput = new TableWithoutColumn(tmpInput,"Market Price");
             tmpInput = TableParser.solidifyTable(tmpInput);
             LocalDate end = LocalDate.now();
             LocalDate start = end.minusYears(20);
             Frequency frequency = Frequency.Monthly;
-            int[] inputColumns = new int[]{1,2,3,4,5};
+            int[] inputColumns = new int[]{0,1,2,3,4,5};
             final Table inputs = tmpInput;
 
             String text = doWithWriter(w -> {
@@ -41,7 +41,6 @@ public class Market {
             });
             System.out.println(text);
         } else {
-//        ConsolidateData();
             DataRetriever dataRetriever = marketContext.getDataRetriever();
 
             LocalDate end = LocalDate.now();
@@ -55,7 +54,7 @@ public class Market {
     public static MarketContext createContext() throws IOException {
         MarketContext mc = new MarketContext();
         String marketText = mc.getCurrentDirectory().toText("nasdaq-history.csv");
-        Table market = TableParser.parse(marketText,true);
+        Table market = TableParser.parse(marketText,true,Frequency.Monthly);
 
         BiFunction<Table,Integer,TableImpl.GetMethod> gmc = (tbl,col) -> {
             return TableImpl.GetMethod.LAST_KNOWN_VALUE;

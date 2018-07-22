@@ -49,6 +49,7 @@ public class Indicator {
                 continue;
             }
             if (first && hasHeader) {
+                first = false;
                 continue;
             }
             String[] parts = line.split(",");
@@ -57,7 +58,6 @@ public class Indicator {
             Frequency frequency = Frequency.valueOf(parts[2]);
             String description = parts[3];
             indicators.add(new Indicator(series,start,frequency,description));
-            first = false;
         }
         return indicators;
     }
