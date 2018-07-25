@@ -19,6 +19,12 @@ public class TableImpl implements Table {
         return new TableBuilder();
     }
 
+    private TableImpl(List<String> columns, SortedMap<LocalDate,TableRow> rows, Frequency frequency) {
+        this.columns = columns;
+        this.rows = rows;
+        this.frequency = frequency;
+    }
+
     private TableImpl(List<String> columns, List<TableRow> rows, Frequency frequency) {
         if (frequency == null) {
             throw new IllegalArgumentException("Frequency can't be null");
@@ -121,6 +127,7 @@ public class TableImpl implements Table {
     }
 
     private double extrapolateDataAfterEnd(LocalDate date,int column) {
+        // TODO fix this.
         LocalDate secondLast = null;
         LocalDate last = null;
         for (LocalDate d : rows.keySet()) {
@@ -135,11 +142,30 @@ public class TableImpl implements Table {
         return secondValue + (x * slope);
     }
 
-    private LocalDate getDateBefore(LocalDate date) {
+    @Override
+    public LocalDate getDateBefore(LocalDate date) {
         return rows.headMap(date).lastKey();
     }
 
-    private LocalDate getDateAfter(LocalDate date) {
+    @Override
+    public LocalDate getDateOnOrBefore(LocalDate date) {
+        if (rows.containsKey(date)) {
+            return date;
+        }
+        return rows.headMap(date).lastKey();
+    }
+
+    @Override
+    public LocalDate getDateAfter(LocalDate date) {
+        LocalDate d = date.plusDays(1);
+        return rows.tailMap(d).firstKey();
+    }
+
+    @Override
+    public LocalDate getDateOnOrAfter(LocalDate date) {
+        if (rows.containsKey(date)) {
+            return date;
+        }
         return rows.tailMap(date).firstKey();
     }
 
@@ -230,6 +256,21 @@ public class TableImpl implements Table {
     @Override
     public LocalDate getFirstDate() {
         return rows.firstKey();
+    }
+
+    @Override
+    public Table untilExclusive(LocalDate date) {
+        return new TableImpl(columns,rows.headMap(date), frequency);
+    }
+
+    @Override
+    public Table onOrAfter(LocalDate date) {
+        return new TableImpl(columns,rows.tailMap(date), frequency);
+    }
+
+    @Override
+    public Table inTimeFrame(LocalDate start, LocalDate end) {
+        return new TableImpl(columns,rows.subMap(start,end), frequency);
     }
 
     public double[][] toDoubleColumns(int[] xColumns, LocalDate start, LocalDate end,

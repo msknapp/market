@@ -1,6 +1,5 @@
 package knapp.table;
 
-import com.sun.deploy.util.SyncAccess;
 import knapp.history.Frequency;
 import knapp.util.Util;
 
@@ -136,6 +135,41 @@ public class TableWithoutColumn implements Table {
     @Override
     public LocalDate getFirstDate() {
         return core.getFirstDate();
+    }
+
+    @Override
+    public Table untilExclusive(LocalDate date) {
+        return new TableWithoutColumn(core.untilExclusive(date),this.removeColumn);
+    }
+
+    @Override
+    public Table onOrAfter(LocalDate date) {
+        return new TableWithoutColumn(core.onOrAfter(date),this.removeColumn);
+    }
+
+    @Override
+    public Table inTimeFrame(LocalDate startInclusive, LocalDate endExclusive) {
+        return new TableWithoutColumn(core.inTimeFrame(startInclusive,endExclusive),this.removeColumn);
+    }
+
+    @Override
+    public LocalDate getDateBefore(LocalDate date) {
+        return core.getDateBefore(date);
+    }
+
+    @Override
+    public LocalDate getDateOnOrBefore(LocalDate date) {
+        return core.getDateOnOrBefore(date);
+    }
+
+    @Override
+    public LocalDate getDateAfter(LocalDate date) {
+        return core.getDateAfter(date);
+    }
+
+    @Override
+    public LocalDate getDateOnOrAfter(LocalDate date) {
+        return core.getDateOnOrAfter(date);
     }
 
     @Override

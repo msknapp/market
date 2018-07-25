@@ -28,4 +28,11 @@ public interface Table {
 
     LocalDate getLastDate();
     LocalDate getFirstDate();
+    Table untilExclusive(LocalDate date);
+    Table onOrAfter(LocalDate date);
+    Table inTimeFrame(LocalDate startInclusive, LocalDate endExclusive);
+    LocalDate getDateBefore(LocalDate date);
+    LocalDate getDateOnOrBefore(LocalDate date);
+    LocalDate getDateAfter(LocalDate date);
+    LocalDate getDateOnOrAfter(LocalDate date);
 }

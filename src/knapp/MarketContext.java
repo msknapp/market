@@ -1,6 +1,7 @@
 package knapp;
 
 import knapp.history.Frequency;
+import knapp.simulation.Simulater;
 import knapp.table.Table;
 import knapp.table.TableParser;
 import knapp.util.CurrentDirectory;
@@ -17,6 +18,7 @@ public class MarketContext {
     private String consolidatedDataFile;
     private String marketFile;
     private String predictionFile;
+    private Simulater simulater;
 
     public String getIndicatorsFile() {
         return indicatorsFile;
@@ -71,6 +73,13 @@ public class MarketContext {
 
     }
 
+    public Simulater getSimulater() {
+        return simulater;
+    }
+
+    public void setSimulater(Simulater simulater) {
+        this.simulater = simulater;
+    }
 
     public CurrentDirectory getCurrentDirectory() {
         return currentDirectory;

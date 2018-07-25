@@ -157,6 +157,21 @@ public class TrendFinder {
             System.out.println(text);
         }
 
+        public Model deriveModel() {
+            TableImpl.GetMethod marketMethod = getMethodChooser.apply(inputs,0);
+            double[][] x = TableUtil.toDoubleRows(inputs,inputColumns,start,end,frequency,marketMethod);
+            double[][] yy = TableUtil.toDoubleColumns(market,new int[]{0},start,end,frequency, marketMethod);
+            double[] y = yy[0];
+            OLSMultipleLinearRegression regression = new OLSMultipleLinearRegression();
+            regression.newSampleData(y, x);
+
+            double[] beta = regression.estimateRegressionParameters();
+            double sigma = regression.estimateRegressionStandardError();
+            double rSquared = regression.calculateRSquared();
+
+            return new Model(beta, sigma,rSquared);
+        }
+
         public void analyzeTrend(String outFileRelativePath, Writer out) throws IOException {
             TableImpl.GetMethod marketMethod = getMethodChooser.apply(inputs,0);
             double[][] x = TableUtil.toDoubleRows(inputs,inputColumns,start,end,frequency,marketMethod);

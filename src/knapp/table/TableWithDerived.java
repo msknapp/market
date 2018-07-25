@@ -1,7 +1,6 @@
 package knapp.table;
 
 import knapp.history.Frequency;
-import knapp.util.Util;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -114,6 +113,41 @@ public class TableWithDerived implements Table {
     @Override
     public LocalDate getFirstDate() {
         return core.getFirstDate();
+    }
+
+    @Override
+    public Table untilExclusive(LocalDate date) {
+        return new TableWithDerived(core.untilExclusive(date),valueDeriver);
+    }
+
+    @Override
+    public Table onOrAfter(LocalDate date) {
+        return new TableWithDerived(core.onOrAfter(date),valueDeriver);
+    }
+
+    @Override
+    public Table inTimeFrame(LocalDate startInclusive, LocalDate endExclusive) {
+        return new TableWithDerived(core.inTimeFrame(startInclusive,endExclusive),valueDeriver);
+    }
+
+    @Override
+    public LocalDate getDateBefore(LocalDate date) {
+        return core.getDateBefore(date);
+    }
+
+    @Override
+    public LocalDate getDateOnOrBefore(LocalDate date) {
+        return core.getDateOnOrBefore(date);
+    }
+
+    @Override
+    public LocalDate getDateAfter(LocalDate date) {
+        return core.getDateAfter(date);
+    }
+
+    @Override
+    public LocalDate getDateOnOrAfter(LocalDate date) {
+        return core.getDateOnOrAfter(date);
     }
 
     @Override

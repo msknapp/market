@@ -2,6 +2,11 @@ package knapp;
 
 import knapp.history.Frequency;
 import knapp.indicator.Indicator;
+import knapp.simulation.Account;
+import knapp.simulation.Simulater;
+import knapp.simulation.strategy.AllStockStrategy;
+import knapp.simulation.strategy.IntelligentStrategy;
+import knapp.simulation.strategy.InvestmentStrategy;
 import knapp.table.*;
 
 import java.io.IOException;
@@ -68,13 +73,49 @@ public class Market {
     public static void main(String[] args) throws IOException {
         MarketContext marketContext = createContext();
         Market market = new Market(marketContext);
-        if (args.length > 0 && "analyze".equals(args[0])) {
-            // don't use logarithmic method, it appears to be less
-            // accurate.
-            market.analyzeMarket(false);
-        } else {
-            market.retrieveData();
-        }
+
+        market.simulate();
+
+//        if (args.length > 0 && "analyze".equals(args[0])) {
+//            // don't use logarithmic method, it appears to be less
+//            // accurate.
+//            market.analyzeMarket(false);
+//        } else {
+//            market.retrieveData();
+//        }
+    }
+
+    public void simulate() throws IOException {
+        String bmText = marketContext.getCurrentDirectory().toText("ishares-20year-t-bond.csv");
+        Table bondMarket = TableParser.parse(bmText,true,Frequency.Monthly);
+        bondMarket = bondMarket.retainColumns(Collections.singleton("Adj Close"));
+        String smText = marketContext.getCurrentDirectory().toText(marketContext.getMarketFile());
+        Table stockMarket = TableParser.parse(smText,true,Frequency.Monthly);
+        stockMarket = stockMarket.retainColumns(Collections.singleton("Adj Close"));
+        String inputText = marketContext.getCurrentDirectory().toText(marketContext.getConsolidatedDataFile());
+        Table tmpInput = TableParser.parse(inputText,true,Frequency.Monthly);
+        tmpInput = new TableWithoutColumn(tmpInput,"Market Price");
+        tmpInput = TableParser.solidifyTable(tmpInput);
+        final Table inputs = tmpInput;
+
+        Simulater simulater = new Simulater.SimulaterBuilder().frameYears(20)
+                .bondMarket(bondMarket).inputs(inputs).stockMarket(stockMarket).build();
+
+        LocalDate end = LocalDate.now().minusMonths(2);
+        LocalDate start = end.minusYears(10);
+
+        InvestmentStrategy strategy = new AllStockStrategy();
+        Account finalAccount = simulater.simulate(start,end, 10000, strategy);
+        long finalCents = finalAccount.getCurrentCents();
+
+        System.out.println("They end up with: $"+(finalCents / 100));
+
+        strategy = new IntelligentStrategy(marketContext.getTrendFinder());
+        finalAccount = simulater.simulate(start,end, 10000, strategy);
+        finalCents = finalAccount.getCurrentCents();
+
+        System.out.println("The intelligent investor ends up with: $"+(finalCents / 100));
+
     }
 
     public static MarketContext createContext() throws IOException {
@@ -91,6 +132,7 @@ public class Market {
 
         DataRetriever dataRetriever = new DataRetriever(mc.getMarket(),mc.getCurrentDirectory(),gmc);
         mc.setDataRetriever(dataRetriever);
+
         return mc;
     }
 
