@@ -14,5 +14,6 @@ public interface Account {
     double getLongTermTaxRate();
     Account executeOrder(final Order order, final CurrentPrices currentPrices, LocalDate presentDay);
     Account cashOut(final CurrentPrices currentPrices, final LocalDate presentDay);
+    Account addCash(long cents);
     long netValueCents(final CurrentPrices currentPrices, final LocalDate presentDay);
 }

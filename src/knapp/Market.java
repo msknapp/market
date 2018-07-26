@@ -87,8 +87,14 @@ public class Market {
 
     public void simulate() throws IOException {
         String bmText = marketContext.getCurrentDirectory().toText("ishares-20year-t-bond.csv");
-        Table bondMarket = TableParser.parse(bmText,true,Frequency.Monthly);
-        bondMarket = bondMarket.retainColumns(Collections.singleton("Adj Close"));
+//        Table bondMarket = TableParser.parse(bmText,true,Frequency.Monthly);
+//        bondMarket = bondMarket.retainColumns(Collections.singleton("Adj Close"));
+
+        // for simulation purposes, bonds have a constant value,
+        // however, bonds pay dividends in the simulation while stocks only
+        // benefit from capital gains.
+        Table bondMarket = TableParser.produceConstantTable(100.0,LocalDate.parse("1950-01-01"),
+                LocalDate.now(),Frequency.Monthly);
         String smText = marketContext.getCurrentDirectory().toText(marketContext.getMarketFile());
         Table stockMarket = TableParser.parse(smText,true,Frequency.Monthly);
         stockMarket = stockMarket.retainColumns(Collections.singleton("Adj Close"));
@@ -99,16 +105,17 @@ public class Market {
         final Table inputs = tmpInput;
 
         Simulater simulater = new Simulater.SimulaterBuilder().frameYears(20)
-                .bondMarket(bondMarket).inputs(inputs).stockMarket(stockMarket).build();
+                .bondMarket(bondMarket).inputs(inputs).bondROI(0.04)
+                .stockMarket(stockMarket).build();
 
         LocalDate end = LocalDate.now().minusMonths(2);
-        LocalDate start = end.minusYears(10);
+        LocalDate start = LocalDate.of(2000,02,01);
 
         InvestmentStrategy strategy = new AllStockStrategy();
         Account finalAccount = simulater.simulate(start,end, 10000, strategy);
         long finalCents = finalAccount.getCurrentCents();
 
-        System.out.println("They end up with: $"+(finalCents / 100));
+        System.out.println("The investor that just bought stock and never sold it wound up with: $"+(finalCents / 100));
 
         strategy = new IntelligentStrategy(marketContext.getTrendFinder());
         finalAccount = simulater.simulate(start,end, 10000, strategy);

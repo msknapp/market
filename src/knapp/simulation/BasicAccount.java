@@ -101,6 +101,17 @@ public class BasicAccount implements Account {
     }
 
     @Override
+    public Account addCash(long cents) {
+        if (cents < 0) {
+            throw new IllegalArgumentException("Can't subtract funds");
+        }
+        if (cents == 0) {
+            return this;
+        }
+        return new BasicAccount(this.cents + cents,this.stockShares,this.bondShares,this.effectiveTaxRate);
+    }
+
+    @Override
     public long netValueCents(CurrentPrices currentPrices, LocalDate presentDay) {
         long totalCents = cents;
         for (PurchaseInfo purchaseInfo : stockShares.values()) {

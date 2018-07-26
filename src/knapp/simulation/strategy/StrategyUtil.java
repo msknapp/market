@@ -28,10 +28,37 @@ public class StrategyUtil {
         return Collections.singleton(order);
     }
 
+    public static Set<Order> buyAsMuchBondsAsPossible(LocalDate presentDay, Account account, Table inputs, Table stockMarket,
+                                                      Table bondMarket, CurrentPrices currentPrices) {
+        long cents = account.getCurrentCents();
+        long centsToInvestInStock = cents - account.getTradeFeeCents();
+        if (centsToInvestInStock < 1) {
+            return Collections.emptySet();
+        }
+        double approximateDollars = centsToInvestInStock / 100;
+        double shares = approximateDollars/currentPrices.getBondPriceDollars();
+        int quantity = (int)Math.floor(shares);
+        if (quantity < 1) {
+            return Collections.emptySet();
+        }
+
+        Order order = Order.BuyBonds(quantity);
+        return Collections.singleton(order);
+    }
+
     public static Set<Order> sellAllYourStock(LocalDate presentDay, Account account, Table inputs, Table stockMarket,
                                                       Table bondMarket, CurrentPrices currentPrices) {
         Set<Order> orders = new HashSet<>();
         for (PurchaseInfo purchaseInfo : account.getOwnedStockShares().values()) {
+            orders.add(sellAll(purchaseInfo));
+        }
+        return orders;
+    }
+
+    public static Set<Order> sellAllYourBonds(LocalDate presentDay, Account account, Table inputs, Table stockMarket,
+                                              Table bondMarket, CurrentPrices currentPrices) {
+        Set<Order> orders = new HashSet<>();
+        for (PurchaseInfo purchaseInfo : account.getOwnedBondShares().values()) {
             orders.add(sellAll(purchaseInfo));
         }
         return orders;

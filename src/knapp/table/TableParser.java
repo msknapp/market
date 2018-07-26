@@ -1,6 +1,7 @@
 package knapp.table;
 
 import knapp.history.Frequency;
+import knapp.util.Util;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -58,6 +59,16 @@ public class TableParser {
             double[] values = TableUtil.getExactValues(table,localDate,retainColumns);
             tableBuilder.addRow(localDate,values);
         }
+        return tableBuilder.build();
+    }
+
+    public static Table produceConstantTable(final double value, LocalDate start, LocalDate end, Frequency frequency) {
+        TableImpl.TableBuilder tableBuilder = TableImpl.newBuilder();
+        tableBuilder.frequency(frequency);
+        tableBuilder.column("Adj Price");
+        Util.doWithDate(start,end,frequency,date -> {
+            tableBuilder.addRow(date,new double[]{value});
+        });
         return tableBuilder.build();
     }
 }
