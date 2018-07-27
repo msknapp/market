@@ -7,9 +7,10 @@ import knapp.table.TableImpl;
 import knapp.util.Util;
 
 import java.time.LocalDate;
-import java.util.Set;
+import java.util.*;
 
 import static java.time.temporal.ChronoUnit.DAYS;
+import static java.time.temporal.ChronoUnit.YEARS;
 
 public class Simulater {
     private final Table stockMarket;
@@ -32,11 +33,13 @@ public class Simulater {
         this.bondROI = bondROI;
     }
 
-    public Account simulate(LocalDate start, LocalDate end, int initialDollars,
+    public SimulationResults simulate(LocalDate start, LocalDate end, int initialDollars,
                                    InvestmentStrategy investmentStrategy) {
         Account initialAccount = BasicAccount.createAccount(initialDollars,0.2);
         final AccountPointer accountPointer = new AccountPointer();
         accountPointer.account = initialAccount;
+        List<Transaction> transactions = new ArrayList<>();
+        Map<LocalDate, Stance> netWorthOverTime = new HashMap<>();
         Util.doWithDate(start, end, Frequency.Monthly, date -> {
             // bonds pay dividends
 
@@ -67,17 +70,27 @@ public class Simulater {
             for (Order order : orders) {
                 if (!order.isPurchase()) {
                     account = account.executeOrder(order, currentPrices, date);
+                    double price = order.getAsset() == Asset.STOCK ? currentPrices.getStockPriceDollars() :
+                            currentPrices.getBondPriceDollars();
+                    Transaction transaction = new Transaction(date,order.getQuantity(),price,order.isPurchase());
+                    transactions.add(transaction);
                 }
             }
             for (Order order : orders) {
                 if (order.isPurchase()) {
                     account = account.executeOrder(order, currentPrices, date);
+                    double price = order.getAsset() == Asset.STOCK ? currentPrices.getStockPriceDollars() :
+                            currentPrices.getBondPriceDollars();
+                    Transaction transaction = new Transaction(date,order.getQuantity(),price,order.isPurchase());
+                    transactions.add(transaction);
                 }
             }
             accountPointer.account = account;
             long netValue = account.netValueCents(currentPrices,date);
             double netDollars = netValue / 100;
-//            System.out.println(String.format("On %s, the account is worth %f",date.toString(),netDollars));
+            int pctStock = determinePercentStock(account,currentPrices);
+            Stance stance = new Stance(pctStock, netDollars);
+            netWorthOverTime.put(date,stance);
         });
 
 
@@ -88,7 +101,84 @@ public class Simulater {
         }
         CurrentPrices currentPrices = new CurrentPrices(stockPrice,bondPrice);
         accountPointer.account = accountPointer.account.cashOut(currentPrices,end);
-        return accountPointer.account;
+
+        Account endingAccount =  accountPointer.account;
+        int endingDollars = (int)Math.round(endingAccount.getCurrentCents()/100);
+
+        int years = (int) YEARS.between(start,end);
+        double averageROI = calculateROI(endingDollars,initialDollars,years);
+
+        return new SimulationResults(endingDollars,endingAccount,transactions,averageROI,netWorthOverTime);
+    }
+
+    private int determinePercentStock(Account account, CurrentPrices currentPrices) {
+        double stockValue = account.getCurrentSharesStock() * currentPrices.getStockPriceDollars();
+        double dollars = account.getCurrentSharesBonds() * currentPrices.getBondPriceDollars()
+                +stockValue
+                + account.getCurrentCents() / 100;
+        return (int) Math.round(100*stockValue / dollars);
+    }
+
+    public static double calculateROI(int endingDollars, int initialDollars, int years) {
+        double ratio = ((double)endingDollars/(double)initialDollars);
+        double lnration = Math.log(ratio);
+        double d = Math.exp(lnration / years)-1;
+        return d;
+    }
+
+    public static class Stance {
+        private final int percentStock;
+        private final double netWorthDollars;
+
+        public Stance(int percentStock, double netWorthDollars) {
+            this.percentStock = percentStock;
+            this.netWorthDollars = netWorthDollars;
+        }
+
+        public int getPercentStock() {
+            return percentStock;
+        }
+
+        public double getNetWorthDollars() {
+            return netWorthDollars;
+        }
+    }
+
+    public static class SimulationResults {
+        private final int finalDollars;
+        private final List<Transaction> transactions;
+        private final Account account;
+        private final double averageROI;
+        private final Map<LocalDate,Stance> worthOverTime;
+
+        public SimulationResults(int finalDollars, Account account, List<Transaction> transactions, double averageROI,
+                                 Map<LocalDate,Stance> worthOverTime) {
+            this.finalDollars = finalDollars;
+            this.account = account;
+            this.transactions = transactions;
+            this.averageROI = averageROI;
+            this.worthOverTime = worthOverTime;
+        }
+
+        public int getFinalDollars() {
+            return finalDollars;
+        }
+
+        public List<Transaction> getTransactions() {
+            return transactions;
+        }
+
+        public Account getAccount() {
+            return account;
+        }
+
+        public double getAverageROI() {
+            return averageROI;
+        }
+
+        public Map<LocalDate, Stance> getWorthOverTime() {
+            return worthOverTime;
+        }
     }
 
     private double determineBondPaymentsDollars(Account account, LocalDate date) {

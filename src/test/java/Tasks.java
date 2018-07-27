@@ -1,21 +1,14 @@
 import knapp.Market;
 import knapp.MarketContext;
-import knapp.TrendFinder;
-import knapp.history.Frequency;
-import knapp.simulation.Account;
 import knapp.simulation.Simulater;
-import knapp.simulation.strategy.AllStockStrategy;
-import knapp.simulation.strategy.IntelligentStrategy;
-import knapp.simulation.strategy.InvestmentStrategy;
-import knapp.table.DefaultGetMethod;
-import knapp.table.Table;
-import knapp.table.TableParser;
-import knapp.util.InputLoader;
+import knapp.simulation.strategy.LinearInvestmentStrategy;
+import knapp.simulation.strategy.MySlope;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.*;
+
+import static knapp.simulation.strategy.MySlope.randomSlope;
 
 public class Tasks {
 
@@ -28,34 +21,47 @@ public class Tasks {
 
     @Test
     public void testStrategy() throws IOException {
-        LocalDate tableStart = LocalDate.of(1969,01,01);
-        LocalDate simulationStart = LocalDate.of(1990,01,01);
-        LocalDate simulationEnd = LocalDate.of(2018,06,01);
-        String stockMarketText = InputLoader.loadTextFromClasspath("/market/s-and-p-500-weekly.csv");
-        Table stockMarket = TableParser.parse(stockMarketText,true,Frequency.Weekly);
-        stockMarket = stockMarket.retainColumns(Collections.singleton("Adj Close"));
-
-        Table bondMarket = TableParser.produceConstantTable(100.0,tableStart,
-                simulationEnd,Frequency.Monthly);
-
-        List<String> series = Arrays.asList("INDPRO","UNRATE","TCU","WPRIME","WTB3MS");
-        Table inputs = InputLoader.loadInputsTableFromClasspath(series,tableStart,simulationEnd,Frequency.Monthly);
-
-        Simulater simulater = new Simulater.SimulaterBuilder().stockMarket(stockMarket)
-                .bondMarket(bondMarket).bondROI(0.04).frameYears(20).inputs(inputs).build();
-
-        DefaultGetMethod defaultGetMethod = new DefaultGetMethod();
-        TrendFinder trendFinder = new TrendFinder(defaultGetMethod);
-        InvestmentStrategy strategy = new IntelligentStrategy(trendFinder);
-
-        InvestmentStrategy holdForeverStrategy = new AllStockStrategy();
-
-        Account holdForeverEndingAccount = simulater.simulate(simulationStart,simulationEnd,10000,holdForeverStrategy);
-        System.out.println("The guy who held it forever has: "+(holdForeverEndingAccount.getCurrentCents() / 100));
-        Account endingAccount = simulater.simulate(simulationStart,simulationEnd,10000,strategy);
-        System.out.println("The guy who used trade signals has: "+(endingAccount.getCurrentCents() / 100));
+        TestBed testBed = new TestBed();
+        testBed.init();
+        Simulater.SimulationResults results = testBed.testIntelligentInvestment();
+        TestBed.printResults(results,"smart");
     }
 
+    @Test
+    public void testEvolver() throws IOException {
+        TestBed testBed = new TestBed();
+        testBed.init();
 
+        Map<MySlope,Simulater.SimulationResults> results = new HashMap<>();
+        for (int i = 0;i<100;i++) {
+            MySlope mySlope = randomSlope();
+            LinearInvestmentStrategy linearInvestmentStrategy = new LinearInvestmentStrategy(testBed.getTrendFinder(),mySlope);
 
+            Simulater.SimulationResults res = testBed.testStrategy(linearInvestmentStrategy);
+            results.put(mySlope,res);
+            System.out.println(String.format("On Test %d, with equation (%f * sigma + %f), ended with $%d",i,mySlope.slope,mySlope.intercept,res.getFinalDollars()));
+        }
+
+        MySlope best = null;
+        Simulater.SimulationResults bestResults = null;
+        for (MySlope key : results.keySet()) {
+            Simulater.SimulationResults curr = results.get(key);
+            if (bestResults == null) {
+                bestResults = curr;
+                best = key;
+            } else {
+                if (curr.getFinalDollars() > bestResults.getFinalDollars()) {
+                    best = key;
+                    bestResults = curr;
+                }
+            }
+        }
+        TestBed.printResults(bestResults,"evolved");
+        System.out.println(String.format("Winner has equation: %f + %f * sigma",best.intercept,best.slope));
+    }
+
+    // winner:
+//    The strategy 'evolved' ended with this much money: $6762423
+//    The strategy 'evolved' ended with this average ROI: 0.262046%
+//    Winner has equation: 0.833908 + 0.456409 * sigma
 }

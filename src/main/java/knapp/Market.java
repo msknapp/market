@@ -110,13 +110,13 @@ public class Market {
         LocalDate start = LocalDate.of(2000,02,01);
 
         InvestmentStrategy strategy = new AllStockStrategy();
-        Account finalAccount = simulater.simulate(start,end, 10000, strategy);
+        Account finalAccount = simulater.simulate(start,end, 10000, strategy).getAccount();
         long finalCents = finalAccount.getCurrentCents();
 
         System.out.println("The investor that just bought stock and never sold it wound up with: $"+(finalCents / 100));
 
         strategy = new IntelligentStrategy(marketContext.getTrendFinder());
-        finalAccount = simulater.simulate(start,end, 10000, strategy);
+        finalAccount = simulater.simulate(start,end, 10000, strategy).getAccount();
         finalCents = finalAccount.getCurrentCents();
 
         System.out.println("The intelligent investor ends up with: $"+(finalCents / 100));

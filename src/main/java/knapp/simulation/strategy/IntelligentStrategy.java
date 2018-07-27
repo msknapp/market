@@ -52,34 +52,6 @@ public class IntelligentStrategy extends AllocationStrategy implements Investmen
             return new InvestmentAllocation(25,75,0);
         }
 
-//        if (estimate.getEstimatedValue() > estimate.getRealValue()) {
-//            // go all in
-////            System.out.println(String.format("On %s we are buying all the stock we can.",presentDay.toString()));
-//            Set<Order> orders = StrategyUtil.sellAllYourBonds(presentDay,account,inputs,stockMarket,bondMarket,currentPrices);
-//            double availableDollars = determineFinalMoney(account,presentDay,orders, currentPrices);
-//            double sharesDouble = (availableDollars - (account.getTradeFeeCents()/100.0) ) / currentPrices.getStockPriceDollars();
-//            int shares = (int) Math.floor(sharesDouble);
-//            if (shares > 0) {
-//                Order order = Order.BuyStock(shares);
-//                orders.add(order);
-//            }
-//            return orders;
-////            return StrategyUtil.buyAsMuchStockAsPossible(presentDay,account,inputs,stockMarket,bondMarket,currentPrices);
-//            // TODO with spare money buy up bonds.
-//        } else {
-////            System.out.println(String.format("On %s we are switching as much to bonds as possible.", presentDay.toString()));
-//            Set<Order> orders = StrategyUtil.sellAllYourStock(presentDay,account,inputs,stockMarket,bondMarket,currentPrices);
-//
-//            // buy all the bonds you can! go all out.
-//            double availableDollars = determineFinalMoney(account,presentDay,orders, currentPrices);
-//            double sharesDouble = (availableDollars - (account.getTradeFeeCents()/100.0) ) / currentPrices.getBondPriceDollars();
-//            int shares = (int) Math.floor(sharesDouble);
-//            if (shares > 0) {
-//                Order order = Order.BuyBonds(shares);
-//                orders.add(order);
-//            }
-//            return orders;
-//        }
     }
 
     @Override
@@ -87,28 +59,4 @@ public class IntelligentStrategy extends AllocationStrategy implements Investmen
         return 10;
     }
 
-//    private double determineFinalMoney(Account account, LocalDate date, Set<Order> sales,
-//                                       CurrentPrices currentPrices) {
-//        double dollars = ((double)account.getCurrentCents() / 100.0);
-//        for (Order order : sales) {
-//            if (order.isPurchase()) {
-//                throw new IllegalArgumentException("This only works with sales.");
-//            }
-//            PurchaseInfo purchaseInfo = (order.getAsset() == Asset.STOCK) ?
-//                    account.getOwnedStockShares().get(order.getDateSharesWerePurchased()) :
-//                    account.getOwnedBondShares().get(order.getDateSharesWerePurchased());
-//            double priceDollars = (order.getAsset() == Asset.STOCK) ? currentPrices.getStockPriceDollars() :
-//                    currentPrices.getBondPriceDollars();
-//            double incomeDollars = order.getQuantity() * priceDollars - (account.getTradeFeeCents() / 100.0);
-//            double costBasis = order.getQuantity() * purchaseInfo.getPriceDollars();
-//            double profit = incomeDollars - costBasis;
-//            boolean longTerm = DAYS.between(order.getDateSharesWerePurchased(),date) > 365;
-//            double taxRate = (longTerm) ? account.getLongTermTaxRate() : account.getShortTermTaxRate();
-//            double taxDollars = profit * taxRate;
-//
-//            dollars += incomeDollars - taxDollars;
-//
-//        }
-//        return dollars;
-//    }
 }
