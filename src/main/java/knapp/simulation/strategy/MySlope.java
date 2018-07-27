@@ -24,8 +24,8 @@ public class MySlope implements Function<Double, Double> {
 
     public static MySlope randomSlope() {
         MySlope mySlope = new MySlope();
-        mySlope.intercept = random.nextDouble();
-        mySlope.slope = random.nextDouble()*0.5;
+        mySlope.intercept = random.nextDouble()*0.4 + 0.55; // between 0.55 and 0.95
+        mySlope.slope = random.nextDouble()*0.2 + 0.3; // between 0.3 and 0.5
         return mySlope;
     }
 }

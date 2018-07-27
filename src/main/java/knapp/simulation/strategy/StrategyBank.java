@@ -14,4 +14,7 @@ public class StrategyBank {
         // ended with $6762423 in the test bed.
         return new LinearInvestmentStrategy(trendFinder,mySlope);
     }
+//    The strategy 'evolved' ended with this much money: $7343646
+//    The strategy 'evolved' ended with this average ROI: 0.265768%
+//    Winner has equation: 0.851884 + 0.473762 * sigma
 }
