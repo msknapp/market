@@ -25,6 +25,13 @@ public abstract class AllocationStrategy implements InvestmentStrategy {
         }
         InvestmentAllocation current = approximateCurrentAllocation(account,currentPrices);
 
+
+        if (Math.abs(current.getPercentBond() - desired.getPercentBond()) < getMinimumPercentChange() &&
+                Math.abs(current.getPercentStock() - desired.getPercentStock()) < getMinimumPercentChange()) {
+            // we must meet a minimum threshold for change.
+            return Collections.emptySet();
+        }
+
         double liquidValueDollars = account.netValueCents(currentPrices,presentDay) / 100.0;
 
         double moreStockPercent = (desired.getPercentStock() - current.getPercentStock())/100.0;
@@ -127,10 +134,12 @@ public abstract class AllocationStrategy implements InvestmentStrategy {
         double b = account.getCurrentSharesBonds() * currentPrices.getBondPriceDollars();
         double c = account.getCurrentCents() / 100.0;
         double total = s + b + c;
-        int pctStock = (int) Math.round(s / total);
-        int pctBond = (int) Math.round(b / total);
+        int pctStock = (int) Math.round(100 * s / total);
+        int pctBond = (int) Math.round(100 * b / total);
         int pctMoney = 100 - pctBond - pctStock;
 
         return new InvestmentAllocation(pctStock,pctBond,pctMoney);
     }
+
+    public abstract int getMinimumPercentChange();
 }

@@ -1,0 +1,7 @@
+Series,Start Date,Frequency,Description
+INDPRO,1919-01-01,Monthly,GDP seasonally adjusted but not adjusted for inflation
+CPIAUCSL,1947-01-01,Monthly,CPI for consumers; seasonally adjusted; all items.
+MPRIME,1949-01-01,Monthly,Bank Prime Loan rate; not seasonally adjusted
+M1SL,1959-01-01,Monthly,M1 Money Stock billions of dollars; seasonally adjusted;https://fred.stlouisfed.org/series/M1SL
+UMCSENT,1978-01-01,Monthly,University of Michigan Consumer Sentiment
+UNRATE,1948-01-01,Monthly,unemployment rate

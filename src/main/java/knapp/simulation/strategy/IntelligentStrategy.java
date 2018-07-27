@@ -82,6 +82,11 @@ public class IntelligentStrategy extends AllocationStrategy implements Investmen
 //        }
     }
 
+    @Override
+    public int getMinimumPercentChange() {
+        return 10;
+    }
+
 //    private double determineFinalMoney(Account account, LocalDate date, Set<Order> sales,
 //                                       CurrentPrices currentPrices) {
 //        double dollars = ((double)account.getCurrentCents() / 100.0);

@@ -19,19 +19,13 @@ import static knapp.util.Util.writeToFile;
 
 public class TrendFinder {
 
-    private final CurrentDirectory currentDirectory;
     private final BiFunction<Table,Integer,TableImpl.GetMethod> getMethodChooser;
 
-    public TrendFinder(CurrentDirectory currentDirectory,
-                       BiFunction<Table,Integer,TableImpl.GetMethod> getMethodChooser) {
+    public TrendFinder(BiFunction<Table,Integer,TableImpl.GetMethod> getMethodChooser) {
         if (getMethodChooser == null) {
             throw new IllegalArgumentException("getMethodChooser can't be null");
         }
-        if (currentDirectory == null) {
-            throw new IllegalArgumentException("currentDirectory can't be null");
-        }
         this.getMethodChooser = getMethodChooser;
-        this.currentDirectory = currentDirectory;
     }
 
     public AnalysisBuilder startAnalyzing() {
@@ -150,9 +144,9 @@ public class TrendFinder {
             this.end = end;
         }
 
-        public void analyzeTrend(String outFileRelativePath) throws IOException {
+        public void analyzeTrend(String outFileRelativePath, CurrentDirectory currentDirectory) throws IOException {
             String text = doWithWriter(w -> {
-                analyzeTrend(outFileRelativePath, w);
+                analyzeTrend(outFileRelativePath, w, currentDirectory);
             });
             System.out.println(text);
         }
@@ -172,7 +166,7 @@ public class TrendFinder {
             return new Model(beta, sigma,rSquared);
         }
 
-        public void analyzeTrend(String outFileRelativePath, Writer out) throws IOException {
+        public void analyzeTrend(String outFileRelativePath, Writer out, CurrentDirectory currentDirectory) throws IOException {
             TableImpl.GetMethod marketMethod = getMethodChooser.apply(inputs,0);
             double[][] x = TableUtil.toDoubleRows(inputs,inputColumns,start,end,frequency,marketMethod);
             double[][] yy = TableUtil.toDoubleColumns(market,new int[]{0},start,end,frequency, marketMethod);

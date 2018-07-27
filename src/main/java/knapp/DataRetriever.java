@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import static knapp.download.Downloader.DownloadSeries;
 import static knapp.util.Util.doWithDate;
@@ -49,7 +48,7 @@ public class DataRetriever {
     }
 
     public void consolidateData(String destinationFile) throws IOException {
-        String text = currentDirectory.toText("current-indicators.csv");
+        String text = currentDirectory.toText("indicators/current-indicators.csv");
         List<Indicator> indicators = Indicator.parseFromText(text, true);
         consolidateData(indicators, destinationFile);
     }

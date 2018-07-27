@@ -1,0 +1,18 @@
+Series,Start Date,Frequency,Description
+INDPRO,1919-01-01,Monthly,Industrial production index seasonally adjusted
+CPIAUCSL,1947-01-01,Monthly,CPI for consumers; seasonally adjusted; all items.
+MPRIME,1949-01-01,Monthly,Bank Prime Loan rate; not seasonally adjusted
+GDPC1,1947-01-01,Quarterly,real GDP (inflation adjusted) seasonally adjusted
+GDP,1947-01-01,Quarterly,GDP seasonally adjusted but not adjusted for inflation
+GDI,1947-01-01,Quarterly,Gross domestic income seasonally adjusted
+IMPGS,1947-01-01,Quarterly,Imports of goods and services
+NETEXP,1947-01-01,Quarterly,Net exports of goods and services seasonally adjusted
+M1SL,1959-01-01,Monthly,M1 Money Stock billions of dollars; seasonally adjusted;https://fred.stlouisfed.org/series/M1SL
+JHGDPBRINDX,1967-10-01,Quarterly,The percent probability that the USA was in a recession at that time.
+NASDAQCOM,1971-02-05,Daily,Nasdaq
+UMCSENT,1978-01-01,Monthly,University of Michigan Consumer Sentiment
+OUTMS,1987-01-01,Quarterly,Manufacturing sector real output
+MNFCTRSMSA,1992-01-01,Monthly,Manufacturers sales;seasonally adjusted; millions of dollars
+TOTBUSSMSA,1992-01-01,Monthly,Total business sales
+SP500,2008-06-30,Daily, S&P500
+UNRATE,1948-01-01,Monthly,civilian unemployment rate

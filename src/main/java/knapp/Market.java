@@ -14,8 +14,6 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.function.BiFunction;
 
-import static knapp.util.Util.doWithWriter;
-
 public class Market {
 
     // https://fred.stlouisfed.org/categories
@@ -57,7 +55,7 @@ public class Market {
         TrendFinder.Analasys analasys = tf.startAnalyzing().market(market).inputs(inputs)
                 .end(end).start(end.minusYears(30)).build();
 
-        analasys.analyzeTrend(marketContext.getPredictionFile());
+        analasys.analyzeTrend(marketContext.getPredictionFile(),marketContext.getCurrentDirectory());
     }
 
     public void retrieveData() throws IOException {
@@ -86,7 +84,7 @@ public class Market {
     }
 
     public void simulate() throws IOException {
-        String bmText = marketContext.getCurrentDirectory().toText("ishares-20year-t-bond.csv");
+//        String bmText = marketContext.getCurrentDirectory().toText("ishares-20year-t-bond.csv");
 //        Table bondMarket = TableParser.parse(bmText,true,Frequency.Monthly);
 //        bondMarket = bondMarket.retainColumns(Collections.singleton("Adj Close"));
 
@@ -127,40 +125,19 @@ public class Market {
 
     public static MarketContext createContext() throws IOException {
         MarketContext mc = new MarketContext();
-        mc.setIndicatorsFile("current-indicators.csv");
+        mc.setIndicatorsFile("indicators/current-indicators.csv");
         mc.setPredictionFile("prediction.csv");
         mc.setConsolidatedDataFile("consolidated-data.csv");
         mc.setMarketFile("nasdaq-history.csv");
         mc.loadMarketData();
 
         DefaultGetMethod gmc = new DefaultGetMethod();
-        TrendFinder trendFinder = new TrendFinder(mc.getCurrentDirectory(),gmc);
+        TrendFinder trendFinder = new TrendFinder(gmc);
         mc.setTrendFinder(trendFinder);
 
         DataRetriever dataRetriever = new DataRetriever(mc.getMarket(),mc.getCurrentDirectory(),gmc);
         mc.setDataRetriever(dataRetriever);
 
         return mc;
-    }
-
-    private static class DefaultGetMethod implements BiFunction<Table,Integer,TableImpl.GetMethod> {
-        private Set<String> extrapolated = new HashSet<>(Arrays.asList("indpro","m1sl","cpiaucsl"));
-        private Set<String> interpolated = new HashSet<>(Arrays.asList("market","nasdaq","market price"));
-
-        @Override
-        public TableImpl.GetMethod apply(Table table, Integer columnNumber) {
-            String cname = table.getColumn(columnNumber);
-            for (String ex : extrapolated) {
-                if (cname.toLowerCase().endsWith(ex.toLowerCase())) {
-                    return TableImpl.GetMethod.EXTRAPOLATE;
-                }
-            }
-            for (String ex : interpolated) {
-                if (cname.toLowerCase().endsWith(ex.toLowerCase())) {
-                    return TableImpl.GetMethod.INTERPOLATE;
-                }
-            }
-            return TableImpl.GetMethod.LAST_KNOWN_VALUE;
-        }
     }
 }
