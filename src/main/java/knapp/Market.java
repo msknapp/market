@@ -72,10 +72,17 @@ public class Market {
     }
 
     public static void main(String[] args) throws IOException {
-        MarketContext marketContext = createContext();
-        Market market = new Market(marketContext);
 
-        market.simulate();
+
+        Advisor advisor = new Advisor();
+        Reporter reporter = advisor.recommendInvestmentAllocationToday();
+        reporter.produceReportBeneathHome();
+
+
+//        MarketContext marketContext = createContext();
+//        Market market = new Market(marketContext);
+//
+//        market.simulate();
 
 //        if (args.length > 0 && "analyze".equals(args[0])) {
 //            // don't use logarithmic method, it appears to be less

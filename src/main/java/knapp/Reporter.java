@@ -149,7 +149,7 @@ public class Reporter {
                         parm, value, parm*value, sum));
             }
             writer.write(String.format("\nYields: %f\n\n",estimate.getEstimatedValue()));
-            
+
             writer.write("Simulation Results:\n");
             writer.write(String.format("The simulation ended with: $%d\n",getBestSimulationResults().getFinalDollars()));
             writer.write(String.format("The simulation had ROI: $%f\n",getBestSimulationResults().getAverageROI()));

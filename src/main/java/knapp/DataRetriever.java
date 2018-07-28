@@ -51,6 +51,8 @@ public class DataRetriever {
                 continue;
             }
             DownloadRequest downloadRequest = indicator.toDownloadRequest();
+            downloadRequest.setStart(start);
+            downloadRequest.setEnd(end);
             String data = DownloadSeries(downloadRequest);
             Table table = TableParser.parse(data,true,indicator.getFrequency());
             table.setName(indicator.getSeries());

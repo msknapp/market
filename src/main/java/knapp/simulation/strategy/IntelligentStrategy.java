@@ -1,16 +1,14 @@
 package knapp.simulation.strategy;
 
-import jdk.internal.org.objectweb.asm.tree.analysis.Analyzer;
 import knapp.Model;
 import knapp.TrendFinder;
 import knapp.history.Frequency;
-import knapp.simulation.*;
+import knapp.simulation.Account;
+import knapp.simulation.CurrentPrices;
+import knapp.simulation.InvestmentAllocation;
 import knapp.table.Table;
 
 import java.time.LocalDate;
-import java.util.Set;
-
-import static java.time.temporal.ChronoUnit.DAYS;
 
 public class IntelligentStrategy extends AllocationStrategy implements InvestmentStrategy {
 
