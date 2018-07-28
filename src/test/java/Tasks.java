@@ -10,11 +10,14 @@ import knapp.simulation.strategy.Line;
 import knapp.simulation.strategy.StrategyBank;
 import knapp.table.Table;
 import knapp.table.TableParser;
+import knapp.util.CurrentDirectory;
 import knapp.util.InputLoader;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 
@@ -44,11 +47,10 @@ public class Tasks {
 //        The strategy 'evolved' ended with this average ROI: 0.266216%
 //        Winner has equation: 0.867733 + 0.483158 * sigma
 
-        Line line = new Line();
         // this equation was found by training up until June 2014.
         // now it gets tested for the four years after it was trained.
-        line.intercept = 0.766013;
-        line.slope = 0.481578;
+        Line line = Line.slope(0.481578).intercept(0.766013).toLine();
+
         InvestmentStrategy strategy = new LinearInvestmentStrategy(testBed.getTrendFinder(), line);
         Simulater.SimulationResults results = testBed.testStrategy(strategy);
         TestBed.printResults(results,"smart");
@@ -76,13 +78,12 @@ public class Tasks {
         LinearInvestmentStrategy strategy = new LinearInvestmentStrategy(testBed.getTrendFinder(),best);
         Simulater.SimulationResults results = testBed.trainStrategy(strategy);
         TestBed.printResults(results, "evolved");
-        System.out.println(String.format("Winner has equation: %f + %f * sigma",best.intercept,best.slope));
+        System.out.println(String.format("Winner has equation: %f + %f * sigma",best.getIntercept(),best.getSlope()));
 
         Simulater.SimulationResults realResults = testBed.testStrategy(strategy);
         System.out.println("=====================");
         System.out.println("Post training they get these results:");
         TestBed.printResults(realResults, "evolved");
-
     }
 
     @Test
@@ -99,7 +100,7 @@ public class Tasks {
         LinearInvestmentStrategy strategy = new LinearInvestmentStrategy(testBed.getTrendFinder(),best);
         Simulater.SimulationResults results = testBed.trainStrategyWithoutTestHoldout(strategy);
         TestBed.printResults(results, "evolved");
-        System.out.println(String.format("Winner has equation: %f + %f * sigma",best.intercept,best.slope));
+        System.out.println(String.format("Winner has equation: %f + %f * sigma",best.getIntercept(),best.getSlope()));
     }
 
     @Test
@@ -136,6 +137,13 @@ public class Tasks {
     }
 
     @Test
+    public void produceReport() throws IOException {
+        Advisor advisor = new Advisor();
+        Reporter reporter = advisor.recommendInvestmentAllocationToday();
+        reporter.produceReportBeneathHome();
+    }
+
+    @Test
     public void recommendInvestmentAllocationToday() throws IOException {
         LocalDate inputStart = LocalDate.of(2000,01,01);
         LocalDate marketStart = LocalDate.of(2000,06,01);
@@ -143,7 +151,7 @@ public class Tasks {
 
 
         IEXRetriever iexRetriever = new IEXRetriever();
-        Table recentData = iexRetriever.getChart("IVE",IEXRetriever.ChartLength.SIXMONTHS);
+        Table recentData = iexRetriever.getChart("IVE",IEXRetriever.ChartLength.FIVEYEARS);
 
         String stockMarketText = InputLoader.loadTextFromClasspath("/market/IVE.csv");
         Table stockMarket = TableParser.parse(stockMarketText,true,Frequency.Weekly);

@@ -94,9 +94,6 @@ public class TableImpl implements Table {
             return getLastKnownValue(date, column);
         }
         if (date.isBefore(rows.firstKey())) {
-            if (date.isBefore(rows.firstKey())) {
-                return 0;
-            }
             return extrapolateDataBeforeStart(date,column);
         }
         if (date.isAfter(rows.lastKey())) {
@@ -123,7 +120,7 @@ public class TableImpl implements Table {
         LocalDate first = iter.next();
         LocalDate second= iter.next();
         double firstValue = rows.get(first).values[column];
-        double secondValue = rows.get(first).values[column];
+        double secondValue = rows.get(second).values[column];
         long days = DAYS.between(first,second);
         double slope = (secondValue - firstValue) / days;
         long x = - DAYS.between(date,first);
@@ -183,9 +180,18 @@ public class TableImpl implements Table {
 
     private double extrapolateValue(LocalDate date, int column) {
         LocalDate second = getDateBefore(date);
+        if (second == null) {
+            return extrapolateDataBeforeStart(date, column);
+        }
         LocalDate first = getDateBefore(second);
-        double firstVal = rows.get(first).values[column];
         double secondVal = rows.get(second).values[column];
+        if (first == null) {
+            // it's between the first and second value,
+            // we interpolate it figuring that this is due to the table
+            // just not going far enough in the past.
+            return interpolateValue(date, column);
+        }
+        double firstVal = rows.get(first).values[column];
         long days = DAYS.between(first,second);
         double slope = (secondVal - firstVal) / days;
         long elapsed = DAYS.between(second,date);

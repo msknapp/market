@@ -13,26 +13,17 @@ public class StrategyBank {
     }
 
     public static Line winner1_Equation() {
-        Line line = new Line();
-        line.intercept = 0.833908;
-        line.slope = 0.456409;
-        return line;
+        return Line.slope(0.456409).intercept(0.833908).toLine();
     }
 
     public static Line trainedUntil2014_Equation() {
-        Line line = new Line();
-        line.intercept = 0.869505;
-        line.slope = 0.495949;
-        return line;
+        return Line.slope(0.495949).intercept(0.869505).toLine();
     }
 
     public static Line trainedUntil2018_Equation() {
-        Line line = new Line();
         // shockingly it gets much more aggressive.
         // it's a bit concerning how these lines shift so dramatically.
-        line.intercept = 1.355005;
-        line.slope = 0.716392;
-        return line;
+        return Line.slope(0.716392).intercept(1.355005).toLine();
     }
 
     public static InvestmentStrategy trainedUntil2014() {

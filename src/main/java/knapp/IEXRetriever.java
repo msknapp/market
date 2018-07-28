@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 public class IEXRetriever {
+    // https://iextrading.com/trading/eligible-symbols/
 
     private static final String IEX_ENDPOINT = "https://api.iextrading.com/1.0";
 

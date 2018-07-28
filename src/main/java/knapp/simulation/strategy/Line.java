@@ -5,9 +5,49 @@ import java.util.function.Function;
 
 public class Line implements Function<Double, Double> {
     private static Random random = new Random();
-    public double intercept = 0.55;
-    public double slope = 0.15;
+    private final double intercept;
+    private final double slope;
 
+    private Line(double intercept, double slope) {
+        this.intercept = intercept;
+        this.slope = slope;
+    }
+
+    public double getIntercept() {
+        return intercept;
+    }
+
+    public double getSlope() {
+        return slope;
+    }
+
+
+    public static LineBuilder slope(double x) {
+        return new LineBuilder().slope(x);
+    }
+
+    public static LineBuilder intercept(double x) {
+        return new LineBuilder().intercept(x);
+    }
+
+    public static class LineBuilder {
+        private double slope;
+        private double intercept;
+
+        public LineBuilder slope(double x) {
+            this.slope = x;
+            return this;
+        }
+
+        public LineBuilder intercept(double x) {
+            this.intercept = x;
+            return this;
+        }
+
+        public Line toLine() {
+            return new Line(intercept, slope);
+        }
+    }
 
     @Override
     public Double apply(Double aDouble) {
@@ -23,16 +63,14 @@ public class Line implements Function<Double, Double> {
     }
 
     public static Line randomSlope() {
-        Line line = new Line();
-        line.intercept = random.nextDouble()*0.4 + 0.55; // between 0.55 and 0.95
-        line.slope = random.nextDouble()*0.2 + 0.3; // between 0.3 and 0.5
-        return line;
+        double intercept = random.nextDouble()*0.4 + 0.55; // between 0.55 and 0.95
+        double slope = random.nextDouble()*0.2 + 0.3; // between 0.3 and 0.5
+        return slope(slope).intercept(intercept).toLine();
     }
 
     public static Line randomNear(Line original, double deviation) {
-        Line line = new Line();
-        line.intercept = original.intercept + (random.nextDouble() - 0.5) * deviation;
-        line.slope = original.slope + (random.nextDouble() - 0.5) * deviation;
-        return line;
+        double intercept = original.intercept + (random.nextDouble() - 0.5) * deviation;
+        double slope = original.slope + (random.nextDouble() - 0.5) * deviation;
+        return slope(slope).intercept(intercept).toLine();
     }
 }
