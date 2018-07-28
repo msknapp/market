@@ -15,6 +15,10 @@ public class TableImpl implements Table {
     private final Frequency frequency;
     private String name;
 
+    // getting first and last key is a bit slow, cache them.
+    private LocalDate firstDate;
+    private LocalDate lastDate;
+
     public static TableBuilder newBuilder() {
         return new TableBuilder();
     }
@@ -258,12 +262,18 @@ public class TableImpl implements Table {
 
     @Override
     public LocalDate getLastDate() {
-        return rows.lastKey();
+        if (lastDate == null) {
+            lastDate = rows.lastKey();
+        }
+        return lastDate;
     }
 
     @Override
     public LocalDate getFirstDate() {
-        return rows.firstKey();
+        if (firstDate == null) {
+            firstDate = rows.firstKey();
+        }
+        return firstDate;
     }
 
     @Override

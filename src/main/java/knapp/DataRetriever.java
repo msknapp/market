@@ -3,16 +3,19 @@ package knapp;
 import knapp.download.DownloadRequest;
 import knapp.history.Frequency;
 import knapp.indicator.Indicator;
+import knapp.table.DefaultGetMethod;
 import knapp.table.Table;
 import knapp.table.TableImpl;
 import knapp.table.TableParser;
 import knapp.util.CurrentDirectory;
 import knapp.util.Util;
+import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.time.LocalDate;
+import java.util.Currency;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -23,44 +26,23 @@ import static knapp.util.Util.doWithDate;
 
 public class DataRetriever {
 
-    private final Table market;
-    private final CurrentDirectory currentDirectory;
     private final BiFunction<Table,Integer,TableImpl.GetMethod> getMethodChooser;
 
-    public DataRetriever(Table market, CurrentDirectory currentDirectory,
-                         BiFunction<Table,Integer,TableImpl.GetMethod> getMethodChooser) {
-        if (market == null) {
-            throw new IllegalArgumentException("market data can't be null");
-        }
-        this.market = market;
+    public DataRetriever() {
+        this(new DefaultGetMethod());
+    }
+
+    public DataRetriever(BiFunction<Table,Integer,TableImpl.GetMethod> getMethodChooser) {
         this.getMethodChooser = getMethodChooser;
-        this.currentDirectory = currentDirectory;
     }
 
-    public DataRetriever(TableImpl market, CurrentDirectory currentDirectory) {
-        this(market,currentDirectory, (tableImpl, col) -> {
-            return TableImpl.GetMethod.LAST_KNOWN_VALUE;
-        });
-    }
-
-    public void consolidateData() throws IOException {
-        consolidateData("temp-output.csv");
-    }
-
-    public void consolidateData(String destinationFile) throws IOException {
-        String text = currentDirectory.toText("indicators/current-indicators.csv");
-        List<Indicator> indicators = Indicator.parseFromText(text, true);
-        consolidateData(indicators, destinationFile);
-    }
-
-    public void consolidateData(List<Indicator> indicators, String destinationFile) throws IOException {
+    public Map<String,Table> retrieveData(List<Indicator> indicators) throws IOException {
         LocalDate start = LocalDate.of(1979,1,1);
         LocalDate end = LocalDate.of(2019,1,1);
-        consolidateData(start, end, indicators, destinationFile);
+        return retrieveData(start, end, indicators);
     }
 
-    public void consolidateData(LocalDate start, LocalDate end, List<Indicator> indicators,
-                                String destinationFile) throws IOException {
+    public Map<String,Table> retrieveData(LocalDate start, LocalDate end, List<Indicator> indicators) throws IOException {
         boolean first = true;
         Map<String,Table> downloadedData = new TreeMap<String,Table>();
         for (Indicator indicator : indicators) {
@@ -71,24 +53,24 @@ public class DataRetriever {
             DownloadRequest downloadRequest = indicator.toDownloadRequest();
             String data = DownloadSeries(downloadRequest);
             Table table = TableParser.parse(data,true,indicator.getFrequency());
+            table.setName(indicator.getSeries());
             downloadedData.put(indicator.getSeries(), table);
         }
 
+        return downloadedData;
+    }
+
+    public void writeData(LocalDate start, LocalDate end, Map<String,Table> downloadedData,
+                          Table market, CurrentDirectory currentDirectory, String destinationFile) {
+
         Frequency frequency = Frequency.Monthly;
 
-        File outFile = currentDirectory.toFile(destinationFile);
         Util.ExceptionalConsumer<Writer> consumer = writer -> {
             writer.write("Date");
             for (String key : downloadedData.keySet()) {
                 writer.write(",");
                 writer.write(key);
             }
-            writer.write(",");
-            String marketName = market.getName();
-            if (marketName == null || marketName.isEmpty()) {
-                marketName = "Market Price";
-            }
-            writer.write(marketName);
             writer.write("\n");
             final TableImpl.GetMethod marketMethod = getMethodChooser.apply(market,1);
 
@@ -105,12 +87,15 @@ public class DataRetriever {
                     }
                     writer.write(sValue);
                 }
-                writer.write(",");
-                double value = market.getValue(d, 5, marketMethod);
-                writer.write(String.valueOf(value));
                 writer.write("\n");
             });
         };
-        Util.writeToFile(consumer,outFile);
+        String text = Util.doWithWriter(consumer);
+        File file = currentDirectory.toFile(destinationFile);
+        try {
+            FileUtils.writeStringToFile(file, text);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

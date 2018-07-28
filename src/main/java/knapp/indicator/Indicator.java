@@ -21,6 +21,15 @@ public class Indicator {
         this.description = description;
     }
 
+    public static List<Indicator> toIndicators(List<String> series, LocalDate retrievalStart) {
+        List<Indicator> indicators = new ArrayList<>();
+        for (String s : series) {
+            Indicator indicator = new Indicator(s,retrievalStart,Frequency.Monthly,"whatever");
+            indicators.add(indicator);
+        }
+        return indicators;
+    }
+
     public String getSeries() {
         return series;
     }

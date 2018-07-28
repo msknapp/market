@@ -48,6 +48,8 @@ public class Util {
                 d = d.plusMonths(1);
             } else if (frequency.equals(Frequency.Daily)) {
                 d = d.plusDays(1);
+            } else if (frequency.equals(Frequency.Weekly)) {
+                d = d.plusWeeks(1);
             }
         }
     }

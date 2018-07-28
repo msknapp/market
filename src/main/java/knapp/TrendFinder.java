@@ -1,6 +1,7 @@
 package knapp;
 
 import knapp.history.Frequency;
+import knapp.table.DefaultGetMethod;
 import knapp.table.Table;
 import knapp.table.TableImpl;
 import knapp.table.TableUtil;
@@ -20,6 +21,10 @@ import static knapp.util.Util.writeToFile;
 public class TrendFinder {
 
     private final BiFunction<Table,Integer,TableImpl.GetMethod> getMethodChooser;
+
+    public TrendFinder() {
+        this(new DefaultGetMethod());
+    }
 
     public TrendFinder(BiFunction<Table,Integer,TableImpl.GetMethod> getMethodChooser) {
         if (getMethodChooser == null) {

@@ -4,6 +4,8 @@ import knapp.history.Frequency;
 import knapp.util.Util;
 
 import java.time.LocalDate;
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 public class TableParser {
@@ -68,6 +70,52 @@ public class TableParser {
         tableBuilder.column("Adj Price");
         Util.doWithDate(start,end,frequency,date -> {
             tableBuilder.addRow(date,new double[]{value});
+        });
+        return tableBuilder.build();
+    }
+
+    public static Table mergeTables(LocalDate start, LocalDate end, List<Table> values, Frequency frequency) {
+        TableImpl.TableBuilder tableBuilder = TableImpl.newBuilder();
+        tableBuilder.frequency(frequency);
+        for (Table t : values) {
+            tableBuilder.column(t.getName());
+        }
+
+        Util.doWithDate(start,end,frequency,date -> {
+            double[] d = new double[values.size()];
+            int i = 0;
+            for (Table t : values) {
+                double value = t.getValue(date,0,TableImpl.GetMethod.LAST_KNOWN_VALUE);
+                d[i++] = value;
+            }
+            tableBuilder.addRow(date,d);
+        });
+        return tableBuilder.build();
+    }
+
+    public static Table mergeTableRows(LocalDate start, LocalDate end, List<Table> values, Frequency frequency) {
+        Table t1 = values.get(0);
+        for (Table t : values) {
+            if (t.getColumnCount() != t1.getColumnCount()) {
+                throw new IllegalArgumentException("inconsistent columns");
+            }
+        }
+        TableImpl.TableBuilder tableBuilder = TableImpl.newBuilder();
+        tableBuilder.frequency(frequency);
+        for (int i = 0;i < t1.getColumnCount(); i++) {
+            tableBuilder.column(t1.getColumn(i));
+        }
+
+        Util.doWithDate(start,end,frequency,date -> {
+            for (int i = 0;i < t1.getColumnCount();i++) {
+                for (Table t : values) {
+                    if (!t.getFirstDate().isAfter(date) && !t.getLastDate().isBefore(date)) {
+                        double value = t.getValue(date,0,TableImpl.GetMethod.LAST_KNOWN_VALUE);
+                        tableBuilder.addRow(date,new double[]{value});
+                        break;
+                    }
+                }
+            }
         });
         return tableBuilder.build();
     }

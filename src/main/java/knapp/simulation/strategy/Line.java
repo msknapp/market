@@ -3,7 +3,7 @@ package knapp.simulation.strategy;
 import java.util.Random;
 import java.util.function.Function;
 
-public class MySlope implements Function<Double, Double> {
+public class Line implements Function<Double, Double> {
     private static Random random = new Random();
     public double intercept = 0.55;
     public double slope = 0.15;
@@ -22,10 +22,17 @@ public class MySlope implements Function<Double, Double> {
         return intercept + slope * aDouble;
     }
 
-    public static MySlope randomSlope() {
-        MySlope mySlope = new MySlope();
-        mySlope.intercept = random.nextDouble()*0.4 + 0.55; // between 0.55 and 0.95
-        mySlope.slope = random.nextDouble()*0.2 + 0.3; // between 0.3 and 0.5
-        return mySlope;
+    public static Line randomSlope() {
+        Line line = new Line();
+        line.intercept = random.nextDouble()*0.4 + 0.55; // between 0.55 and 0.95
+        line.slope = random.nextDouble()*0.2 + 0.3; // between 0.3 and 0.5
+        return line;
+    }
+
+    public static Line randomNear(Line original, double deviation) {
+        Line line = new Line();
+        line.intercept = original.intercept + (random.nextDouble() - 0.5) * deviation;
+        line.slope = original.slope + (random.nextDouble() - 0.5) * deviation;
+        return line;
     }
 }

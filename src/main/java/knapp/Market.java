@@ -65,7 +65,10 @@ public class Market {
         LocalDate start = end.minusYears(50);
         String indicatorText = marketContext.getCurrentDirectory().toText(marketContext.getIndicatorsFile());
         List<Indicator> indicators = Indicator.parseFromText(indicatorText,true);
-        dataRetriever.consolidateData(start,end,indicators,marketContext.getConsolidatedDataFile());
+        Map<String,Table> data = dataRetriever.retrieveData(start,end,indicators);
+        dataRetriever.writeData(start,end,data,marketContext.getMarket(),
+                marketContext.getCurrentDirectory(),
+                marketContext.getConsolidatedDataFile());
     }
 
     public static void main(String[] args) throws IOException {
@@ -135,7 +138,7 @@ public class Market {
         TrendFinder trendFinder = new TrendFinder(gmc);
         mc.setTrendFinder(trendFinder);
 
-        DataRetriever dataRetriever = new DataRetriever(mc.getMarket(),mc.getCurrentDirectory(),gmc);
+        DataRetriever dataRetriever = new DataRetriever(gmc);
         mc.setDataRetriever(dataRetriever);
 
         return mc;
