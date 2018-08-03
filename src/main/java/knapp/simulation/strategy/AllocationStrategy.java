@@ -1,13 +1,11 @@
 package knapp.simulation.strategy;
 
-import knapp.simulation.Account;
-import knapp.simulation.CurrentPrices;
-import knapp.simulation.InvestmentAllocation;
-import knapp.simulation.Order;
+import knapp.simulation.*;
 import knapp.table.Table;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public abstract class AllocationStrategy implements InvestmentStrategy {
 
@@ -94,39 +92,47 @@ public abstract class AllocationStrategy implements InvestmentStrategy {
     }
 
     private Map<LocalDate,Integer> chooseBondsToSell(Account account, int bondSharesToSell, LocalDate presentDay) {
+        return chooseThingsToSell(account, bondSharesToSell, presentDay, Asset.BONDS);
+    }
+
+    private Map<LocalDate,Integer> chooseThingsToSell(Account account, int sharesToSell, LocalDate presentDay, Asset asset) {
         Map<LocalDate,Integer> m = new HashMap<>();
         int total = 0;
-        for (LocalDate d : account.getOwnedBondShares().keySet()) {
-            int needed = bondSharesToSell - total;
+        Map<LocalDate,PurchaseInfo> purchaseMap = (asset == Asset.BONDS) ?
+                account.getOwnedBondShares() :
+                account.getOwnedStockShares();
+        List<LocalDate> dates = new ArrayList<>(purchaseMap.keySet());
+        Collections.sort(dates);
+        LocalDate oneYearAgo = presentDay.minusYears(1);
+        List<LocalDate> oldThings = dates.stream().filter(d -> d.isBefore(oneYearAgo)).collect(Collectors.toList());
+        Collections.sort(oldThings);
+        List<LocalDate> newThings = dates.stream().filter(d -> !d.isBefore(oneYearAgo)).collect(Collectors.toList());
+        Collections.sort(newThings);
+        Collections.reverse(newThings);
+
+        for (LocalDate d : oldThings) {
+            int needed = sharesToSell - total;
             if (needed < 1) {
                 break;
             }
-            int trade = Math.min(needed,account.getOwnedBondShares().get(d).getQuantity());
+            int trade = Math.min(needed,purchaseMap.get(d).getQuantity());
+            m.put(d,trade);
+            total += trade;
+        }
+        for (LocalDate d : newThings) {
+            int needed = sharesToSell - total;
+            if (needed < 1) {
+                break;
+            }
+            int trade = Math.min(needed,purchaseMap.get(d).getQuantity());
             m.put(d,trade);
             total += trade;
         }
         return m;
-        // TODO
-        // if you have bonds over one year old, sell them first.
-        // otherwise, sell off the most recently purchased bonds.
     }
 
     private Map<LocalDate,Integer> chooseStockToSell(Account account, int stockSharesToSell, LocalDate presentDay) {
-        Map<LocalDate,Integer> m = new HashMap<>();
-        int total = 0;
-        for (LocalDate d : account.getOwnedStockShares().keySet()) {
-            int needed = stockSharesToSell - total;
-            if (needed < 1) {
-                break;
-            }
-            int trade = Math.min(needed,account.getOwnedStockShares().get(d).getQuantity());
-            m.put(d,trade);
-            total += trade;
-        }
-        return m;
-        // TODO
-        // if you have bonds over one year old, sell them first.
-        // otherwise, sell off the most recently purchased bonds.
+        return chooseThingsToSell(account, stockSharesToSell, presentDay, Asset.STOCK);
     }
 
     private InvestmentAllocation approximateCurrentAllocation(Account account, CurrentPrices currentPrices) {

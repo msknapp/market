@@ -1,0 +1,4 @@
+
+* In tables, adjust the prices and some indicators for inflation.  Have predictions factor in inflation/CPI.
+* Experiment with some different indicators.
+* write some more unit tests

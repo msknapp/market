@@ -167,8 +167,9 @@ public class TrendFinder {
             double[] beta = regression.estimateRegressionParameters();
             double sigma = regression.estimateRegressionStandardError();
             double rSquared = regression.calculateRSquared();
+            double[] parmStdErr = regression.estimateRegressionParametersStandardErrors();
 
-            return new Model(beta, sigma,rSquared);
+            return new Model(beta, sigma, rSquared,parmStdErr);
         }
 
         public void analyzeTrend(String outFileRelativePath, Writer out, CurrentDirectory currentDirectory) throws IOException {

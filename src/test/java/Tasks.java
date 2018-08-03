@@ -1,23 +1,19 @@
 import knapp.*;
-import knapp.download.Downloader;
 import knapp.history.Frequency;
 import knapp.indicator.Indicator;
 import knapp.simulation.Simulater;
 import knapp.simulation.evolution.Evolver;
 import knapp.simulation.strategy.InvestmentStrategy;
-import knapp.simulation.strategy.LinearInvestmentStrategy;
 import knapp.simulation.strategy.Line;
+import knapp.simulation.strategy.LinearInvestmentStrategy;
 import knapp.simulation.strategy.StrategyBank;
 import knapp.table.Table;
 import knapp.table.TableParser;
-import knapp.util.CurrentDirectory;
 import knapp.util.InputLoader;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 

@@ -117,6 +117,8 @@ public class Util {
                 cd = cd.plusMonths(1);
             } else if (frequency == Frequency.Daily) {
                 cd = cd.plusDays(1);
+            } else if (frequency == Frequency.Weekly) {
+                cd = cd.plusWeeks(1);
             }
 
         }
@@ -159,6 +161,8 @@ public class Util {
                 cd = cd.plusMonths(1);
             } else if (frequency == Frequency.Daily) {
                 cd = cd.plusDays(1);
+            } else if (frequency == Frequency.Weekly) {
+                cd = cd.plusWeeks(1);
             }
 
         }

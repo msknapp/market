@@ -25,7 +25,8 @@ public class Advisor {
     private LocalDate end = LocalDate.now();
     private IEXRetriever iexRetriever = new IEXRetriever();
     private String marketSymbol = "IVE";
-    private List<String> inputSeries = Arrays.asList("INDPRO","UNRATE","TCU","WPRIME","WTB3MS");
+//    private List<String> inputSeries = Arrays.asList("INDPRO","UNRATE","TCU","WPRIME","WTB3MS");
+    private List<String> inputSeries = Arrays.asList("UNRATE","WTB3MS","M1SL","M2SL","M2MSL","M3SL","IPMAN");
 
     public Advisor() {
 

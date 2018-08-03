@@ -128,7 +128,6 @@ public class TableImpl implements Table {
     }
 
     private double extrapolateDataAfterEnd(LocalDate date,int column) {
-        // TODO fix this.
         LocalDate secondLast = null;
         LocalDate last = null;
         for (LocalDate d : rows.keySet()) {

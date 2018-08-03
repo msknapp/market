@@ -1,16 +1,25 @@
 package knapp;
 
+import knapp.util.NormalDistUtil;
+import org.apache.commons.math.stat.descriptive.rank.Percentile;
+
 public class Model {
 
     private final double[] parameters;
+    private final double[] parametersStandardError;
     private final double standardDeviation;
     private final double rsquared;
 
-    public Model(double[] parameters, double standardDeviation, double rsquared) {
+    public Model(double[] parameters, double standardDeviation, double rsquared, double[] parametersStandardError) {
         this.parameters = new double[parameters.length];
         System.arraycopy(parameters,0,this.parameters,0,parameters.length);
         this.standardDeviation = standardDeviation;
         this.rsquared = rsquared;
+        this.parametersStandardError = parametersStandardError;
+    }
+
+    public double[] getParametersStandardError() {
+        return parametersStandardError;
     }
 
     public double[] getParameters() {
@@ -32,8 +41,8 @@ public class Model {
             est += b * currentInputs[i];
         }
         double sigmas = (est - presentValue) / standardDeviation;
-        // TODO implement percentile
-        return new Estimate(presentValue,est,0,sigmas);
+        double pctl = NormalDistUtil.calculatePercentile(presentValue, est, standardDeviation);
+        return new Estimate(presentValue, est, pctl, sigmas);
     }
 
     public static class Estimate {
