@@ -3,9 +3,9 @@ import knapp.history.Frequency;
 import knapp.indicator.Indicator;
 import knapp.simulation.Simulater;
 import knapp.simulation.evolution.Evolver;
+import knapp.simulation.strategy.FunctionStrategy;
 import knapp.simulation.strategy.InvestmentStrategy;
-import knapp.simulation.strategy.Line;
-import knapp.simulation.strategy.LinearInvestmentStrategy;
+import knapp.simulation.functions.Line;
 import knapp.simulation.strategy.StrategyBank;
 import knapp.table.Table;
 import knapp.table.TableParser;
@@ -47,7 +47,7 @@ public class Tasks {
         // now it gets tested for the four years after it was trained.
         Line line = Line.slope(0.481578).intercept(0.766013).toLine();
 
-        InvestmentStrategy strategy = new LinearInvestmentStrategy(testBed.getTrendFinder(), line);
+        InvestmentStrategy strategy = new FunctionStrategy(testBed.getTrendFinder(), line);
         Simulater.SimulationResults results = testBed.testStrategy(strategy);
         TestBed.printResults(results,"smart");
 
@@ -69,9 +69,9 @@ public class Tasks {
             return testBed.trainStrategy(strategy);
         };
         Evolver evolver = new Evolver(sim, testBed.getTrendFinder());
-        Line best = evolver.evolve();
+        Line best = (Line) evolver.evolve();
 
-        LinearInvestmentStrategy strategy = new LinearInvestmentStrategy(testBed.getTrendFinder(),best);
+        FunctionStrategy strategy = new FunctionStrategy(testBed.getTrendFinder(),best);
         Simulater.SimulationResults results = testBed.trainStrategy(strategy);
         TestBed.printResults(results, "evolved");
         System.out.println(String.format("Winner has equation: %f + %f * sigma",best.getIntercept(),best.getSlope()));
@@ -91,9 +91,9 @@ public class Tasks {
             return testBed.trainStrategyWithoutTestHoldout(strategy);
         };
         Evolver evolver = new Evolver(sim, testBed.getTrendFinder());
-        Line best = evolver.evolve();
+        Line best = (Line) evolver.evolve();
 
-        LinearInvestmentStrategy strategy = new LinearInvestmentStrategy(testBed.getTrendFinder(),best);
+        FunctionStrategy strategy = new FunctionStrategy(testBed.getTrendFinder(),best);
         Simulater.SimulationResults results = testBed.trainStrategyWithoutTestHoldout(strategy);
         TestBed.printResults(results, "evolved");
         System.out.println(String.format("Winner has equation: %f + %f * sigma",best.getIntercept(),best.getSlope()));

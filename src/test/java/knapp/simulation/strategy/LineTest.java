@@ -1,5 +1,6 @@
 package knapp.simulation.strategy;
 
+import knapp.simulation.functions.Line;
 import org.junit.Assert;
 import org.junit.Test;
 

@@ -1,9 +1,8 @@
-package knapp.simulation.strategy;
+package knapp.simulation.functions;
 
 import java.util.Random;
-import java.util.function.Function;
 
-public class Line implements Function<Double, Double> {
+public class Line implements EvolvableFunction {
     private static Random random = new Random();
     private final double intercept;
     private final double slope;
@@ -11,6 +10,10 @@ public class Line implements Function<Double, Double> {
     private Line(double intercept, double slope) {
         this.intercept = intercept;
         this.slope = slope;
+    }
+
+    public static EvolvableFunction initialLine() {
+        return slope(1).intercept(0.5).toLine();
     }
 
     public double getIntercept() {
@@ -28,6 +31,24 @@ public class Line implements Function<Double, Double> {
 
     public static LineBuilder intercept(double x) {
         return new LineBuilder().intercept(x);
+    }
+
+    @Override
+    public EvolvableFunction deviateRandomly(double deviation) {
+        return randomNear(this,deviation);
+    }
+
+    @Override
+    public String describe() {
+        return String.format("Best Strategy Equation: percent stock = %f + %f * sigma\n",
+                getIntercept(), getSlope());
+    }
+
+    @Override
+    public String describe(double value) {
+        double y = apply(value);
+        return String.format("Solving: %f = %f + %f * %f",y,
+                getIntercept(), getSlope(), value);
     }
 
     public static class LineBuilder {

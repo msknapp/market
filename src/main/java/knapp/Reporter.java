@@ -1,7 +1,8 @@
 package knapp;
 
 import knapp.simulation.Simulater;
-import knapp.simulation.strategy.Line;
+import knapp.simulation.functions.EvolvableFunction;
+import knapp.simulation.functions.Line;
 import knapp.simulation.strategy.StrategyBank;
 import knapp.table.Table;
 import knapp.table.TableImpl;
@@ -17,7 +18,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 
 public class Reporter {
     private Model model;
@@ -26,7 +26,7 @@ public class Reporter {
     private LocalDate start;
     private double currentMarketValue;
     private Simulater.SimulationResults bestSimulationResults;
-    private Line bestLine;
+    private EvolvableFunction bestFunction;
     private String filePrefix;
 
     public Reporter() {
@@ -41,12 +41,12 @@ public class Reporter {
         this.filePrefix = filePrefix;
     }
 
-    public Line getBestLine() {
-        return bestLine;
+    public EvolvableFunction getBestFunction() {
+        return bestFunction;
     }
 
-    public void setBestLine(Line bestLine) {
-        this.bestLine = bestLine;
+    public void setBestFunction(EvolvableFunction bestFunction) {
+        this.bestFunction = bestFunction;
     }
 
     public Simulater.SimulationResults getBestSimulationResults() {
@@ -138,18 +138,17 @@ public class Reporter {
             Model.Estimate estimate = getModel().produceEstimate(lastInputs, getCurrentMarketValue());
             double sigma = estimate.getSigmas();
 
-            // make it have one decimal place:
-            double recommendedPercentStock = Math.round(1000*getBestLine().apply(sigma)) / 10.0;
+            double recommendedPercentStock = Math.round(1000.0 * bestFunction.apply(sigma)) / 10.0;
             writer.write("Summary:\n\n");
-            writer.write(String.format("You should have %f%% of your money invested in stock right now.\n\n",recommendedPercentStock));
-            writer.write(String.format("Best Strategy Equation: percent stock = %f + %f * sigma\n",
-                    getBestLine().getIntercept(),getBestLine().getSlope()));
-            writer.write(String.format("Solving: percent stock = %f + %f * %f = %f\n",
-                    getBestLine().getIntercept(),getBestLine().getSlope(), sigma, recommendedPercentStock));
+            writer.write(String.format("You should have %.1f%% of your money invested in stock right now.\n\n", recommendedPercentStock));
+
+            writer.write(bestFunction.describe()+"\n");
+            writer.write(bestFunction.describe(sigma)+" = "+recommendedPercentStock+"\n");
+
             writer.write(String.format("The market ticker symbol is: %s\n",getMarket().getName()));
             writer.write(String.format("Current Market Price: $%.2f\n",getCurrentMarketValue()));
             writer.write(String.format("Estimated Market Price: $%.2f\n",estimate.getEstimatedValue()));
-            writer.write(String.format("The model's standard deviation is: %.2f\n",getModel().getStandardDeviation()));
+            writer.write(String.format("The model's standard deviation is: $%.2f\n",getModel().getStandardDeviation()));
             writer.write(String.format("The model's R-Squared is: %.4f\n",getModel().getRsquared()));
             writer.write(String.format("Current Sigma: %.2f\n\n",sigma));
             writer.write("Estimate From Inputs:\n");
@@ -164,7 +163,7 @@ public class Reporter {
                 writer.write(String.format("%s =>  parameter: '%f' x last value: '%f' = '%.2f' --> Cumulative Sum: %f'\n",colName,
                         parm, value, parm*value, sum));
             }
-            writer.write(String.format("\nYields: %f\n\n",estimate.getEstimatedValue()));
+            writer.write(String.format("\nYields: %.2f\n\n",estimate.getEstimatedValue()));
 
             writer.write("Simulation Results:\n");
             writer.write(String.format("The simulation ended with: $%d\n",getBestSimulationResults().getFinalDollars()));
@@ -178,6 +177,12 @@ public class Reporter {
             writer.write(s+"\n");
             s = evalWith(estimate,StrategyBank.winner1_Equation(),"winner1");
             writer.write(s+"\n");
+
+            writer.write("\nFunction Output:\n");
+            writer.write("Sigma, Percent Stock:\n");
+            for (double x = -6; x <= 6; x+=0.5) {
+                writer.write(String.format("%.1f,%(.1f\n",x,bestFunction.apply(x)*100));
+            }
 
         });
 
@@ -194,7 +199,9 @@ public class Reporter {
             Collections.sort(dates);
             for (LocalDate date : dates) {
                 Simulater.Stance stance = getBestSimulationResults().getWorthOverTime().get(date);
-                writer.write(String.format("%s,%f,%d\n",date.toString(),stance.getNetWorthDollars(),stance.getPercentStock()));
+                writer.write(String.format("%s,%d,%d%%\n",date.toString(),
+                        (int) Math.round(stance.getNetWorthDollars()),
+                        stance.getPercentStock()));
             }
         });
         File simFile = currentDirectory.toFile(filePrefix+"simulation.csv");
@@ -218,18 +225,18 @@ public class Reporter {
                     writer.write(",");
                     double v = inputs.getValue(date,i,TableImpl.GetMethod.INTERPOLATE);
                     currentInputs[i] = v;
-                    writer.write(String.valueOf(v));
+                    writer.write(String.format("%.2f",v));
                 }
                 writer.write(",");
                 double presentValue = market.getValue(date,0,TableImpl.GetMethod.INTERPOLATE);
                 writer.write(String.valueOf(presentValue));
                 Model.Estimate est = getModel().produceEstimate(currentInputs,presentValue);
                 writer.write(",");
-                writer.write(String.valueOf(est.getEstimatedValue()));
+                writer.write(String.format("%.2f",est.getEstimatedValue()));
                 writer.write(",");
-                writer.write(String.valueOf(est.getSigmas()));
+                writer.write(String.format("%.4f",est.getSigmas()));
                 writer.write(",");
-                writer.write(String.valueOf(getBestLine().apply(est.getSigmas())));
+                writer.write(String.format("%.4f",getBestFunction().apply(est.getSigmas())));
             });
         });
         File dataFile = currentDirectory.toFile(filePrefix+"data.csv");

@@ -4,13 +4,12 @@ import knapp.history.Frequency;
 import knapp.indicator.Indicator;
 import knapp.simulation.Simulater;
 import knapp.simulation.evolution.Evolver;
-import knapp.simulation.strategy.InvestmentStrategy;
-import knapp.simulation.strategy.Line;
-import knapp.simulation.strategy.LinearInvestmentStrategy;
-import knapp.simulation.strategy.StrategyBank;
+import knapp.simulation.functions.Cubed;
+import knapp.simulation.functions.CubicPolynomial;
+import knapp.simulation.functions.EvolvableFunction;
+import knapp.simulation.strategy.*;
 import knapp.table.Table;
 import knapp.table.TableParser;
-import knapp.util.CurrentDirectory;
 import knapp.util.InputLoader;
 
 import java.io.IOException;
@@ -28,8 +27,18 @@ public class Advisor {
 //    private List<String> inputSeries = Arrays.asList("INDPRO","UNRATE","TCU","WPRIME","WTB3MS");
     private List<String> inputSeries = Arrays.asList("UNRATE","WTB3MS","M1SL","M2SL","M2MSL","M3SL","IPMAN");
 
+    private EvolvableFunction initialFunction;
+
     public Advisor() {
 
+    }
+
+    public EvolvableFunction getInitialFunction() {
+        return initialFunction;
+    }
+
+    public void setInitialFunction(EvolvableFunction initialFunction) {
+        this.initialFunction = initialFunction;
     }
 
     public void setSimulationInputStart(LocalDate simulationInputStart) {
@@ -85,6 +94,9 @@ public class Advisor {
     }
 
     public Reporter recommendInvestmentAllocationToday() throws IOException {
+        if (initialFunction == null) {
+            initialFunction = CubicPolynomial.initialCubed();
+        }
         System.out.println("Downloading IEX data for "+marketSymbol);
         Table recentData = iexRetriever.getChart(marketSymbol,IEXRetriever.ChartLength.FIVEYEARS);
         System.out.println("Done downloading IEX data.");
@@ -95,6 +107,8 @@ public class Advisor {
         stockMarket = stockMarket.retainColumns(Collections.singleton("Adj Close"));
         stockMarket = TableParser.mergeTableRows(marketStart,LocalDate.now(),
                 Arrays.asList(recentData,stockMarket),Frequency.Weekly);
+
+        stockMarket.setName(marketSymbol);
 
         TrendFinder trendFinder = new TrendFinder();
 
@@ -135,13 +149,13 @@ public class Advisor {
 
         Evolver evolver = new Evolver(sim, trendFinder,0.01);
         System.out.println("Running the evolver to find the best investment strategy.");
-        Line bestLine = evolver.evolve();
+        EvolvableFunction bestArcTan = evolver.evolve(initialFunction);
 
-        LinearInvestmentStrategy linearInvestmentStrategy = new LinearInvestmentStrategy(trendFinder,bestLine);
-        Simulater.SimulationResults results = simulater.simulate(simStart, end, 10000, linearInvestmentStrategy);
+        FunctionStrategy strategy = new FunctionStrategy(trendFinder,bestArcTan);
+        Simulater.SimulationResults results = simulater.simulate(simStart, end, 10000, strategy);
 
         Reporter reporter = new Reporter();
-        reporter.setBestLine(bestLine);
+        reporter.setBestFunction(bestArcTan);
         reporter.setBestSimulationResults(results);
         reporter.setCurrentMarketValue(lastMarketValue);
         reporter.setInputs(inputs);

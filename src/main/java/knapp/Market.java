@@ -4,6 +4,7 @@ import knapp.history.Frequency;
 import knapp.indicator.Indicator;
 import knapp.simulation.Account;
 import knapp.simulation.Simulater;
+import knapp.simulation.functions.*;
 import knapp.simulation.strategy.AllStockStrategy;
 import knapp.simulation.strategy.IntelligentStrategy;
 import knapp.simulation.strategy.InvestmentStrategy;
@@ -44,42 +45,59 @@ public class Market {
         dir.mkdirs();
         CurrentDirectory currentDirectory = new CurrentDirectory(cdDir);
 
+        // Cubed and Tan seem to be too wild and inconsistent.
+        // CubicPolynomial is also acting too wild and inconsistent.
+        List<EvolvableFunction> functions = Arrays.asList(Line.initialLine(),
+                ArcTan.initialArcTan());
+
+        for (EvolvableFunction f : functions) {
+            runWith(currentDirectory,
+                    f.getClass().getSimpleName()+"-best7",f,
+                    "M1SL","UNRATE","M1V","UMCSENT","IPMAN","TTLCONS","REVOLSL");
+            runWith(currentDirectory,
+                    f.getClass().getSimpleName()+"-second-best7",f,
+                    "M1SL","UNRATE","M1V","UMCSENT","IPMAN","CE16OV","RSAFS");
+
+            runWith(currentDirectory,
+                    f.getClass().getSimpleName()+"-best6",f,
+                    "M1SL","UNRATE","M1V","IPMAN","CSUSHPISA","REVOLSL");
+
+            runWith(currentDirectory,
+                    f.getClass().getSimpleName()+"-best5",f,
+                    "M1SL","UNRATE","M1V","EXUSEU","CE16OV");
+
+            runWith(currentDirectory,
+                    f.getClass().getSimpleName()+"-second-best5",f,
+                    "M1SL","UNRATE","M1V","CPIAUCSL","INDPRO");
+
+            runWith(currentDirectory,
+                    f.getClass().getSimpleName()+"-best4",f,
+                    "M1SL","UNRATE","M1V","REVOLSL");
+
+            runWith(currentDirectory,
+                    f.getClass().getSimpleName()+"-second-best4",f,
+                    "M1SL","UNRATE","UMCSENT","M1V");
+
+            runWith(currentDirectory,
+                    f.getClass().getSimpleName()+"-best3",f,
+                    "UNRATE","CSUSHPISA","RSAFS");
+
+            runWith(currentDirectory,
+                    f.getClass().getSimpleName()+"-second-best3",f,
+                    "UNRATE","UMCSENT","CPIAUCSL");
+        }
+    }
+
+    private static void runWith(CurrentDirectory currentDirectory,
+                         String prefix, EvolvableFunction initialFunction, String ... series) throws IOException {
+
         Advisor advisor = new Advisor();
         Reporter reporter;
 
-        advisor.setInputSeries(Arrays.asList("M1SL","UNRATE","M1V","UMCSENT","IPMAN","TTLCONS","REVOLSL"));
+        advisor.setInputSeries(Arrays.asList(series));
+        advisor.setInitialFunction(initialFunction);
         reporter = advisor.recommendInvestmentAllocationToday();
-        reporter.setFilePrefix("best7");
-        reporter.produceReport(currentDirectory);
-
-        advisor.setInputSeries(Arrays.asList("M1SL","UNRATE","M1V","UMCSENT","IPMAN","CE16OV","RSAFS"));
-        reporter = advisor.recommendInvestmentAllocationToday();
-        reporter.setFilePrefix("second-best7");
-        reporter.produceReport(currentDirectory);
-
-        advisor.setInputSeries(Arrays.asList("M1SL","UNRATE","M1V","IPMAN","CSUSHPISA","REVOLSL"));
-        reporter = advisor.recommendInvestmentAllocationToday();
-        reporter.setFilePrefix("best6");
-        reporter.produceReport(currentDirectory);
-
-        advisor.setInputSeries(Arrays.asList("M1SL","UNRATE","M1V","EXUSEU","CE16OV"));
-        reporter = advisor.recommendInvestmentAllocationToday();
-        reporter.setFilePrefix("best5");
-        reporter.produceReport(currentDirectory);
-
-        advisor.setInputSeries(Arrays.asList("M1SL","UNRATE","M1V","EXUSEU","IPMAN","CE16OV"));
-        reporter = advisor.recommendInvestmentAllocationToday();
-        reporter.setFilePrefix("second-best6");
-        reporter.produceReport(currentDirectory);
-
-        advisor.setInputSeries(Arrays.asList("M1SL","UNRATE","M1V","CPIAUCSL","INDPRO"));
-        reporter = advisor.recommendInvestmentAllocationToday();
-        reporter.setFilePrefix("second-best5");
-        reporter.produceReport(currentDirectory);
-
-        advisor.setInputSeries(Arrays.asList("M1SL","UNRATE","M1V","REVOLSL"));
-        reporter = advisor.recommendInvestmentAllocationToday();
-        reporter.setFilePrefix("best4");
+        reporter.setFilePrefix(prefix);
         reporter.produceReport(currentDirectory);
     }
 

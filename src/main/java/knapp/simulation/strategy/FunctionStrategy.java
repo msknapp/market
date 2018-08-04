@@ -6,21 +6,20 @@ import knapp.history.Frequency;
 import knapp.simulation.Account;
 import knapp.simulation.CurrentPrices;
 import knapp.simulation.InvestmentAllocation;
+import knapp.simulation.functions.EvolvableFunction;
 import knapp.table.Table;
 
 import java.time.LocalDate;
-import java.util.function.Function;
 
-public class LinearInvestmentStrategy extends AllocationStrategy {
+public class FunctionStrategy extends AllocationStrategy {
 
+    private final EvolvableFunction evolvableFunction;
     private final TrendFinder trendFinder;
-    private final Function<Double,Double> scale;
 
-    public LinearInvestmentStrategy(TrendFinder trendFinder, Function<Double,Double> scale) {
+    public FunctionStrategy(TrendFinder trendFinder, EvolvableFunction evolvableFunction) {
+        this.evolvableFunction = evolvableFunction;
         this.trendFinder = trendFinder;
-        this.scale = scale;
     }
-
 
     @Override
     public InvestmentAllocation chooseAllocation(LocalDate presentDay, Account account, Table inputs, Table stockMarket, Table bondMarket, CurrentPrices currentPrices) {
@@ -36,7 +35,7 @@ public class LinearInvestmentStrategy extends AllocationStrategy {
         double lastMarketValue = stockMarket.getExactValues(stockMarket.getLastDate())[0];
         Model.Estimate estimate = model.produceEstimate(lastInputs,lastMarketValue);
 
-        double pctStock = scale.apply(estimate.getSigmas());
+        double pctStock = this.evolvableFunction.apply(estimate.getSigmas());
         if (pctStock > 1.0) {
             pctStock = 1;
         }
@@ -55,6 +54,6 @@ public class LinearInvestmentStrategy extends AllocationStrategy {
 
     @Override
     public int getMinimumPercentChange() {
-        return 10;
+        return 5;
     }
 }

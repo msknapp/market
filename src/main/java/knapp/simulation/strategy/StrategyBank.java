@@ -1,6 +1,7 @@
 package knapp.simulation.strategy;
 
 import knapp.TrendFinder;
+import knapp.simulation.functions.Line;
 import knapp.table.DefaultGetMethod;
 
 public class StrategyBank {
@@ -9,7 +10,7 @@ public class StrategyBank {
         DefaultGetMethod defaultGetMethod = new DefaultGetMethod();
         TrendFinder trendFinder = new TrendFinder(defaultGetMethod);
         // ended with $6762423 in the test bed.
-        return new LinearInvestmentStrategy(trendFinder,winner1_Equation());
+        return new FunctionStrategy(trendFinder,winner1_Equation());
     }
 
     public static Line winner1_Equation() {
@@ -29,12 +30,12 @@ public class StrategyBank {
     public static InvestmentStrategy trainedUntil2014() {
         DefaultGetMethod defaultGetMethod = new DefaultGetMethod();
         TrendFinder trendFinder = new TrendFinder(defaultGetMethod);
-        return new LinearInvestmentStrategy(trendFinder,trainedUntil2014_Equation());
+        return new FunctionStrategy(trendFinder,trainedUntil2014_Equation());
     }
 
     public static InvestmentStrategy trainedUntil2018() {
         DefaultGetMethod defaultGetMethod = new DefaultGetMethod();
         TrendFinder trendFinder = new TrendFinder(defaultGetMethod);
-        return new LinearInvestmentStrategy(trendFinder,trainedUntil2018_Equation());
+        return new FunctionStrategy(trendFinder,trainedUntil2018_Equation());
     }
 }
