@@ -22,6 +22,9 @@ public class Util {
     }
 
     public static void doWithDate(LocalDate start, LocalDate end, Frequency frequency, ExceptionalConsumer<LocalDate> consumer) {
+        if (consumer == null) {
+            return;
+        }
         doWithDate(start,end,frequency,d -> {
             consumer.accept(d);
             return false;

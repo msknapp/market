@@ -1,0 +1,40 @@
+**********************
+Place: 1
+Indicators:
+EXUSEU
+TWEXMMTH
+RSXFS
+R-Squared: 0.9608369933801183
+Trust Score: 0.9676684397520436
+**********************
+Place: 2
+Indicators:
+EXUSEU
+RSAFS
+TWEXMMTH
+R-Squared: 0.9572215665079272
+Trust Score: 0.9554445621962625
+**********************
+Place: 3
+Indicators:
+EXUSEU
+PPIACO
+RSXFS
+R-Squared: 0.9525585839371001
+Trust Score: 0.9675780037753845
+**********************
+Place: 4
+Indicators:
+CPIAUCSL
+M2V
+RSAFS
+R-Squared: 0.9507873360957129
+Trust Score: 0.9053752198634646
+**********************
+Place: 5
+Indicators:
+CPIAUCSL
+EXUSEU
+RSAFS
+R-Squared: 0.948899325686049
+Trust Score: 0.9332485638730106

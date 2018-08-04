@@ -27,9 +27,18 @@ public class Reporter {
     private double currentMarketValue;
     private Simulater.SimulationResults bestSimulationResults;
     private Line bestLine;
+    private String filePrefix;
 
     public Reporter() {
 
+    }
+
+    public String getFilePrefix() {
+        return filePrefix;
+    }
+
+    public void setFilePrefix(String filePrefix) {
+        this.filePrefix = filePrefix;
     }
 
     public Line getBestLine() {
@@ -109,6 +118,12 @@ public class Reporter {
     }
 
     public void produceReport(CurrentDirectory currentDirectory) {
+        if (filePrefix == null) {
+            filePrefix = "";
+        }
+        if (!filePrefix.isEmpty() && !filePrefix.endsWith("-")) {
+            filePrefix += "-";
+        }
         // write files to current directory.
         // When this is called, the current directory should be new each time.
 
@@ -131,28 +146,29 @@ public class Reporter {
                     getBestLine().getIntercept(),getBestLine().getSlope()));
             writer.write(String.format("Solving: percent stock = %f + %f * %f = %f\n",
                     getBestLine().getIntercept(),getBestLine().getSlope(), sigma, recommendedPercentStock));
-            writer.write(String.format("Current Market Price: $%f\n",getCurrentMarketValue()));
-            writer.write(String.format("Estimated Market Price: $%f\n",estimate.getEstimatedValue()));
-            writer.write(String.format("The model's standard deviation is: %f\n",getModel().getStandardDeviation()));
-            writer.write(String.format("The model's R-Squared is: %f\n",getModel().getRsquared()));
-            writer.write(String.format("Current Sigma: %f\n\n",sigma));
+            writer.write(String.format("The market ticker symbol is: %s\n",getMarket().getName()));
+            writer.write(String.format("Current Market Price: $%.2f\n",getCurrentMarketValue()));
+            writer.write(String.format("Estimated Market Price: $%.2f\n",estimate.getEstimatedValue()));
+            writer.write(String.format("The model's standard deviation is: %.2f\n",getModel().getStandardDeviation()));
+            writer.write(String.format("The model's R-Squared is: %.4f\n",getModel().getRsquared()));
+            writer.write(String.format("Current Sigma: %.2f\n\n",sigma));
             writer.write("Estimate From Inputs:\n");
             double[] parms = model.getParameters();
             double sum = parms[0];
-            writer.write(String.format("Intercept: %f --> Cumulative Sum: %f\n",parms[0],sum));
+            writer.write(String.format("Intercept: %f --> Cumulative Sum: %.2f\n",parms[0],sum));
             for (int col = 0; col < getInputs().getColumnCount(); col ++) {
                 String colName = getInputs().getColumn(col);
                 double parm = parms[col+1];
                 double value = lastInputs[col];
                 sum += parm * value;
-                writer.write(String.format("%s =>  parameter: '%f' x last value: '%f' = '%f' --> Cumulative Sum: %f'\n",colName,
+                writer.write(String.format("%s =>  parameter: '%f' x last value: '%f' = '%.2f' --> Cumulative Sum: %f'\n",colName,
                         parm, value, parm*value, sum));
             }
             writer.write(String.format("\nYields: %f\n\n",estimate.getEstimatedValue()));
 
             writer.write("Simulation Results:\n");
             writer.write(String.format("The simulation ended with: $%d\n",getBestSimulationResults().getFinalDollars()));
-            writer.write(String.format("The simulation had ROI: $%f\n",getBestSimulationResults().getAverageROI()));
+            writer.write(String.format("The simulation had ROI: %.1f%%\n",getBestSimulationResults().getAverageROI()*100.0));
             writer.write(String.format("The simulation made %d transactions.\n",getBestSimulationResults().getTransactions().size()));
 
             writer.write("\nAlternative Strategies:\n\n");
@@ -164,7 +180,8 @@ public class Reporter {
             writer.write(s+"\n");
 
         });
-        File file = currentDirectory.toFile("summary.txt");
+
+        File file = currentDirectory.toFile(filePrefix+"summary.txt");
         try {
             FileUtils.writeStringToFile(file,text);
         } catch (IOException e) {
@@ -180,7 +197,7 @@ public class Reporter {
                 writer.write(String.format("%s,%f,%d\n",date.toString(),stance.getNetWorthDollars(),stance.getPercentStock()));
             }
         });
-        File simFile = currentDirectory.toFile("simulation.csv");
+        File simFile = currentDirectory.toFile(filePrefix+"simulation.csv");
         try {
             FileUtils.writeStringToFile(simFile,simText);
         } catch (IOException e) {
@@ -215,7 +232,7 @@ public class Reporter {
                 writer.write(String.valueOf(getBestLine().apply(est.getSigmas())));
             });
         });
-        File dataFile = currentDirectory.toFile("data.csv");
+        File dataFile = currentDirectory.toFile(filePrefix+"data.csv");
         try {
             FileUtils.writeStringToFile(dataFile,dataText);
         } catch (IOException e) {

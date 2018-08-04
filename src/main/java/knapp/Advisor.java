@@ -32,6 +32,34 @@ public class Advisor {
 
     }
 
+    public void setSimulationInputStart(LocalDate simulationInputStart) {
+        this.simulationInputStart = simulationInputStart;
+    }
+
+    public void setInputStart(LocalDate inputStart) {
+        this.inputStart = inputStart;
+    }
+
+    public void setMarketStart(LocalDate marketStart) {
+        this.marketStart = marketStart;
+    }
+
+    public void setEnd(LocalDate end) {
+        this.end = end;
+    }
+
+    public void setIexRetriever(IEXRetriever iexRetriever) {
+        this.iexRetriever = iexRetriever;
+    }
+
+    public void setMarketSymbol(String marketSymbol) {
+        this.marketSymbol = marketSymbol;
+    }
+
+    public void setInputSeries(List<String> inputSeries) {
+        this.inputSeries = inputSeries;
+    }
+
     public LocalDate getInputStart() {
         return inputStart;
     }

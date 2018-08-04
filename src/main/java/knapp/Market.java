@@ -8,11 +8,17 @@ import knapp.simulation.strategy.AllStockStrategy;
 import knapp.simulation.strategy.IntelligentStrategy;
 import knapp.simulation.strategy.InvestmentStrategy;
 import knapp.table.*;
+import knapp.util.CurrentDirectory;
 
+import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.*;
-import java.util.function.BiFunction;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public class Market {
 
@@ -25,6 +31,52 @@ public class Market {
 
     public Market(MarketContext marketContext) {
         this.marketContext = marketContext;
+    }
+
+    public static void main(String[] args) throws IOException {
+        String subPath = "/Documents/investing";
+        String baseDir = System.getenv("HOME")+subPath;
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
+        String subDir = LocalDateTime.now().format(dtf);
+        String cdDir = baseDir+"/"+subDir;
+        System.out.println("Your report will be written to: "+cdDir);
+        File dir = new File(cdDir);
+        dir.mkdirs();
+        CurrentDirectory currentDirectory = new CurrentDirectory(cdDir);
+
+        Advisor advisor = new Advisor();
+        Reporter reporter;
+
+        advisor.setInputSeries(Arrays.asList("CPIAUCSL","EXUSEU","M1SL","MEHOINUSA672N","M1V"));
+        reporter = advisor.recommendInvestmentAllocationToday();
+        reporter.setFilePrefix("best5");
+        reporter.produceReport(currentDirectory);
+
+        advisor.setInputSeries(Arrays.asList("CPIAUCSL","DEXUSEU","EXUSEU","RSAFS","USSLIND"));
+        reporter = advisor.recommendInvestmentAllocationToday();
+        reporter.setFilePrefix("good5");
+        reporter.produceReport(currentDirectory);
+
+        advisor.setInputSeries(Arrays.asList("CPIAUCSL","M1SL","MEHOINUSA672N","M1V"));
+        reporter = advisor.recommendInvestmentAllocationToday();
+        reporter.setFilePrefix("best4");
+        reporter.produceReport(currentDirectory);
+
+
+        advisor.setInputSeries(Arrays.asList("CPIAUCSL","DEXUSEU","M1SL","MEHOINUSA672N","CE16OV","M1V"));
+        reporter = advisor.recommendInvestmentAllocationToday();
+        reporter.setFilePrefix("main");
+        reporter.produceReport(currentDirectory);
+
+        advisor.setInputSeries(Arrays.asList("UNRATE","WTB3MS","M1SL","M2SL","M2MSL","M3SL","IPMAN"));
+        reporter = advisor.recommendInvestmentAllocationToday();
+        reporter.setFilePrefix("legacy1");
+        reporter.produceReport(currentDirectory);
+
+        advisor.setInputSeries(Arrays.asList("INDPRO","UNRATE","TCU","WPRIME","WTB3MS"));
+        reporter = advisor.recommendInvestmentAllocationToday();
+        reporter.setFilePrefix("legacy2");
+        reporter.produceReport(currentDirectory);
     }
 
     public void analyzeMarket(boolean logarithmicMethod) throws IOException {
@@ -69,28 +121,6 @@ public class Market {
         dataRetriever.writeData(start,end,data,marketContext.getMarket(),
                 marketContext.getCurrentDirectory(),
                 marketContext.getConsolidatedDataFile());
-    }
-
-    public static void main(String[] args) throws IOException {
-
-
-        Advisor advisor = new Advisor();
-        Reporter reporter = advisor.recommendInvestmentAllocationToday();
-        reporter.produceReportBeneathHome();
-
-
-//        MarketContext marketContext = createContext();
-//        Market market = new Market(marketContext);
-//
-//        market.simulate();
-
-//        if (args.length > 0 && "analyze".equals(args[0])) {
-//            // don't use logarithmic method, it appears to be less
-//            // accurate.
-//            market.analyzeMarket(false);
-//        } else {
-//            market.retrieveData();
-//        }
     }
 
     public void simulate() throws IOException {

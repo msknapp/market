@@ -11,6 +11,16 @@ public class CorrelationResult {
     private Frequency frequency;
     private Model model;
 
+    private double trustLevel;
+
+    public double getTrustLevel() {
+        return trustLevel;
+    }
+
+    public void setTrustLevel(double trustLevel) {
+        this.trustLevel = trustLevel;
+    }
+
     public List<String> getIndicators() {
         return indicators;
     }
@@ -52,8 +62,9 @@ public class CorrelationResult {
         for (String ind : getIndicators()) {
             System.out.println(ind);
         }
-        System.out.println("Frequency: "+getFrequency().name());
+//        System.out.println("Frequency: "+getFrequency().name());
         System.out.println("R-Squared: "+getRsquared());
-        System.out.println("CPI was adjusted: "+isCpiWasAdjusted());
+        System.out.println("Trust Score: "+getTrustLevel());
+//        System.out.println("CPI was adjusted: "+isCpiWasAdjusted());
     }
 }

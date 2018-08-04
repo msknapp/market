@@ -1,0 +1,50 @@
+**********************
+Place: 1
+Indicators:
+CPIAUCSL
+EXUSEU
+M1SL
+MEHOINUSA672N
+M1V
+R-Squared: 0.9719428611277542
+Trust Score: 0.92398322093194
+**********************
+Place: 2
+Indicators:
+CPIAUCSL
+DEXUSEU
+EXUSEU
+TWEXMMTH
+RSXFS
+R-Squared: 0.9631798805226881
+Trust Score: 0.9011319961967641
+**********************
+Place: 3
+Indicators:
+CPIAUCSL
+DEXUSEU
+EXUSEU
+RSAFS
+USSLIND
+R-Squared: 0.9622855133858538
+Trust Score: 0.9865864876344863
+**********************
+Place: 4
+Indicators:
+CPIAUCSL
+DEXUSEU
+EXUSEU
+RSAFS
+TWEXMMTH
+R-Squared: 0.9604098330879445
+Trust Score: 0.9676270632716308
+**********************
+Place: 5
+Indicators:
+CPIAUCSL
+DEXUSEU
+EXUSEU
+INDPRO
+TWEXBMTH
+R-Squared: 0.9589262595875749
+Trust Score: 0.9785404437801091

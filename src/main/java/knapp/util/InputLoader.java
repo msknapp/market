@@ -15,6 +15,10 @@ public class InputLoader {
 
     public static String loadTextFromClasspath(String cp) {
         InputStream in = InputLoader.class.getResourceAsStream(cp);
+        if (in == null) {
+            System.out.println("The resource does not exist: "+cp);
+            return "";
+        }
         String text = "";
         try {
             text = IOUtils.toString(in);
@@ -27,6 +31,9 @@ public class InputLoader {
 
     public static Table loadTableFromClasspath(String cp) {
         String text = loadTextFromClasspath(cp);
+        if (text == null || text.isEmpty()) {
+            return null;
+        }
         return TableParser.parse(text,true,Frequency.Monthly);
     }
 
@@ -44,8 +51,10 @@ public class InputLoader {
         TableImpl.TableBuilder tableBuilder = TableImpl.newBuilder().frequency(frequency);
         for (String s : series) {
             Table table = loadTableFromClasspath(prefix+s+".csv");
-            tables.put(s,table);
-            tableBuilder.column(s);
+            if (table != null) {
+                tables.put(s,table);
+                tableBuilder.column(s);
+            }
         }
 
         TableImpl.GetMethod tgm = TableImpl.GetMethod.INTERPOLATE;

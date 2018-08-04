@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.time.LocalDate;
+import java.util.*;
 import java.util.function.BiFunction;
 
 import static knapp.util.Util.doWithDate;
@@ -164,12 +165,101 @@ public class TrendFinder {
             OLSMultipleLinearRegression regression = new OLSMultipleLinearRegression();
             regression.newSampleData(y, x);
 
-            double[] beta = regression.estimateRegressionParameters();
-            double sigma = regression.estimateRegressionStandardError();
-            double rSquared = regression.calculateRSquared();
-            double[] parmStdErr = regression.estimateRegressionParametersStandardErrors();
+            try {
+                double[] beta = regression.estimateRegressionParameters();
+                double sigma = regression.estimateRegressionStandardError();
+                double rSquared = regression.calculateRSquared();
+                double[] parmStdErr = regression.estimateRegressionParametersStandardErrors();
 
-            return new Model(beta, sigma, rSquared,parmStdErr);
+                return new Model(beta, sigma, rSquared, parmStdErr);
+            } catch (Exception e) {
+
+            }
+            return null;
+        }
+
+        public TestedModel deriveTestedModel() {
+            Random random = new Random();
+            TableImpl.GetMethod marketMethod = getMethodChooser.apply(inputs,0);
+
+            List<LocalDate> dates = new ArrayList<LocalDate>(Arrays.asList(inputs.getAllDates()));
+            int testSample = (int) Math.round(dates.size()*0.2);
+            Set<LocalDate> testDates = new HashSet<>(testSample);
+            for (int i = 0; i < testSample; i++) {
+                int x = random.nextInt(dates.size());
+                LocalDate d = dates.get(x);
+                testDates.add(d);
+                dates.remove(d);
+            }
+
+            double[][] x = getInputs(inputs,inputColumns, dates, marketMethod);
+            double[] y = getColumnAsArray(market,0,dates,marketMethod);
+            OLSMultipleLinearRegression regression = new OLSMultipleLinearRegression();
+            regression.newSampleData(y, x);
+
+            try {
+                double[] beta = regression.estimateRegressionParameters();
+                double sigma = regression.estimateRegressionStandardError();
+                double rSquared = regression.calculateRSquared();
+                double[] parmStdErr = regression.estimateRegressionParametersStandardErrors();
+
+                Model model = new Model(beta, sigma, rSquared, parmStdErr);
+                
+                // test it.
+                double testStandardDeviation = testModel(model,testDates, marketMethod);
+                TestedModel testedModel = new TestedModel();
+                testedModel.setModel(model);
+                testedModel.setTestedStandardDeviation(testStandardDeviation);
+                return testedModel;
+            } catch (Exception e) {
+
+            }
+            return null;
+        }
+
+        private double testModel(Model model, Set<LocalDate> testDates, TableImpl.GetMethod marketMethod) {
+            double squareDeviation = 0;
+            for (LocalDate date : testDates) {
+                double[] rowData = new double[inputColumns.length];
+                int colIndex = 0;
+                for (int col : inputColumns) {
+                    rowData[colIndex++] = inputs.getValue(date,col,marketMethod);
+                }
+                double realValue = market.getValue(date,0,marketMethod);
+                Model.Estimate estimate = model.produceEstimate(rowData,realValue);
+                double deviation = estimate.getEstimatedValue() - realValue;
+                squareDeviation += Math.pow(deviation,2);
+            }
+            return Math.sqrt(squareDeviation / ((double) testDates.size()));
+        }
+
+        private double[][] getInputs(Table inputs, int[] inputColumns, List<LocalDate> dates,
+                                     TableImpl.GetMethod marketMethod) {
+            Collections.sort(dates);
+            // each row forms one array.
+            double[][] out = new double[dates.size()][];
+            int row = 0;
+            for (LocalDate date : dates) {
+                double[] rowData = new double[inputColumns.length];
+                int colIndex = 0;
+                for (int col : inputColumns) {
+                    rowData[colIndex++] = inputs.getValue(date,col,marketMethod);
+                }
+                out[row++] = rowData;
+            }
+            return out;
+        }
+
+        private double[] getColumnAsArray(Table inputs, int inputColumn, List<LocalDate> dates,
+                                     TableImpl.GetMethod marketMethod) {
+            Collections.sort(dates);
+            // each row forms one array.
+            double[] out = new double[dates.size()];
+            int row = 0;
+            for (LocalDate date : dates) {
+                out[row++] = inputs.getValue(date,inputColumn,marketMethod);
+            }
+            return out;
         }
 
         public void analyzeTrend(String outFileRelativePath, Writer out, CurrentDirectory currentDirectory) throws IOException {
@@ -253,5 +343,36 @@ public class TrendFinder {
 
     private static class DoublePointer {
         double value;
+    }
+
+    public static class TestedModel {
+        private Model model;
+        private double testedStandardDeviation;
+
+        public Model getModel() {
+            return model;
+        }
+
+        public void setModel(Model model) {
+            this.model = model;
+        }
+
+        public double getTestedStandardDeviation() {
+            return testedStandardDeviation;
+        }
+
+        public void setTestedStandardDeviation(double testedStandardDeviation) {
+            this.testedStandardDeviation = testedStandardDeviation;
+        }
+
+        public double getTrustLevel() {
+            double delta = Math.abs(1 - (testedStandardDeviation/model.getStandardDeviation()));
+            return 1 - delta;
+        }
+
+        public boolean trustIt() {
+            // the test standard deviation should be within 10%.
+            return getTrustLevel() > 0.9;
+        }
     }
 }

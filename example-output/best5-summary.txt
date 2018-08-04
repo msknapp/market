@@ -1,0 +1,33 @@
+Summary:
+
+You should have 35.500000% of your money invested in stock right now.
+
+Best Strategy Equation: percent stock = 0.533437 + 0.383639 * sigma
+Solving: percent stock = 0.533437 + 0.383639 * -0.464454 = 35.500000
+The market ticker symbol is: null
+Current Market Price: $114.73
+Estimated Market Price: $112.45
+The model's standard deviation is: 4.91
+The model's R-Squared is: 0.9535
+Current Sigma: -0.46
+
+Estimate From Inputs:
+Intercept: -19.498088 --> Cumulative Sum: -19.50
+CPIAUCSL =>  parameter: '-0.669669' x last value: '250.857000' = '-167.99' --> Cumulative Sum: -187.489156'
+EXUSEU =>  parameter: '-0.685331' x last value: '1.168400' = '-0.80' --> Cumulative Sum: -188.289897'
+M1SL =>  parameter: '0.078151' x last value: '3657.800000' = '285.86' --> Cumulative Sum: 97.570705'
+M1V =>  parameter: '18.349066' x last value: '5.578000' = '102.35' --> Cumulative Sum: 199.921796'
+MEHOINUSA672N =>  parameter: '-0.001482' x last value: '59039.000000' = '-87.47' --> Cumulative Sum: 112.448101'
+
+Yields: 112.448101
+
+Simulation Results:
+The simulation ended with: $510649
+The simulation had ROI: 48.2%
+The simulation made 283 transactions.
+
+Alternative Strategies:
+
+According to 'trained until 2014', you should have 64% (unbound: 64%) invested in stock and the rest in bonds.
+According to 'trained until 2018', you should have 100% (unbound: 100%) invested in stock and the rest in bonds.
+According to 'winner1', you should have 62% (unbound: 62%) invested in stock and the rest in bonds.
