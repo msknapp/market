@@ -1,0 +1,45 @@
+**********************
+Place: 1
+Indicators:
+UNRATE
+CSUSHPISA
+RSAFS
+Score: 0.9424431314041168
+R-Squared: 0.9463921114857021
+Trust Score: 0.9958273319973199
+**********************
+Place: 2
+Indicators:
+UNRATE
+UMCSENT
+CPIAUCSL
+Score: 0.9376496945966022
+R-Squared: 0.9422942978988802
+Trust Score: 0.9950709631665664
+**********************
+Place: 3
+Indicators:
+WTB3MS
+UNRATE
+M2SL
+Score: 0.9368507375130853
+R-Squared: 0.9374469264410984
+Trust Score: 0.9993640291400001
+**********************
+Place: 4
+Indicators:
+M1SL
+M3SL
+M1V
+Score: 0.9367087584676328
+R-Squared: 0.9471162779871641
+Trust Score: 0.9890113603140158
+**********************
+Place: 5
+Indicators:
+M1SL
+M3SL
+CE16OV
+Score: 0.9128428875331319
+R-Squared: 0.9274451156858464
+Trust Score: 0.9842554261101304

@@ -47,35 +47,39 @@ public class Market {
         Advisor advisor = new Advisor();
         Reporter reporter;
 
-        advisor.setInputSeries(Arrays.asList("CPIAUCSL","EXUSEU","M1SL","MEHOINUSA672N","M1V"));
+        advisor.setInputSeries(Arrays.asList("M1SL","UNRATE","M1V","UMCSENT","IPMAN","TTLCONS","REVOLSL"));
+        reporter = advisor.recommendInvestmentAllocationToday();
+        reporter.setFilePrefix("best7");
+        reporter.produceReport(currentDirectory);
+
+        advisor.setInputSeries(Arrays.asList("M1SL","UNRATE","M1V","UMCSENT","IPMAN","CE16OV","RSAFS"));
+        reporter = advisor.recommendInvestmentAllocationToday();
+        reporter.setFilePrefix("second-best7");
+        reporter.produceReport(currentDirectory);
+
+        advisor.setInputSeries(Arrays.asList("M1SL","UNRATE","M1V","IPMAN","CSUSHPISA","REVOLSL"));
+        reporter = advisor.recommendInvestmentAllocationToday();
+        reporter.setFilePrefix("best6");
+        reporter.produceReport(currentDirectory);
+
+        advisor.setInputSeries(Arrays.asList("M1SL","UNRATE","M1V","EXUSEU","CE16OV"));
         reporter = advisor.recommendInvestmentAllocationToday();
         reporter.setFilePrefix("best5");
         reporter.produceReport(currentDirectory);
 
-        advisor.setInputSeries(Arrays.asList("CPIAUCSL","DEXUSEU","EXUSEU","RSAFS","USSLIND"));
+        advisor.setInputSeries(Arrays.asList("M1SL","UNRATE","M1V","EXUSEU","IPMAN","CE16OV"));
         reporter = advisor.recommendInvestmentAllocationToday();
-        reporter.setFilePrefix("good5");
+        reporter.setFilePrefix("second-best6");
         reporter.produceReport(currentDirectory);
 
-        advisor.setInputSeries(Arrays.asList("CPIAUCSL","M1SL","MEHOINUSA672N","M1V"));
+        advisor.setInputSeries(Arrays.asList("M1SL","UNRATE","M1V","CPIAUCSL","INDPRO"));
+        reporter = advisor.recommendInvestmentAllocationToday();
+        reporter.setFilePrefix("second-best5");
+        reporter.produceReport(currentDirectory);
+
+        advisor.setInputSeries(Arrays.asList("M1SL","UNRATE","M1V","REVOLSL"));
         reporter = advisor.recommendInvestmentAllocationToday();
         reporter.setFilePrefix("best4");
-        reporter.produceReport(currentDirectory);
-
-
-        advisor.setInputSeries(Arrays.asList("CPIAUCSL","DEXUSEU","M1SL","MEHOINUSA672N","CE16OV","M1V"));
-        reporter = advisor.recommendInvestmentAllocationToday();
-        reporter.setFilePrefix("main");
-        reporter.produceReport(currentDirectory);
-
-        advisor.setInputSeries(Arrays.asList("UNRATE","WTB3MS","M1SL","M2SL","M2MSL","M3SL","IPMAN"));
-        reporter = advisor.recommendInvestmentAllocationToday();
-        reporter.setFilePrefix("legacy1");
-        reporter.produceReport(currentDirectory);
-
-        advisor.setInputSeries(Arrays.asList("INDPRO","UNRATE","TCU","WPRIME","WTB3MS"));
-        reporter = advisor.recommendInvestmentAllocationToday();
-        reporter.setFilePrefix("legacy2");
         reporter.produceReport(currentDirectory);
     }
 

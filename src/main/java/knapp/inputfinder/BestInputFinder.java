@@ -9,31 +9,30 @@ import knapp.table.TableImpl;
 import knapp.table.TableParser;
 import knapp.util.InputLoader;
 
+import java.io.File;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.function.BiFunction;
 
+import static java.time.temporal.ChronoUnit.MONTHS;
+
 public class BestInputFinder {
 
-    private String marketSymbol = "IVE";// "nasdaq-weekly";
+    private String marketSymbol = "s-and-p-500-weekly";// "nasdaq-weekly";
 
-
-    //    private List<String> inputSeries = Arrays.asList("INDPRO","UNRATE","TCU","WPRIME","WTB3MS");
-//    private List<String> inputSeries = Arrays.asList("INDPRO","UNRATE","TCU","WPRIME","WTB3MS");
-
-    private static String allSeriesText = "CPIAUCSL DEXUSEU EXUSEU INDPRO M1SL M2V MEHOINUSA672N PPIACO " +
-            "RSAFS S4248SM144SCEN TCU TTLCONS TWEXMMTH UNEMPLOY USSLIND WTB3MS " +
-            "CE16OV CSUSHPISA DGS10 INDPRO IPMAN M1V M3SL MZMV PCUOMFGOMFG REVOLSL RSXFS TASACBW027SBOG TOTALSL " +
-            "TWEXBMTH UMCSENT UNRATE WPRIME";
- 
     private List<String> adjustWithCpi = Arrays.asList("INDPRO", "M1SL", "M2SL", "M2MSL", "M3SL", "IPMAN");
 
+
     public static void main(String[] args) throws IOException {
-        List<String> allSeries = Arrays.asList(allSeriesText.split(" "));
+
+        // the two arguments I keep changing and experimenting with:
+        int numberOfInputs = 7;
+        Set<String> mustHave = new HashSet<>(Arrays.asList("UNRATE","M1SL","M1V","IPMAN"));
+
+        List<String> allSeries = getAllSeries();
         BestInputFinder bestInputFinder = new BestInputFinder();
-        Set<String> mustHave = new HashSet<>(Arrays.asList("CPIAUCSL","EXUSEU"));
-        Leaders result = bestInputFinder.findBestInputs(allSeries,mustHave,5);
+        Leaders result = bestInputFinder.findBestInputs(allSeries,mustHave,numberOfInputs);
         System.out.println("============== Finished: =============");
         int place = 1;
         for (CorrelationResult res : result.getLeaders()) {
@@ -41,6 +40,18 @@ public class BestInputFinder {
             res.print();
             place++;
         }
+    }
+
+    public static List<String> getAllSeries() {
+        List<String> out = new ArrayList<>();
+        for (String sub : Arrays.asList("best-inputs","good-inputs")) {
+            File file = new File("./src/main/resources/"+sub);
+            String[] x = file.list();
+            for (String s : x) {
+                out.add(s.replaceAll(".csv",""));
+            }
+        }
+        return out;
     }
 
     public Leaders findBestInputs(List<String> allInputs, Set<String> mustHave, int size) throws IOException {
@@ -69,7 +80,7 @@ public class BestInputFinder {
             for (Frequency frequency : frequencies) {
                 for (boolean considerInflation : cpiBools) {
                     CorrelationResult correlationResult = determineCorrelationResult(inputs, frequency, considerInflation);
-                    if (correlationResult != null && (best == null || correlationResult.getRsquared() > best.getRsquared())) {
+                    if (correlationResult != null && (best == null || correlationResult.getScore() > best.getScore())) {
                         best = correlationResult;
                         leaders.addNewLeader(best);
                         if (num > 10000) {
@@ -131,61 +142,100 @@ public class BestInputFinder {
         Table stockMarket = TableParser.parse(stockMarketText, true, Frequency.Weekly);
         stockMarket = stockMarket.retainColumns(Collections.singleton("Adj Close"));
 
+        if (stockMarket.getFirstDate().minusMonths(1).isAfter(marketStart)) {
+            throw new IllegalArgumentException("The stock market start date is too recent.");
+        }
+        if (stockMarket.getLastDate().plusMonths(1).isBefore(marketEnd)) {
+            throw new IllegalArgumentException("The stock market end date is too old.");
+        }
+
         TrendFinder trendFinder = new TrendFinder(getMethodChooser);
 
-        Table inputs = InputLoader.loadInputsTableFromClasspath(inputSeries, marketStart, marketEnd, Frequency.Monthly);
+        try {
+            Table inputs = InputLoader.loadInputsTableFromClasspath(inputSeries, marketStart, marketEnd, Frequency.Monthly);
+            checkZeroes(inputs);
 
-        String cpiText = InputLoader.loadTextFromClasspath("/inputs/alternative/cpi.csv");
-        Table cpi = TableParser.parse(cpiText, true, Frequency.Weekly);
+            String cpiText = InputLoader.loadTextFromClasspath("/good-inputs/CPIAUCSL.csv");
+            Table cpi = TableParser.parse(cpiText, true, Frequency.Weekly);
 
-        if (adjustForInflation) {
-            LocalDate cpiBaseDate = cpi.getDateOnOrAfter(marketStart);
-            Set<String> retainColumns = new HashSet<>(inputs.getColumnCount());
-            for (int colNumber = 0; colNumber < inputs.getColumnCount(); colNumber++) {
-                String colName = inputs.getColumn(colNumber);
-                if (adjustWithCpi.contains(colName)) {
-                    RealDeriver realDeriver = new RealDeriver(cpi, cpiBaseDate, colName, colNumber);
-                    inputs = inputs.withDerivedColumn(realDeriver);
-                    retainColumns.add(realDeriver.getColumnName());
-                } else {
-                    retainColumns.add(colName);
+            if (adjustForInflation) {
+                LocalDate cpiBaseDate = cpi.getDateOnOrAfter(marketStart);
+                Set<String> retainColumns = new HashSet<>(inputs.getColumnCount());
+                for (int colNumber = 0; colNumber < inputs.getColumnCount(); colNumber++) {
+                    String colName = inputs.getColumn(colNumber);
+                    if (adjustWithCpi.contains(colName)) {
+                        RealDeriver realDeriver = new RealDeriver(cpi, cpiBaseDate, colName, colNumber);
+                        inputs = inputs.withDerivedColumn(realDeriver);
+                        retainColumns.add(realDeriver.getColumnName());
+                    } else {
+                        retainColumns.add(colName);
+                    }
+                }
+                inputs = inputs.retainColumns(retainColumns);
+
+                // adjust the stock market too.
+                RealDeriver realDeriver = new RealDeriver(cpi, cpiBaseDate, stockMarket.getColumn(0), 0);
+                stockMarket = stockMarket.withDerivedColumn(realDeriver)
+                        .retainColumns(Collections.singleton(realDeriver.getColumnName()));
+            }
+
+            TrendFinder.Analasys analasys = trendFinder.startAnalyzing()
+                    .start(marketStart)
+                    .end(marketEnd)
+                    .frequency(trendFrequency)
+                    .market(stockMarket)
+                    .inputs(inputs)
+                    .build();
+
+            // first I want to know that I am not over-fitting this model
+            // so let's have a tested model.
+            TrendFinder.TestedModel model = analasys.deriveTestedModel();
+            if (model == null || model.getModel() == null) {
+                return null;
+            }
+            if (!model.trustIt()) {
+                return null;
+            }
+            // now we know we can trust it, let's get a more accurate model.
+            Model accurateModel = analasys.deriveModel();
+
+            CorrelationResult correlationResult = new CorrelationResult();
+            correlationResult.setCpiWasAdjusted(adjustForInflation);
+            correlationResult.setFrequency(trendFrequency);
+            correlationResult.setIndicators(inputSeries);
+            correlationResult.setModel(accurateModel);
+            correlationResult.setTrustLevel(model.getTrustLevel());
+            return correlationResult;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private void checkZeroes(Table inputs) {
+        LocalDate firstDate = inputs.getFirstDate();
+        LocalDate secondDate = inputs.getDateAfter(firstDate);
+        if (!secondDate.isAfter(firstDate)) {
+            throw new RuntimeException("Second date is not after the first.");
+        }
+        if (MONTHS.between(firstDate,secondDate) >= 2) {
+            throw new RuntimeException("The input series is less frequent than monthly.");
+        }
+        LocalDate lastDate = inputs.getLastDate();
+
+        for (int i = 0;i<inputs.getColumnCount();i++) {
+            double v1 = inputs.getValue(firstDate,i,TableImpl.GetMethod.EXACT);
+            if (Math.abs(v1) < 1e-3) {
+                double v2 = inputs.getValue(secondDate,i,TableImpl.GetMethod.EXACT);
+                if (Math.abs(v2) < 1e-3) {
+                    throw new RuntimeException("The input data does not cover the time range for column "+inputs.getColumn(i));
                 }
             }
-            inputs = inputs.retainColumns(retainColumns);
-
-            // adjust the stock market too.
-            RealDeriver realDeriver = new RealDeriver(cpi, cpiBaseDate, stockMarket.getColumn(0), 0);
-            stockMarket = stockMarket.withDerivedColumn(realDeriver)
-                    .retainColumns(Collections.singleton(realDeriver.getColumnName()));
+            double lastValue = inputs.getValue(lastDate,i,TableImpl.GetMethod.EXACT);
+            if (Math.abs(lastValue) < 1e-3) {
+                throw new RuntimeException("The last value is zero for column "+inputs.getColumn(i));
+            }
         }
-
-        TrendFinder.Analasys analasys = trendFinder.startAnalyzing()
-                .start(marketStart)
-                .end(marketEnd)
-                .frequency(trendFrequency)
-                .market(stockMarket)
-                .inputs(inputs)
-                .build();
-
-        // first I want to know that I am not over-fitting this model
-        // so let's have a tested model.
-        TrendFinder.TestedModel model = analasys.deriveTestedModel();
-        if (model == null || model.getModel() == null) {
-            return null;
-        }
-        if (!model.trustIt()) {
-            return null;
-        }
-        // now we know we can trust it, let's get a more accurate model.
-        Model accurateModel = analasys.deriveModel();
-
-        CorrelationResult correlationResult = new CorrelationResult();
-        correlationResult.setCpiWasAdjusted(adjustForInflation);
-        correlationResult.setFrequency(trendFrequency);
-        correlationResult.setIndicators(inputSeries);
-        correlationResult.setModel(accurateModel);
-        correlationResult.setTrustLevel(model.getTrustLevel());
-        return correlationResult;
     }
 
     public static class Leaders {

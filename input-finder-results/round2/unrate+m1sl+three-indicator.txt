@@ -1,0 +1,44 @@
+**********************
+Place: 1
+Indicators:
+M1SL
+UNRATE
+M1V
+EXUSEU
+CE16OV
+Score: 0.9700645493692073
+R-Squared: 0.9707878335028611
+Trust Score: 0.9992549513820708
+**********************
+Place: 2
+Indicators:
+M1SL
+UNRATE
+M1V
+CPIAUCSL
+INDPRO
+Score: 0.9541469549531008
+R-Squared: 0.960421700254094
+Trust Score: 0.9934666768781535
+**********************
+Place: 3
+Indicators:
+M1SL
+UNRATE
+M1V
+CPIAUCSL
+UMCSENT
+Score: 0.9133311602423108
+R-Squared: 0.9596397179912511
+Trust Score: 0.951743808764111
+**********************
+Place: 4
+Indicators:
+M1SL
+UNRATE
+M1V
+CPIAUCSL
+EXUSEU
+Score: 0.8974716517305038
+R-Squared: 0.953331693939796
+Trust Score: 0.9414054493683708

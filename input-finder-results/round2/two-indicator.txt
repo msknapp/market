@@ -1,0 +1,40 @@
+**********************
+Place: 1
+Indicators:
+UMCSENT
+RSXFS
+Score: 0.9292084349130274
+R-Squared: 0.9308985869377939
+Trust Score: 0.9981843865180564
+**********************
+Place: 2
+Indicators:
+UNRATE
+TASACBW027SBOG
+Score: 0.8883934511064431
+R-Squared: 0.9062959051222208
+Trust Score: 0.9802465685714827
+**********************
+Place: 3
+Indicators:
+WPRIME
+M2MSL
+Score: 0.8882969657206083
+R-Squared: 0.8896727061967997
+Trust Score: 0.998453655522296
+**********************
+Place: 4
+Indicators:
+M3SL
+UNRATE
+Score: 0.8833801710102401
+R-Squared: 0.9364671563604943
+Trust Score: 0.9433114285005226
+**********************
+Place: 5
+Indicators:
+M1SL
+IPMAN
+Score: 0.8706142223036769
+R-Squared: 0.8904768564366675
+Trust Score: 0.977694384767648

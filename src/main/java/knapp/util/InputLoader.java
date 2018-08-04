@@ -16,7 +16,7 @@ public class InputLoader {
     public static String loadTextFromClasspath(String cp) {
         InputStream in = InputLoader.class.getResourceAsStream(cp);
         if (in == null) {
-            System.out.println("The resource does not exist: "+cp);
+//            System.out.println("The resource does not exist: "+cp);
             return "";
         }
         String text = "";
@@ -38,22 +38,30 @@ public class InputLoader {
     }
 
     public static Table loadInputsTableFromClasspath(List<String> series, LocalDate start, LocalDate end, Frequency frequency) {
-        return loadTableFromClasspath(series,start,end,frequency,"/inputs/",0);
+        return loadTableFromClasspath(series,start,end,frequency,new String[]{"/best-inputs/","/good-inputs/","/inputs/"},0);
     }
 
     public static Table loadMarketTableFromClasspath(String market, LocalDate start, LocalDate end, Frequency frequency) {
-        return loadTableFromClasspath(Arrays.asList(market),start,end,frequency,"/market/",5);
+        return loadTableFromClasspath(Arrays.asList(market),start,end,frequency,new String[]{"/market/"},5);
     }
 
     public static Table loadTableFromClasspath(List<String> series, LocalDate start, LocalDate end, Frequency frequency,
-                                               String prefix, int column) {
+                                               String[] prefixes, int column) {
         Map<String,Table> tables = new HashMap<>();
         TableImpl.TableBuilder tableBuilder = TableImpl.newBuilder().frequency(frequency);
         for (String s : series) {
-            Table table = loadTableFromClasspath(prefix+s+".csv");
-            if (table != null) {
-                tables.put(s,table);
-                tableBuilder.column(s);
+            Table table = null;
+            for (String prefix : prefixes) {
+                table = loadTableFromClasspath(prefix + s + ".csv");
+                if (table != null) {
+                    tables.put(s, table);
+                    tableBuilder.column(s);
+                    break;
+                }
+            }
+            if (table == null) {
+                System.out.println("The table "+s+" DNE");
+                throw new RuntimeException("The table " + s + " DNE");
             }
         }
 

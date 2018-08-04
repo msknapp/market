@@ -1,0 +1,34 @@
+Summary:
+
+You should have -90.000000% of your money invested in stock right now.
+
+Best Strategy Equation: percent stock = 1.039063 + 1.213641 * sigma
+Solving: percent stock = 1.039063 + 1.213641 * -1.597566 = -90.000000
+The market ticker symbol is: null
+Current Market Price: $114.73
+Estimated Market Price: $109.10
+The model's standard deviation is: 3.52
+The model's R-Squared is: 0.9762
+Current Sigma: -1.60
+
+Estimate From Inputs:
+Intercept: 179.565351 --> Cumulative Sum: 179.57
+CE16OV =>  parameter: '-0.003088' x last value: '155965.000000' = '-481.61' --> Cumulative Sum: -302.040044'
+EXUSEU =>  parameter: '3.465138' x last value: '1.168400' = '4.05' --> Cumulative Sum: -297.991376'
+IPMAN =>  parameter: '0.538885' x last value: '104.793300' = '56.47' --> Cumulative Sum: -241.519885'
+M1SL =>  parameter: '0.073590' x last value: '3657.800000' = '269.18' --> Cumulative Sum: 27.655844'
+M1V =>  parameter: '17.658778' x last value: '5.578000' = '98.50' --> Cumulative Sum: 126.156507'
+UNRATE =>  parameter: '-4.372269' x last value: '3.900000' = '-17.05' --> Cumulative Sum: 109.104657'
+
+Yields: 109.104657
+
+Simulation Results:
+The simulation ended with: $165490
+The simulation had ROI: 32.4%
+The simulation made 179 transactions.
+
+Alternative Strategies:
+
+According to 'trained until 2014', you should have 8% (unbound: 8%) invested in stock and the rest in bonds.
+According to 'trained until 2018', you should have 21% (unbound: 21%) invested in stock and the rest in bonds.
+According to 'winner1', you should have 10% (unbound: 10%) invested in stock and the rest in bonds.

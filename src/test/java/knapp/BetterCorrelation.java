@@ -43,7 +43,7 @@ public class BetterCorrelation {
 
         Table inputs = InputLoader.loadInputsTableFromClasspath(inputSeries,marketStart,marketEnd,Frequency.Monthly);
 
-        String cpiText = InputLoader.loadTextFromClasspath("/inputs/alternative/cpi.csv");
+        String cpiText = InputLoader.loadTextFromClasspath("/unused-inputs/cpi.csv");
         Table cpi = TableParser.parse(cpiText,true,Frequency.Weekly);
 
         if (adjustForCPI) {

@@ -36,6 +36,9 @@ public class TableImpl implements Table {
         if (columns == null) {
             throw new IllegalArgumentException("Columns must be defined.");
         }
+        if (rows == null || rows.isEmpty()) {
+            throw new IllegalArgumentException("Rows must be defined.");
+        }
         this.frequency = frequency;
         this.columns = Collections.unmodifiableList(new ArrayList<>(columns));
         TreeMap<LocalDate,TableRow> tmp = new TreeMap<LocalDate,TableRow>();

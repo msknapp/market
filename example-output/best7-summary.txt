@@ -1,0 +1,35 @@
+Summary:
+
+You should have -12.600000% of your money invested in stock right now.
+
+Best Strategy Equation: percent stock = 0.660741 + 0.581322 * sigma
+Solving: percent stock = 0.660741 + 0.581322 * -1.353224 = -12.600000
+The market ticker symbol is: null
+Current Market Price: $114.73
+Estimated Market Price: $110.05
+The model's standard deviation is: 3.46
+The model's R-Squared is: 0.9771
+Current Sigma: -1.35
+
+Estimate From Inputs:
+Intercept: -162.443995 --> Cumulative Sum: -162.44
+IPMAN =>  parameter: '0.369429' x last value: '104.793300' = '38.71' --> Cumulative Sum: -123.730283'
+M1SL =>  parameter: '0.052541' x last value: '3657.800000' = '192.18' --> Cumulative Sum: 68.454469'
+M1V =>  parameter: '13.592627' x last value: '5.578000' = '75.82' --> Cumulative Sum: 144.274144'
+REVOLSL =>  parameter: '-0.015857' x last value: '1039.314100' = '-16.48' --> Cumulative Sum: 127.794154'
+TTLCONS =>  parameter: '-0.000023' x last value: '1317231.000000' = '-29.80' --> Cumulative Sum: 97.995427'
+UMCSENT =>  parameter: '0.199465' x last value: '98.200000' = '19.59' --> Cumulative Sum: 117.582849'
+UNRATE =>  parameter: '-1.930796' x last value: '3.900000' = '-7.53' --> Cumulative Sum: 110.052744'
+
+Yields: 110.052744
+
+Simulation Results:
+The simulation ended with: $83344
+The simulation had ROI: 23.6%
+The simulation made 194 transactions.
+
+Alternative Strategies:
+
+According to 'trained until 2014', you should have 20% (unbound: 20%) invested in stock and the rest in bonds.
+According to 'trained until 2018', you should have 39% (unbound: 39%) invested in stock and the rest in bonds.
+According to 'winner1', you should have 22% (unbound: 22%) invested in stock and the rest in bonds.

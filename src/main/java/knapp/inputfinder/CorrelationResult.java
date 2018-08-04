@@ -33,6 +33,10 @@ public class CorrelationResult {
         return model.getRsquared();
     }
 
+    public double getScore() {
+        return model.getRsquared() * getTrustLevel();
+    }
+
     public boolean isCpiWasAdjusted() {
         return cpiWasAdjusted;
     }
@@ -63,6 +67,7 @@ public class CorrelationResult {
             System.out.println(ind);
         }
 //        System.out.println("Frequency: "+getFrequency().name());
+        System.out.println("Score: "+getScore());
         System.out.println("R-Squared: "+getRsquared());
         System.out.println("Trust Score: "+getTrustLevel());
 //        System.out.println("CPI was adjusted: "+isCpiWasAdjusted());

@@ -1,0 +1,50 @@
+**********************
+Place: 1
+Indicators:
+M1SL
+UNRATE
+M1V
+REVOLSL
+Score: 0.9625984461325124
+R-Squared: 0.965309907274435
+Trust Score: 0.9971910977795946
+**********************
+Place: 2
+Indicators:
+M1SL
+UNRATE
+UMCSENT
+M1V
+Score: 0.9585591001968338
+R-Squared: 0.9596367577468845
+Trust Score: 0.9988770151399985
+**********************
+Place: 3
+Indicators:
+M1SL
+UNRATE
+INDPRO
+TTLCONS
+Score: 0.9500835846652753
+R-Squared: 0.9528665757029975
+Trust Score: 0.9970793486636165
+**********************
+Place: 4
+Indicators:
+M1SL
+UNRATE
+INDPRO
+IPMAN
+Score: 0.9476943693631066
+R-Squared: 0.9517136923583261
+Trust Score: 0.9957767519502008
+**********************
+Place: 5
+Indicators:
+M1SL
+UNRATE
+USSLIND
+IPMAN
+Score: 0.9428642554352394
+R-Squared: 0.9491139092636806
+Trust Score: 0.9934152752715535
