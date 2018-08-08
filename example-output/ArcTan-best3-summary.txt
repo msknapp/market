@@ -1,0 +1,59 @@
+Summary:
+
+You should have 34.5% of your money invested in stock right now.
+
+percent stock = 0.847664 + 0.769132 * atan(0.505784 * sigma)
+0.344752 = 0.847664 + 0.769132 * atan(0.505784 * -1.515126) = 34.5
+The market ticker symbol is: IVE
+Current Market Price: $115.39
+Estimated Market Price: $108.53
+The model's standard deviation is: $4.53
+The model's R-Squared is: 0.9601
+Current Sigma: -1.52
+
+Estimate From Inputs:
+Intercept: -28.928501 --> Cumulative Sum: -28.93
+CSUSHPISA =>  parameter: '-0.147279' x last value: '202.180000' = '-29.78' --> Cumulative Sum: -58.705436'
+RSAFS =>  parameter: '0.000362' x last value: '506787.000000' = '183.52' --> Cumulative Sum: 124.813878'
+UNRATE =>  parameter: '-4.174596' x last value: '3.900000' = '-16.28' --> Cumulative Sum: 108.532955'
+
+Yields: 108.53
+
+Simulation Results:
+The simulation ended with: $75307
+The simulation had ROI: 22.4%
+The simulation made 256 transactions.
+
+Alternative Strategies:
+
+According to 'trained until 2014', you should have 12% (unbound: 12%) invested in stock and the rest in bonds.
+According to 'trained until 2018', you should have 27% (unbound: 27%) invested in stock and the rest in bonds.
+According to 'winner1', you should have 14% (unbound: 14%) invested in stock and the rest in bonds.
+
+Function Output:
+Sigma, Percent Stock:
+-6.0,(11.6)
+-5.5,(9.5)
+-5.0,(7.1)
+-4.5,(4.2)
+-4.0,(0.7)
+-3.5,3.5
+-3.0,8.8
+-2.5,15.4
+-2.0,23.9
+-1.5,34.8
+-1.0,48.8
+-0.5,65.7
+0.0,84.8
+0.5,103.8
+1.0,120.8
+1.5,134.7
+2.0,145.6
+2.5,154.1
+3.0,160.8
+3.5,166.0
+4.0,170.3
+4.5,173.7
+5.0,176.6
+5.5,179.0
+6.0,181.1

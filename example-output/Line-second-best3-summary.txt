@@ -1,0 +1,60 @@
+Summary:
+
+You should have -49.3% of your money invested in stock right now.
+
+Best Strategy Equation: percent stock = 0.585421 + 0.524507 * sigma
+
+Solving: -0.492768 = 0.585421 + 0.524507 * -2.055624 = -49.3
+The market ticker symbol is: IVE
+Current Market Price: $115.39
+Estimated Market Price: $107.18
+The model's standard deviation is: $3.99
+The model's R-Squared is: 0.9690
+Current Sigma: -2.06
+
+Estimate From Inputs:
+Intercept: -141.285861 --> Cumulative Sum: -141.29
+CPIAUCSL =>  parameter: '0.886245' x last value: '250.857000' = '222.32' --> Cumulative Sum: 81.034844'
+UMCSENT =>  parameter: '0.442492' x last value: '98.200000' = '43.45' --> Cumulative Sum: 124.487519'
+UNRATE =>  parameter: '-4.437280' x last value: '3.900000' = '-17.31' --> Cumulative Sum: 107.182128'
+
+Yields: 107.18
+
+Simulation Results:
+The simulation ended with: $397686
+The simulation had ROI: 44.5%
+The simulation made 290 transactions.
+
+Alternative Strategies:
+
+According to 'trained until 2014', you should have 0% (unbound: 0%) invested in stock and the rest in bonds.
+According to 'trained until 2018', you should have 0% (unbound: 0%) invested in stock and the rest in bonds.
+According to 'winner1', you should have 0% (unbound: 0%) invested in stock and the rest in bonds.
+
+Function Output:
+Sigma, Percent Stock:
+-6.0,(256.2)
+-5.5,(229.9)
+-5.0,(203.7)
+-4.5,(177.5)
+-4.0,(151.3)
+-3.5,(125.0)
+-3.0,(98.8)
+-2.5,(72.6)
+-2.0,(46.4)
+-1.5,(20.1)
+-1.0,6.1
+-0.5,32.3
+0.0,58.5
+0.5,84.8
+1.0,111.0
+1.5,137.2
+2.0,163.4
+2.5,189.7
+3.0,215.9
+3.5,242.1
+4.0,268.3
+4.5,294.6
+5.0,320.8
+5.5,347.0
+6.0,373.2

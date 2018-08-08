@@ -33,4 +33,9 @@ public class TableUtil {
         }
         return y;
     }
+
+    public static Table withoutColumn(Table table, String column) {
+        return new TableWithoutColumn(table,column);
+    }
+
 }

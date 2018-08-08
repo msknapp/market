@@ -1,0 +1,64 @@
+Summary:
+
+You should have -103.2% of your money invested in stock right now.
+
+Best Strategy Equation: percent stock = 0.541481 + 1.018860 * sigma
+
+Solving: -1.031817 = 0.541481 + 1.018860 * -1.544175 = -103.2
+The market ticker symbol is: IVE
+Current Market Price: $115.39
+Estimated Market Price: $110.05
+The model's standard deviation is: $3.46
+The model's R-Squared is: 0.9771
+Current Sigma: -1.54
+
+Estimate From Inputs:
+Intercept: -162.443995 --> Cumulative Sum: -162.44
+IPMAN =>  parameter: '0.369429' x last value: '104.793300' = '38.71' --> Cumulative Sum: -123.730283'
+M1SL =>  parameter: '0.052541' x last value: '3657.800000' = '192.18' --> Cumulative Sum: 68.454469'
+M1V =>  parameter: '13.592627' x last value: '5.578000' = '75.82' --> Cumulative Sum: 144.274144'
+REVOLSL =>  parameter: '-0.015857' x last value: '1039.314100' = '-16.48' --> Cumulative Sum: 127.794154'
+TTLCONS =>  parameter: '-0.000023' x last value: '1317231.000000' = '-29.80' --> Cumulative Sum: 97.995427'
+UMCSENT =>  parameter: '0.199465' x last value: '98.200000' = '19.59' --> Cumulative Sum: 117.582849'
+UNRATE =>  parameter: '-1.930796' x last value: '3.900000' = '-7.53' --> Cumulative Sum: 110.052744'
+
+Yields: 110.05
+
+Simulation Results:
+The simulation ended with: $104707
+The simulation had ROI: 26.5%
+The simulation made 158 transactions.
+
+Alternative Strategies:
+
+According to 'trained until 2014', you should have 10% (unbound: 10%) invested in stock and the rest in bonds.
+According to 'trained until 2018', you should have 25% (unbound: 25%) invested in stock and the rest in bonds.
+According to 'winner1', you should have 13% (unbound: 13%) invested in stock and the rest in bonds.
+
+Function Output:
+Sigma, Percent Stock:
+-6.0,(557.2)
+-5.5,(506.2)
+-5.0,(455.3)
+-4.5,(404.3)
+-4.0,(353.4)
+-3.5,(302.5)
+-3.0,(251.5)
+-2.5,(200.6)
+-2.0,(149.6)
+-1.5,(98.7)
+-1.0,(47.7)
+-0.5,3.2
+0.0,54.1
+0.5,105.1
+1.0,156.0
+1.5,207.0
+2.0,257.9
+2.5,308.9
+3.0,359.8
+3.5,410.7
+4.0,461.7
+4.5,512.6
+5.0,563.6
+5.5,614.5
+6.0,665.5

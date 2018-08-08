@@ -2,7 +2,7 @@ package knapp.table;
 
 import java.time.LocalDate;
 
-public class RealDeriver implements TableWithDerived.ValueDeriver {
+public class RealDeriver implements ValueDeriver {
     private final Table cpi;
     private final LocalDate baseDate;
     private final String coreColumnName;

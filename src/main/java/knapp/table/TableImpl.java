@@ -3,10 +3,11 @@ package knapp.table;
 import knapp.history.Frequency;
 import knapp.util.Util;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.*;
 
-import static java.time.temporal.ChronoUnit.DAYS;
+import static java.time.temporal.ChronoUnit.*;
 
 public class TableImpl implements Table {
 
@@ -43,10 +44,10 @@ public class TableImpl implements Table {
         this.columns = Collections.unmodifiableList(new ArrayList<>(columns));
         TreeMap<LocalDate,TableRow> tmp = new TreeMap<LocalDate,TableRow>();
         for (TableRow tr : rows) {
-            if (tr.values.length != this.columns.size()) {
+            if (tr.getColumnCount() != this.columns.size()) {
                 throw new IllegalArgumentException("The rows must all have the same number of columns");
             }
-            tmp.put(tr.date,tr);
+            tmp.put(tr.getDate(),tr);
         }
         this.rows = Collections.unmodifiableSortedMap(tmp);
     }
@@ -86,7 +87,7 @@ public class TableImpl implements Table {
             throw new IllegalArgumentException("date can't be null");
         }
         if (rows.containsKey(date)) {
-            return rows.get(date).values[column];
+            return rows.get(date).getValue(column);
         } else if (getMethod == GetMethod.EXACT) {
             throw new IllegalArgumentException("There is no record on that date.");
         }
@@ -115,15 +116,15 @@ public class TableImpl implements Table {
         if (lb == null) {
             return 0;
         }
-        return rows.get(lb).values[column];
+        return rows.get(lb).getValue(column);
     }
 
     private double extrapolateDataBeforeStart(LocalDate date,int column) {
         Iterator<LocalDate> iter = rows.keySet().iterator();
         LocalDate first = iter.next();
         LocalDate second= iter.next();
-        double firstValue = rows.get(first).values[column];
-        double secondValue = rows.get(second).values[column];
+        double firstValue = rows.get(first).getValue(column);
+        double secondValue = rows.get(second).getValue(column);
         long days = DAYS.between(first,second);
         double slope = (secondValue - firstValue) / days;
         long x = - DAYS.between(date,first);
@@ -137,8 +138,8 @@ public class TableImpl implements Table {
             secondLast = last;
             last = d;
         }
-        double firstValue = rows.get(secondLast).values[column];
-        double secondValue = rows.get(last).values[column];
+        double firstValue = rows.get(secondLast).getValue(column);
+        double secondValue = rows.get(last).getValue(column);
         long days = DAYS.between(secondLast,last);
         double slope = (secondValue - firstValue) / days;
         long x = DAYS.between(last,date);
@@ -186,14 +187,14 @@ public class TableImpl implements Table {
             return extrapolateDataBeforeStart(date, column);
         }
         LocalDate first = getDateBefore(second);
-        double secondVal = rows.get(second).values[column];
+        double secondVal = rows.get(second).getValue(column);
         if (first == null) {
             // it's between the first and second value,
             // we interpolate it figuring that this is due to the table
             // just not going far enough in the past.
             return interpolateValue(date, column);
         }
-        double firstVal = rows.get(first).values[column];
+        double firstVal = rows.get(first).getValue(column);
         long days = DAYS.between(first,second);
         double slope = (secondVal - firstVal) / days;
         long elapsed = DAYS.between(second,date);
@@ -203,8 +204,8 @@ public class TableImpl implements Table {
     private double interpolateValue(LocalDate date, int column) {
         LocalDate first = getDateBefore(date);
         LocalDate second = getDateAfter(date);
-        double firstVal = rows.get(first).values[column];
-        double secondVal = rows.get(second).values[column];
+        double firstVal = rows.get(first).getValue(column);
+        double secondVal = rows.get(second).getValue(column);
         long days = DAYS.between(first,second);
         double slope = (secondVal - firstVal) / days;
         long elapsed = DAYS.between(first,date);
@@ -233,9 +234,7 @@ public class TableImpl implements Table {
     @Override
     public double[] getExactValues(LocalDate date) {
         TableRow r = rows.get(date);
-        double[] d = new double[r.values.length];
-        System.arraycopy(r.values,0,d,0,r.values.length);
-        return d;
+        return r.getValues();
     }
 
     @Override
@@ -249,7 +248,7 @@ public class TableImpl implements Table {
     }
 
     @Override
-    public Table withDerivedColumn(TableWithDerived.ValueDeriver valueDeriver) {
+    public Table withDerivedColumn(ValueDeriver valueDeriver) {
         return new TableWithDerived(this,valueDeriver);
     }
 
@@ -308,6 +307,17 @@ public class TableImpl implements Table {
     }
 
 
+    @Override
+    public double getValue(LocalDate date) {
+        if (getColumnCount() < 1) {
+            return 0;
+        }
+        if (getColumnCount() < 2) {
+            return getValue(date,0);
+        }
+        throw new IllegalArgumentException("There are multiple columns");
+    }
+
     public static final class TableBuilder {
         private List<String> columns;
         private List<TableRow> rows;
@@ -340,26 +350,36 @@ public class TableImpl implements Table {
             return this;
         }
 
+        public TableBuilder guessFrequency() {
+            Collections.sort(rows);
+            LocalDate start = rows.get(0).getDate();
+            LocalDate second = rows.get(1).getDate();
+            if (DAYS.between(start,second) <= 3) {
+                frequency = Frequency.Daily;
+            } else {
+                LocalDate end = rows.get(rows.size() - 1).getDate();
+                Duration duration = Duration.between(start, end);
+                duration = duration.dividedBy(rows.size() - 1);
+                long days = duration.get(DAYS);
+                if (days < 12) {
+                    frequency = Frequency.Weekly;
+                } else if (days < 60) {
+                    frequency = Frequency.Monthly;
+                } else if (days < 180) {
+                    frequency = Frequency.Quarterly;
+                } else {
+                    frequency = Frequency.Annual;
+                }
+            }
+            return this;
+        }
+
         public TableImpl build() {
+            if (frequency == null) {
+                guessFrequency();
+            }
             return new TableImpl(columns, rows,frequency);
         }
     }
 
-    private static final class TableRow {
-        private final LocalDate date;
-        private final double[] values;
-
-        public TableRow(LocalDate date,double[] values) {
-            if (date == null) {
-                throw new IllegalArgumentException("The date is null");
-            }
-            if (values == null) {
-                throw new IllegalArgumentException("The values are null.");
-            }
-            this.date = date;
-            this.values = new double[values.length];
-            System.arraycopy(values,0,this.values,0,values.length);
-        }
-
-    }
 }

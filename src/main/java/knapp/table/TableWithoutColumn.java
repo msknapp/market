@@ -6,31 +6,16 @@ import knapp.util.Util;
 import java.time.LocalDate;
 import java.util.Set;
 
-public class TableWithoutColumn implements Table {
-
-    private final Table core;
+public class TableWithoutColumn extends AbstractWrappingTable {
 
     private final String removeColumn;
 
     public TableWithoutColumn(Table core, String removeColumn) {
-        if (core == null) {
-            throw new IllegalArgumentException("null core");
-        }
-        this.core = core;
+        super(core);
         if (core.getColumn(removeColumn) < 0 ) {
             throw new IllegalArgumentException("Can't remove a column that doesn't exist.");
         }
         this.removeColumn = removeColumn;
-    }
-
-    @Override
-    public String getName() {
-        return core.getName();
-    }
-
-    @Override
-    public void setName(String name) {
-        core.setName(name);
     }
 
     @Override
@@ -86,11 +71,6 @@ public class TableWithoutColumn implements Table {
     }
 
     @Override
-    public LocalDate[] getAllDates() {
-        return core.getAllDates();
-    }
-
-    @Override
     public double[] getExactValues(LocalDate date) {
         double[] x = core.getExactValues(date);
         double[] y = new double[x.length-1];
@@ -100,41 +80,12 @@ public class TableWithoutColumn implements Table {
         return y;
     }
 
-    @Override
-    public Frequency getFrequency() {
-        return core.getFrequency();
-    }
-
     public double[][] toDoubleColumns(int[] xColumns, LocalDate start, LocalDate end,
                                       Frequency frequency, final TableImpl.GetMethod getMethod) {
         return Util.toDoubleColumns(xColumns,start,end,frequency,(date,col) -> {
             double v = getValue(date,col, getMethod);
             return String.valueOf(v);
         });
-    }
-    @Override
-    public Table withoutColumn(String column) {
-        return new TableWithoutColumn(this,column);
-    }
-
-    @Override
-    public Table withDerivedColumn(TableWithDerived.ValueDeriver valueDeriver) {
-        return new TableWithDerived(this,valueDeriver);
-    }
-
-    @Override
-    public Table retainColumns(Set<String> columns) {
-        return TableParser.retainColumns(this,columns);
-    }
-
-    @Override
-    public LocalDate getLastDate() {
-        return core.getLastDate();
-    }
-
-    @Override
-    public LocalDate getFirstDate() {
-        return core.getFirstDate();
     }
 
     @Override
@@ -150,35 +101,5 @@ public class TableWithoutColumn implements Table {
     @Override
     public Table inTimeFrame(LocalDate startInclusive, LocalDate endExclusive) {
         return new TableWithoutColumn(core.inTimeFrame(startInclusive,endExclusive),this.removeColumn);
-    }
-
-    @Override
-    public LocalDate getDateBefore(LocalDate date) {
-        return core.getDateBefore(date);
-    }
-
-    @Override
-    public LocalDate getDateOnOrBefore(LocalDate date) {
-        return core.getDateOnOrBefore(date);
-    }
-
-    @Override
-    public LocalDate getDateAfter(LocalDate date) {
-        return core.getDateAfter(date);
-    }
-
-    @Override
-    public LocalDate getDateOnOrAfter(LocalDate date) {
-        return core.getDateOnOrAfter(date);
-    }
-
-    @Override
-    public Table withLogOf(String column) {
-        return withDerivedColumn(new LogDeriver(column));
-    }
-
-    @Override
-    public Table replaceColumnWithLog(String column) {
-        return withDerivedColumn(new LogDeriver(column)).withoutColumn(column);
     }
 }

@@ -137,7 +137,7 @@ public class Advisor {
         LocalDate simStart = marketStart.plusYears(frameYears);
 
         Simulater simulater = new Simulater.SimulaterBuilder()
-                .bondROI(0.04)
+                .bondROI(0.02)
                 .frameYears(frameYears)
                 .stockMarket(stockMarket)
                 .bondMarket(bondMarket)

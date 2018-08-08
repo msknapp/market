@@ -2,7 +2,7 @@ package knapp.table;
 
 import java.time.LocalDate;
 
-public class LogDeriver implements TableWithDerived.ValueDeriver {
+public class LogDeriver implements ValueDeriver {
 
     private String coreColumn;
 

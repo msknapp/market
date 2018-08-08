@@ -1,0 +1,63 @@
+Summary:
+
+You should have -25.9% of your money invested in stock right now.
+
+percent stock = 0.366653 + 0.629220 * atan(1.066849 * sigma)
+-0.259284 = 0.366653 + 0.629220 * atan(1.066849 * -1.443203) = -25.9
+The market ticker symbol is: IVE
+Current Market Price: $115.39
+Estimated Market Price: $110.56
+The model's standard deviation is: $3.35
+The model's R-Squared is: 0.9786
+Current Sigma: -1.44
+
+Estimate From Inputs:
+Intercept: 186.731914 --> Cumulative Sum: 186.73
+CE16OV =>  parameter: '-0.003060' x last value: '155965.000000' = '-477.29' --> Cumulative Sum: -290.561487'
+IPMAN =>  parameter: '0.099557' x last value: '104.793300' = '10.43' --> Cumulative Sum: -280.128566'
+M1SL =>  parameter: '0.059499' x last value: '3657.800000' = '217.64' --> Cumulative Sum: -62.491341'
+M1V =>  parameter: '16.264709' x last value: '5.578000' = '90.72' --> Cumulative Sum: 28.233205'
+RSAFS =>  parameter: '0.000165' x last value: '506787.000000' = '83.69' --> Cumulative Sum: 111.923681'
+UMCSENT =>  parameter: '0.149950' x last value: '98.200000' = '14.73' --> Cumulative Sum: 126.648771'
+UNRATE =>  parameter: '-4.125047' x last value: '3.900000' = '-16.09' --> Cumulative Sum: 110.561088'
+
+Yields: 110.56
+
+Simulation Results:
+The simulation ended with: $346943
+The simulation had ROI: 42.6%
+The simulation made 299 transactions.
+
+Alternative Strategies:
+
+According to 'trained until 2014', you should have 15% (unbound: 15%) invested in stock and the rest in bonds.
+According to 'trained until 2018', you should have 32% (unbound: 32%) invested in stock and the rest in bonds.
+According to 'winner1', you should have 18% (unbound: 18%) invested in stock and the rest in bonds.
+
+Function Output:
+Sigma, Percent Stock:
+-6.0,(52.4)
+-5.5,(51.6)
+-5.0,(50.5)
+-4.5,(49.3)
+-4.0,(47.7)
+-3.5,(45.7)
+-3.0,(43.1)
+-2.5,(39.6)
+-2.0,(34.6)
+-1.5,(27.0)
+-1.0,(14.8)
+-0.5,5.8
+0.0,36.7
+0.5,67.5
+1.0,88.1
+1.5,100.4
+2.0,107.9
+2.5,112.9
+3.0,116.4
+3.5,119.0
+4.0,121.0
+4.5,122.6
+5.0,123.8
+5.5,124.9
+6.0,125.8

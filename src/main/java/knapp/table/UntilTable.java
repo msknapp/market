@@ -5,33 +5,12 @@ import knapp.history.Frequency;
 import java.time.LocalDate;
 import java.util.Set;
 
-public class UntilTable implements Table {
-    private Table core;
+public class UntilTable extends AbstractWrappingTable {
     private LocalDate maxDateExclusive;
 
     public UntilTable(Table core, LocalDate max) {
-        this.core = core;
+        super(core);
         this.maxDateExclusive = max;
-    }
-
-    @Override
-    public String getName() {
-        return core.getName();
-    }
-
-    @Override
-    public void setName(String name) {
-        core.setName(name);
-    }
-
-    @Override
-    public String getColumn(int i) {
-        return core.getColumn(i);
-    }
-
-    @Override
-    public int getColumn(String name) {
-        return core.getColumn(name);
     }
 
     @Override
@@ -48,11 +27,6 @@ public class UntilTable implements Table {
             throw new IllegalArgumentException("DNE");
         }
         return core.getValue(date,column,getMethod);
-    }
-
-    @Override
-    public int getColumnCount() {
-        return core.getColumnCount();
     }
 
     @Override
@@ -79,58 +53,8 @@ public class UntilTable implements Table {
     }
 
     @Override
-    public Frequency getFrequency() {
-        return core.getFrequency();
-    }
-
-    @Override
-    public Table withoutColumn(String column) {
-        return new TableWithoutColumn(this,column);
-    }
-
-    @Override
-    public Table withDerivedColumn(TableWithDerived.ValueDeriver valueDeriver) {
-        return new TableWithDerived(this,valueDeriver);
-    }
-
-    @Override
-    public Table withLogOf(String column) {
-        return withDerivedColumn(new LogDeriver(column));
-    }
-
-    @Override
-    public Table replaceColumnWithLog(String column) {
-        return withDerivedColumn(new LogDeriver(column)).withoutColumn(column);
-    }
-
-    @Override
-    public Table retainColumns(Set<String> columns) {
-        return TableParser.retainColumns(this,columns);
-    }
-
-    @Override
     public LocalDate getLastDate() {
         return core.getDateBefore(maxDateExclusive);
-    }
-
-    @Override
-    public LocalDate getFirstDate() {
-        return core.getFirstDate();
-    }
-
-    @Override
-    public Table untilExclusive(LocalDate date) {
-        return new UntilTable(this, date);
-    }
-
-    @Override
-    public Table onOrAfter(LocalDate date) {
-        return null;
-    }
-
-    @Override
-    public Table inTimeFrame(LocalDate startInclusive, LocalDate endExclusive) {
-        return null;
     }
 
     @Override

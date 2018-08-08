@@ -1,0 +1,61 @@
+Summary:
+
+You should have -72.6% of your money invested in stock right now.
+
+percent stock = 0.452458 + 1.425193 * atan(0.745378 * sigma)
+-0.726105 = 0.452458 + 1.425193 * atan(0.745378 * -1.457997) = -72.6
+The market ticker symbol is: IVE
+Current Market Price: $115.39
+Estimated Market Price: $109.90
+The model's standard deviation is: $3.77
+The model's R-Squared is: 0.9726
+Current Sigma: -1.46
+
+Estimate From Inputs:
+Intercept: 205.237828 --> Cumulative Sum: 205.24
+CE16OV =>  parameter: '-0.002914' x last value: '155965.000000' = '-454.55' --> Cumulative Sum: -249.312244'
+EXUSEU =>  parameter: '13.999741' x last value: '1.162500' = '16.27' --> Cumulative Sum: -233.037545'
+M1SL =>  parameter: '0.073138' x last value: '3657.800000' = '267.53' --> Cumulative Sum: 34.487889'
+M1V =>  parameter: '17.323809' x last value: '5.578000' = '96.63' --> Cumulative Sum: 131.120096'
+UNRATE =>  parameter: '-5.442250' x last value: '3.900000' = '-21.22' --> Cumulative Sum: 109.895320'
+
+Yields: 109.90
+
+Simulation Results:
+The simulation ended with: $212049
+The simulation had ROI: 35.7%
+The simulation made 237 transactions.
+
+Alternative Strategies:
+
+According to 'trained until 2014', you should have 15% (unbound: 15%) invested in stock and the rest in bonds.
+According to 'trained until 2018', you should have 31% (unbound: 31%) invested in stock and the rest in bonds.
+According to 'winner1', you should have 17% (unbound: 17%) invested in stock and the rest in bonds.
+
+Function Output:
+Sigma, Percent Stock:
+-6.0,(147.3)
+-5.5,(144.5)
+-5.0,(141.3)
+-4.5,(137.3)
+-4.0,(132.5)
+-3.5,(126.5)
+-3.0,(118.7)
+-2.5,(108.4)
+-2.0,(94.4)
+-1.5,(74.6)
+-1.0,(46.0)
+-0.5,(5.6)
+0.0,45.2
+0.5,96.1
+1.0,136.5
+1.5,165.1
+2.0,184.9
+2.5,198.9
+3.0,209.2
+3.5,216.9
+4.0,223.0
+4.5,227.8
+5.0,231.8
+5.5,235.0
+6.0,237.8
