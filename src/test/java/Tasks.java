@@ -1,6 +1,14 @@
 import knapp.*;
+import knapp.advisor.AdvisorImpl;
+import knapp.download.DataRetriever;
+import knapp.download.IEXRetriever;
 import knapp.history.Frequency;
 import knapp.indicator.Indicator;
+import knapp.predict.NormalModel;
+import knapp.predict.SimpleEstimate;
+import knapp.predict.SimpleModel;
+import knapp.predict.TrendFinder;
+import knapp.report.Reporter;
 import knapp.simulation.Simulater;
 import knapp.simulation.evolution.Evolver;
 import knapp.simulation.strategy.FunctionStrategy;
@@ -120,23 +128,23 @@ public class Tasks {
                 .start(start)
                 .end(end)
                 .build();
-        Model model = analasys.deriveModel();
+        NormalModel model = analasys.deriveModel();
         LocalDate lastInputDate = inputs.getLastDate();
         double[] lastValues = inputs.getExactValues(lastInputDate);
         LocalDate lastMarketDate = stockMarket.getLastDate();
         double[] mvs = stockMarket.getExactValues(lastMarketDate);
         double lastMarketValue = mvs[0];
-        Model.Estimate estimate = model.produceEstimate(lastValues,lastMarketValue);
-        evalWith(estimate,StrategyBank.trainedUntil2014_Equation(),"trained until 2014");
-        evalWith(estimate,StrategyBank.trainedUntil2018_Equation(),"trained until 2018");
-        evalWith(estimate,StrategyBank.winner1_Equation(),"winner1");
+        double estimate = model.estimateValue(inputs.getLastMarketSlice());
+//        evalWith(estimate,StrategyBank.trainedUntil2014_Equation(),"trained until 2014");
+//        evalWith(estimate,StrategyBank.trainedUntil2018_Equation(),"trained until 2018");
+//        evalWith(estimate,StrategyBank.winner1_Equation(),"winner1");
     }
 
     @Test
     public void produceReport() throws IOException {
-        Advisor advisor = new Advisor();
-        Reporter reporter = advisor.recommendInvestmentAllocationToday();
-        reporter.produceReportBeneathHome();
+//        AdvisorImpl advisorImpl = new AdvisorImpl();
+//        Reporter reporter = advisorImpl.recommendInvestmentAllocationToday();
+//        reporter.produceReportBeneathHome();
     }
 
     @Test
@@ -172,16 +180,16 @@ public class Tasks {
                 .start(marketStart)
                 .end(end)
                 .build();
-        Model model = analasys.deriveModel();
-        LocalDate lastInputDate = inputs.getLastDate();
-        double[] lastValues = inputs.getExactValues(lastInputDate);
-        LocalDate lastMarketDate = stockMarket.getLastDate();
-        double[] mvs = stockMarket.getExactValues(lastMarketDate);
-        double lastMarketValue = iexRetriever.getPrice("IVE");
-        Model.Estimate estimate = model.produceEstimate(lastValues,lastMarketValue);
-        evalWith(estimate,StrategyBank.trainedUntil2014_Equation(),"trained until 2014");
-        evalWith(estimate,StrategyBank.trainedUntil2018_Equation(),"trained until 2018");
-        evalWith(estimate,StrategyBank.winner1_Equation(),"winner1");
+//        SimpleModel model = analasys.deriveModel();
+//        LocalDate lastInputDate = inputs.getLastDate();
+//        double[] lastValues = inputs.getExactValues(lastInputDate);
+//        LocalDate lastMarketDate = stockMarket.getLastDate();
+//        double[] mvs = stockMarket.getExactValues(lastMarketDate);
+//        double lastMarketValue = iexRetriever.getPrice("IVE");
+//        SimpleEstimate estimate = model.produceEstimate(lastValues,lastMarketValue);
+//        evalWith(estimate,StrategyBank.trainedUntil2014_Equation(),"trained until 2014");
+//        evalWith(estimate,StrategyBank.trainedUntil2018_Equation(),"trained until 2018");
+//        evalWith(estimate,StrategyBank.winner1_Equation(),"winner1");
     }
 
     // output on July 27, 2018.
@@ -189,7 +197,7 @@ public class Tasks {
 //    According to 'trained until 2018', you should have 52% invested in stock and the rest in bonds.
 //    According to 'winner1', you should have 30% invested in stock and the rest in bonds.
 
-    private void evalWith(Model.Estimate estimate, Line line, String modelName) {
+    private void evalWith(SimpleEstimate estimate, Line line, String modelName) {
         double pct = line.apply(estimate.getSigmas());
         if (pct > 1) {
             pct = 1;

@@ -1,4 +1,4 @@
-import knapp.TrendFinder;
+import knapp.predict.TrendFinder;
 import knapp.history.Frequency;
 import knapp.simulation.Simulater;
 import knapp.simulation.strategy.AllStockStrategy;

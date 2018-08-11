@@ -1,4 +1,4 @@
-package knapp;
+package knapp.download;
 
 import knapp.download.DownloadRequest;
 import knapp.history.Frequency;

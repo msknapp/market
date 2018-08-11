@@ -1,6 +1,8 @@
 package knapp;
 
+import knapp.download.DataRetriever;
 import knapp.history.Frequency;
+import knapp.predict.TrendFinder;
 import knapp.simulation.Simulater;
 import knapp.table.Table;
 import knapp.table.TableParser;

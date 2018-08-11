@@ -1,6 +1,8 @@
 package knapp.inputfinder;
 
-import knapp.Model;
+import knapp.predict.Model;
+import knapp.predict.NormalModel;
+import knapp.predict.SimpleModel;
 import knapp.history.Frequency;
 
 import java.util.List;
@@ -9,7 +11,7 @@ public class CorrelationResult {
     private List<String> indicators;
     private boolean cpiWasAdjusted;
     private Frequency frequency;
-    private Model model;
+    private NormalModel model;
 
     private double trustLevel;
 
@@ -53,11 +55,11 @@ public class CorrelationResult {
         this.frequency = frequency;
     }
 
-    public Model getModel() {
+    public NormalModel getModel() {
         return model;
     }
 
-    public void setModel(Model model) {
+    public void setModel(NormalModel model) {
         this.model = model;
     }
 

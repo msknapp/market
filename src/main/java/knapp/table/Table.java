@@ -1,9 +1,10 @@
 package knapp.table;
 
 import knapp.history.Frequency;
+import knapp.predict.MarketSlice;
 
 import java.time.LocalDate;
-import java.util.Set;
+import java.util.*;
 
 public interface Table {
 
@@ -61,5 +62,37 @@ public interface Table {
 
     default Table withGetMethod(TableImpl.GetMethod getMethod, boolean strict) {
         return new TableWithGetMethod(this, getMethod, strict);
+    }
+
+    default List<String> getColumns() {
+        List<String> cols = new ArrayList<>(getColumnCount());
+        for (int i = 0;i < getColumnCount();i++) {
+            cols.add(getColumn(i));
+        }
+        return cols;
+    }
+
+    default MarketSlice getLastMarketSlice() {
+        return getMarketSlice(getLastDate(),getColumns());
+    }
+
+    default MarketSlice getLastMarketSlice(List<String> columns) {
+        return getMarketSlice(getLastDate(),columns);
+    }
+
+    default MarketSlice getMarketSlice(LocalDate date) {
+        return getMarketSlice(date,getColumns());
+    }
+
+    default MarketSlice getMarketSlice(LocalDate date, List<String> inputs) {
+        return getMarketSlice(date, inputs,TableImpl.GetMethod.EXACT);
+    }
+
+    default MarketSlice getMarketSlice(LocalDate date, List<String> inputs, TableImpl.GetMethod getMethod) {
+        Map<String,Double> values = new HashMap<>(inputs.size());
+        for (String input : inputs) {
+            values.put(input,getValue(date,input, getMethod));
+        }
+        return new MarketSlice(values);
     }
 }

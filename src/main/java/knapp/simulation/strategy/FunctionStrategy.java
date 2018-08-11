@@ -1,7 +1,6 @@
 package knapp.simulation.strategy;
 
-import knapp.Model;
-import knapp.TrendFinder;
+import knapp.predict.*;
 import knapp.history.Frequency;
 import knapp.simulation.Account;
 import knapp.simulation.CurrentPrices;
@@ -29,13 +28,14 @@ public class FunctionStrategy extends AllocationStrategy {
         TrendFinder.Analasys analysis = trendFinder.startAnalyzing().start(start).
                 end(end).inputs(inputs).market(stockMarket).
                 frequency(Frequency.Monthly).build();
-        Model model = analysis.deriveModel();
+        NormalModel model = analysis.deriveModel();
 
-        double[] lastInputs = inputs.getExactValues(inputs.getLastDate());
+        MarketSlice marketSlice = inputs.getLastMarketSlice();
+        double estimate = model.estimateValue(marketSlice);
         double lastMarketValue = stockMarket.getExactValues(stockMarket.getLastDate())[0];
-        Model.Estimate estimate = model.produceEstimate(lastInputs,lastMarketValue);
+        double sigmas = (estimate - lastMarketValue) / model.getStandardDeviation();
 
-        double pctStock = this.evolvableFunction.apply(estimate.getSigmas());
+        double pctStock = this.evolvableFunction.apply(sigmas);
         if (pctStock > 1.0) {
             pctStock = 1;
         }

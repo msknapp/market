@@ -1,6 +1,6 @@
 package knapp.simulation.strategy;
 
-import knapp.TrendFinder;
+import knapp.predict.TrendFinder;
 import knapp.simulation.functions.Line;
 import knapp.table.DefaultGetMethod;
 

@@ -1,7 +1,8 @@
 package knapp.inputfinder;
 
-import knapp.Model;
-import knapp.TrendFinder;
+import knapp.predict.NormalModel;
+import knapp.predict.SimpleModel;
+import knapp.predict.TrendFinder;
 import knapp.history.Frequency;
 import knapp.table.RealDeriver;
 import knapp.table.Table;
@@ -197,7 +198,7 @@ public class BestInputFinder {
                 return null;
             }
             // now we know we can trust it, let's get a more accurate model.
-            Model accurateModel = analasys.deriveModel();
+            NormalModel accurateModel = analasys.deriveModel();
 
             CorrelationResult correlationResult = new CorrelationResult();
             correlationResult.setCpiWasAdjusted(adjustForInflation);

@@ -1,4 +1,4 @@
-package knapp;
+package knapp.download;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import knapp.history.Frequency;

@@ -1,4 +1,4 @@
-package knapp;
+package knapp.predict;
 
 import knapp.history.Frequency;
 import knapp.table.DefaultGetMethod;
@@ -157,7 +157,7 @@ public class TrendFinder {
             System.out.println(text);
         }
 
-        public Model deriveModel() {
+        public NormalModel deriveModel() {
             TableImpl.GetMethod marketMethod = getMethodChooser.apply(inputs,0);
             double[][] x = TableUtil.toDoubleRows(inputs,inputColumns,start,end,frequency,marketMethod);
             double[][] yy = TableUtil.toDoubleColumns(market,new int[]{0},start,end,frequency, marketMethod);
@@ -166,12 +166,7 @@ public class TrendFinder {
             regression.newSampleData(y, x);
 
             try {
-                double[] beta = regression.estimateRegressionParameters();
-                double sigma = regression.estimateRegressionStandardError();
-                double rSquared = regression.calculateRSquared();
-                double[] parmStdErr = regression.estimateRegressionParametersStandardErrors();
-
-                return new Model(beta, sigma, rSquared, parmStdErr);
+                return new SimpleModel(regression, inputs.getColumns());
             } catch (Exception e) {
 
             }
@@ -198,12 +193,7 @@ public class TrendFinder {
             regression.newSampleData(y, x);
 
             try {
-                double[] beta = regression.estimateRegressionParameters();
-                double sigma = regression.estimateRegressionStandardError();
-                double rSquared = regression.calculateRSquared();
-                double[] parmStdErr = regression.estimateRegressionParametersStandardErrors();
-
-                Model model = new Model(beta, sigma, rSquared, parmStdErr);
+                SimpleModel model = new SimpleModel(regression, inputs.getColumns());
                 
                 // test it.
                 double testStandardDeviation = testModel(model,testDates, marketMethod);
@@ -217,17 +207,20 @@ public class TrendFinder {
             return null;
         }
 
-        private double testModel(Model model, Set<LocalDate> testDates, TableImpl.GetMethod marketMethod) {
+        private double testModel(SimpleModel model, Set<LocalDate> testDates, TableImpl.GetMethod marketMethod) {
             double squareDeviation = 0;
             for (LocalDate date : testDates) {
-                double[] rowData = new double[inputColumns.length];
-                int colIndex = 0;
-                for (int col : inputColumns) {
-                    rowData[colIndex++] = inputs.getValue(date,col,marketMethod);
+                Map<String,Double> values = new HashMap<>(inputs.getColumnCount());
+                for (String col : inputs.getColumns()) {
+                    double v = inputs.getValue(date,col,marketMethod);
+                    values.put(col,v);
                 }
+                MarketSlice marketSlice = new MarketSlice(values);
+
                 double realValue = market.getValue(date,0,marketMethod);
-                Model.Estimate estimate = model.produceEstimate(rowData,realValue);
-                double deviation = estimate.getEstimatedValue() - realValue;
+
+                double estimate = model.estimateValue(marketSlice);
+                double deviation = estimate - realValue;
                 squareDeviation += Math.pow(deviation,2);
             }
             return Math.sqrt(squareDeviation / ((double) testDates.size()));
@@ -305,7 +298,7 @@ public class TrendFinder {
                     writer.write(",");
                     writer.write(inputs.getColumn(col));
                 }
-                writer.write(",Market Value,Estimate\n");
+                writer.write(",Market Value,SimpleEstimate\n");
                 doWithDate(start,end,Frequency.Monthly, d -> {
                     writer.write(d.toString());
                     double[] inputDoubles = new double[inputColumns.length+1];
@@ -346,14 +339,14 @@ public class TrendFinder {
     }
 
     public static class TestedModel {
-        private Model model;
+        private SimpleModel model;
         private double testedStandardDeviation;
 
         public Model getModel() {
             return model;
         }
 
-        public void setModel(Model model) {
+        public void setModel(SimpleModel model) {
             this.model = model;
         }
 

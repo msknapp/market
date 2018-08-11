@@ -1,7 +1,12 @@
 package knapp;
 
+import knapp.download.DataRetriever;
+import knapp.download.IEXRetriever;
 import knapp.history.Frequency;
 import knapp.indicator.Indicator;
+import knapp.predict.NormalModel;
+import knapp.predict.SimpleModel;
+import knapp.predict.TrendFinder;
 import knapp.table.*;
 import knapp.util.InputLoader;
 import org.junit.Test;
@@ -75,7 +80,7 @@ public class BetterCorrelation {
                 .inputs(inputs)
                 .build();
 
-        Model model = analasys.deriveModel();
+        NormalModel model = analasys.deriveModel();
 
         System.out.println(model.getRsquared());
     }

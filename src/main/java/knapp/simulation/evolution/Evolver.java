@@ -1,6 +1,6 @@
 package knapp.simulation.evolution;
 
-import knapp.TrendFinder;
+import knapp.predict.TrendFinder;
 import knapp.simulation.Simulater;
 import knapp.simulation.functions.EvolvableFunction;
 import knapp.simulation.strategy.FunctionStrategy;
@@ -39,7 +39,6 @@ public class Evolver {
                 FunctionStrategy strategy = new FunctionStrategy(trendFinder,spawn);
                 Simulater.SimulationResults res = sim.apply(strategy);
                 if (res.getFinalDollars() > bestFinalDollars) {
-//                    System.out.println(String.format("There is a new best strategy, '%f + %f * sigmas' yielded $%d",spawn.getIntercept(),spawn.getCubeSlope(),res.getFinalDollars()));
                     currentBest = spawn;
                     bestFinalDollars = res.getFinalDollars();
                 }

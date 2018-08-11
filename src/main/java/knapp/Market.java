@@ -1,7 +1,13 @@
 package knapp;
 
+import knapp.advisor.Advice;
+import knapp.advisor.AdvisorImpl;
+import knapp.advisor.MixedAdvisor;
+import knapp.download.DataRetriever;
 import knapp.history.Frequency;
 import knapp.indicator.Indicator;
+import knapp.predict.TrendFinder;
+import knapp.report.Reporter;
 import knapp.simulation.Account;
 import knapp.simulation.Simulater;
 import knapp.simulation.functions.*;
@@ -16,10 +22,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class Market {
 
@@ -36,76 +39,50 @@ public class Market {
 
     public static void main(String[] args) throws IOException {
         String subPath = "/Documents/investing";
-        String baseDir = System.getenv("HOME")+subPath;
+        String baseDir = System.getenv("HOME") + subPath;
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss");
         String subDir = LocalDateTime.now().format(dtf);
-        String cdDir = baseDir+"/"+subDir;
-        System.out.println("Your report will be written to: "+cdDir);
+        String cdDir = baseDir + "/" + subDir;
+        System.out.println("Your report will be written to: " + cdDir);
         File dir = new File(cdDir);
         dir.mkdirs();
         CurrentDirectory currentDirectory = new CurrentDirectory(cdDir);
 
         // Cubed and Tan seem to be too wild and inconsistent.
         // CubicPolynomial is also acting too wild and inconsistent.
-        List<EvolvableFunction> functions = Arrays.asList(Line.initialLine(),
-                ArcTan.initialArcTan());
+        // I only use the Normal function now.
 
-        for (EvolvableFunction f : functions) {
-            runWith(currentDirectory,
-                    f.getClass().getSimpleName()+"-best7",f,
-                    "M1SL","UNRATE","M1V","UMCSENT","IPMAN","TTLCONS","REVOLSL");
-            runWith(currentDirectory,
-                    f.getClass().getSimpleName()+"-second-best7",f,
-                    "M1SL","UNRATE","M1V","UMCSENT","IPMAN","CE16OV","RSAFS");
+        // most defaults are correct, I don't override them.
+        AdvisorImpl advisorImpl = AdvisorImpl.define()
+                .addInputs("M1SL", "UNRATE", "M1V", "UMCSENT", "IPMAN", "TTLCONS", "REVOLSL")
+                .addInputs("CE16OV", "RSAFS", "IPMAN", "CSUSHPISA", "REVOLSL")
+                .addInputs("EXUSEU", "CPIAUCSL", "INDPRO", "RSAFS")
+                .build();
 
-            runWith(currentDirectory,
-                    f.getClass().getSimpleName()+"-best6",f,
-                    "M1SL","UNRATE","M1V","IPMAN","CSUSHPISA","REVOLSL");
+        MixedAdvisor mixedAdvisor = MixedAdvisor.define().core(advisorImpl)
+                .addInputs("M1SL", "UNRATE", "M1V", "UMCSENT", "IPMAN", "TTLCONS", "REVOLSL")
+                .addInputs("M1SL", "UNRATE", "M1V", "UMCSENT", "IPMAN", "CE16OV", "RSAFS")
+                .addInputs("M1SL", "UNRATE", "M1V", "IPMAN", "CSUSHPISA", "REVOLSL")
+                .addInputs("M1SL", "UNRATE", "M1V", "EXUSEU", "CE16OV")
+                .addInputs("M1SL", "UNRATE", "M1V", "CPIAUCSL", "INDPRO")
+                .addInputs("M1SL", "UNRATE", "M1V", "REVOLSL")
+                .addInputs("M1SL", "UNRATE", "UMCSENT", "M1V")
+                .addInputs("UNRATE", "CSUSHPISA", "RSAFS")
+                .addInputs("UNRATE", "UMCSENT", "CPIAUCSL")
+                .build();
 
-            runWith(currentDirectory,
-                    f.getClass().getSimpleName()+"-best5",f,
-                    "M1SL","UNRATE","M1V","EXUSEU","CE16OV");
+        mixedAdvisor.initialize();
+        Advice advice = mixedAdvisor.getAdvice(Collections.emptyList());
 
-            runWith(currentDirectory,
-                    f.getClass().getSimpleName()+"-second-best5",f,
-                    "M1SL","UNRATE","M1V","CPIAUCSL","INDPRO");
-
-            runWith(currentDirectory,
-                    f.getClass().getSimpleName()+"-best4",f,
-                    "M1SL","UNRATE","M1V","REVOLSL");
-
-            runWith(currentDirectory,
-                    f.getClass().getSimpleName()+"-second-best4",f,
-                    "M1SL","UNRATE","UMCSENT","M1V");
-
-            runWith(currentDirectory,
-                    f.getClass().getSimpleName()+"-best3",f,
-                    "UNRATE","CSUSHPISA","RSAFS");
-
-            runWith(currentDirectory,
-                    f.getClass().getSimpleName()+"-second-best3",f,
-                    "UNRATE","UMCSENT","CPIAUCSL");
-        }
-    }
-
-    private static void runWith(CurrentDirectory currentDirectory,
-                         String prefix, EvolvableFunction initialFunction, String ... series) throws IOException {
-
-        Advisor advisor = new Advisor();
-        Reporter reporter;
-
-        advisor.setInputSeries(Arrays.asList(series));
-        advisor.setInitialFunction(initialFunction);
-        reporter = advisor.recommendInvestmentAllocationToday();
-        reporter.setFilePrefix(prefix);
-        reporter.produceReport(currentDirectory);
+        Reporter reporter = new Reporter("");
+        reporter.produceReport(currentDirectory,advice);
     }
 
     public void analyzeMarket(boolean logarithmicMethod) throws IOException {
         Table market = marketContext.getMarket();
         String inputText = marketContext.getCurrentDirectory().toText(marketContext.getConsolidatedDataFile());
-        Table tmpInput = TableParser.parse(inputText,true,Frequency.Monthly);
-        tmpInput = new TableWithoutColumn(tmpInput,"Market Price");
+        Table tmpInput = TableParser.parse(inputText, true, Frequency.Monthly);
+        tmpInput = new TableWithoutColumn(tmpInput, "Market Price");
         if (logarithmicMethod) {
             // experimentally this seems to be less accurate.
             LogDeriver logDeriver = new LogDeriver("Adj Close");
@@ -129,7 +106,7 @@ public class Market {
         TrendFinder.Analasys analasys = tf.startAnalyzing().market(market).inputs(inputs)
                 .end(end).start(end.minusYears(30)).build();
 
-        analasys.analyzeTrend(marketContext.getPredictionFile(),marketContext.getCurrentDirectory());
+        analasys.analyzeTrend(marketContext.getPredictionFile(), marketContext.getCurrentDirectory());
     }
 
     public void retrieveData() throws IOException {
@@ -138,9 +115,9 @@ public class Market {
         LocalDate end = LocalDate.now();
         LocalDate start = end.minusYears(50);
         String indicatorText = marketContext.getCurrentDirectory().toText(marketContext.getIndicatorsFile());
-        List<Indicator> indicators = Indicator.parseFromText(indicatorText,true);
-        Map<String,Table> data = dataRetriever.retrieveData(start,end,indicators);
-        dataRetriever.writeData(start,end,data,marketContext.getMarket(),
+        List<Indicator> indicators = Indicator.parseFromText(indicatorText, true);
+        Map<String, Table> data = dataRetriever.retrieveData(start, end, indicators);
+        dataRetriever.writeData(start, end, data, marketContext.getMarket(),
                 marketContext.getCurrentDirectory(),
                 marketContext.getConsolidatedDataFile());
     }
@@ -153,14 +130,14 @@ public class Market {
         // for simulation purposes, bonds have a constant value,
         // however, bonds pay dividends in the simulation while stocks only
         // benefit from capital gains.
-        Table bondMarket = TableParser.produceConstantTable(100.0,LocalDate.parse("1950-01-01"),
-                LocalDate.now(),Frequency.Monthly);
+        Table bondMarket = TableParser.produceConstantTable(100.0, LocalDate.parse("1950-01-01"),
+                LocalDate.now(), Frequency.Monthly);
         String smText = marketContext.getCurrentDirectory().toText(marketContext.getMarketFile());
-        Table stockMarket = TableParser.parse(smText,true,Frequency.Monthly);
+        Table stockMarket = TableParser.parse(smText, true, Frequency.Monthly);
         stockMarket = stockMarket.retainColumns(Collections.singleton("Adj Close"));
         String inputText = marketContext.getCurrentDirectory().toText(marketContext.getConsolidatedDataFile());
-        Table tmpInput = TableParser.parse(inputText,true,Frequency.Monthly);
-        tmpInput = new TableWithoutColumn(tmpInput,"Market Price");
+        Table tmpInput = TableParser.parse(inputText, true, Frequency.Monthly);
+        tmpInput = new TableWithoutColumn(tmpInput, "Market Price");
         tmpInput = TableParser.solidifyTable(tmpInput);
         final Table inputs = tmpInput;
 
@@ -169,19 +146,19 @@ public class Market {
                 .stockMarket(stockMarket).build();
 
         LocalDate end = LocalDate.now().minusMonths(2);
-        LocalDate start = LocalDate.of(2000,02,01);
+        LocalDate start = LocalDate.of(2000, 02, 01);
 
         InvestmentStrategy strategy = new AllStockStrategy();
-        Account finalAccount = simulater.simulate(start,end, 10000, strategy).getAccount();
+        Account finalAccount = simulater.simulate(start, end, 10000, strategy).getAccount();
         long finalCents = finalAccount.getCurrentCents();
 
-        System.out.println("The investor that just bought stock and never sold it wound up with: $"+(finalCents / 100));
+        System.out.println("The investor that just bought stock and never sold it wound up with: $" + (finalCents / 100));
 
         strategy = new IntelligentStrategy(marketContext.getTrendFinder());
-        finalAccount = simulater.simulate(start,end, 10000, strategy).getAccount();
+        finalAccount = simulater.simulate(start, end, 10000, strategy).getAccount();
         finalCents = finalAccount.getCurrentCents();
 
-        System.out.println("The intelligent investor ends up with: $"+(finalCents / 100));
+        System.out.println("The intelligent investor ends up with: $" + (finalCents / 100));
 
     }
 
