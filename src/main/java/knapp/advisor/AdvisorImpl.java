@@ -12,8 +12,8 @@ import knapp.simulation.functions.EvolvableFunction;
 import knapp.simulation.functions.Normal;
 import knapp.simulation.strategy.FunctionStrategy;
 import knapp.simulation.strategy.InvestmentStrategy;
-import knapp.table.Table;
-import knapp.table.TableParser;
+import knapp.table.*;
+import knapp.table.util.TableParser;
 import knapp.util.InputLoader;
 
 import java.io.IOException;
@@ -48,7 +48,12 @@ public class AdvisorImpl implements Advisor {
     @Override
     public Table getAllInputsTable() {
         List<Table> inputList = new ArrayList<>(allInputs.values());
-        Table inputs = TableParser.mergeTables(inputStart, end, inputList, Frequency.Monthly);
+        Table[] ts = new Table[allInputs.size()];
+        int i = 0;
+        for (Table table : allInputs.values()) {
+            ts[i++] = table;
+        }
+        Table inputs = UnevenTable.from(inputList);
         return inputs;
     }
 
@@ -71,6 +76,7 @@ public class AdvisorImpl implements Advisor {
     @Override
     public void initialize() {
         System.out.println("Downloading IEX data for "+marketSymbol);
+        // recentData has exact values.
         Table recentData = iexRetriever.getChart(marketSymbol,IEXRetriever.ChartLength.FIVEYEARS);
         System.out.println("Done downloading IEX data.");
 
@@ -78,8 +84,13 @@ public class AdvisorImpl implements Advisor {
 
         stockMarket = TableParser.parse(stockMarketText,true,Frequency.Weekly);
         stockMarket = stockMarket.retainColumns(Collections.singleton("Adj Close"));
-        stockMarket = TableParser.mergeTableRows(marketStart,LocalDate.now(),
-                Arrays.asList(recentData,stockMarket),Frequency.Weekly);
+        stockMarket = TableParser.mergeTableRowsExacly(Arrays.asList(stockMarket, recentData));
+
+//        Table[] combined = new Table[] {stockMarket, recentData};
+//        stockMarket = new ExactlyMergedTables(combined, DatePolicy.ANYMUSTHAVE);
+
+//        stockMarket = TableParser.mergeTableRowsApproximately(marketStart,LocalDate.now(),
+//                Arrays.asList(recentData,stockMarket),Frequency.Weekly);
 
         stockMarket.setName(marketSymbol);
 
@@ -99,11 +110,12 @@ public class AdvisorImpl implements Advisor {
 
     @Override
     public Advice getAdvice(List<String> inputSeries) {
-        List<Table> inputList = new ArrayList<>(inputSeries.size());
+        Table[] inputArray = new Table[inputSeries.size()];
+        int i = 0;
         for (String s : inputSeries) {
-            inputList.add(allInputs.get(s));
+            inputArray[i++] = allInputs.get(s);
         }
-        Table inputs = TableParser.mergeTables(inputStart, end, inputList, Frequency.Monthly);
+        Table inputs = UnevenTable.from(Arrays.asList(inputArray));
 
         TrendFinder.Analasys analasys = trendFinder.startAnalyzing()
                 .market(stockMarket)
@@ -111,6 +123,8 @@ public class AdvisorImpl implements Advisor {
                 .frequency(Frequency.Monthly)
                 .start(marketStart)
                 .end(end)
+                .presentDay(LocalDate.now())
+                .lags(inputs.getLags(LocalDate.now()))
                 .build();
         NormalModel model = analasys.deriveModel();
 
@@ -128,11 +142,13 @@ public class AdvisorImpl implements Advisor {
             return simulater.simulate(simStart, end, 10000, strategy);
         };
 
-        Evolver evolver = new Evolver(sim, trendFinder,0.01);
+        Map<String,Integer> lags = inputs.getLags(LocalDate.now());
+
+        Evolver evolver = new Evolver(sim, trendFinder,0.01,lags);
         System.out.println("Running the evolver to find the best investment strategy.");
         EvolvableFunction evolvableFunction = evolver.evolve(initialFunction);
 
-        FunctionStrategy strategy = new FunctionStrategy(trendFinder,evolvableFunction);
+        FunctionStrategy strategy = new FunctionStrategy(trendFinder,evolvableFunction, lags);
         Simulater.SimulationResults results = simulater.simulate(simStart, end, 10000, strategy);
 
         return BasicAdvice.define().bestFunction(evolvableFunction).simulationResults(results)

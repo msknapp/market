@@ -1,14 +1,18 @@
 package knapp.advisor;
 
-import com.sun.org.apache.xpath.internal.operations.Mod;
 import knapp.predict.MarketSlice;
-import knapp.predict.Model;
 import knapp.predict.NormalModel;
 import knapp.simulation.Simulater;
 import knapp.simulation.functions.EvolvableFunction;
 import knapp.table.Table;
+import knapp.table.values.GetMethod;
 
 import java.time.LocalDate;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+import static java.time.temporal.ChronoUnit.DAYS;
 
 public class BasicAdvice implements Advice {
     private final NormalModel model;
@@ -18,6 +22,7 @@ public class BasicAdvice implements Advice {
     private final double currentValue;
     private final Simulater.SimulationResults simulationResults;
     private final EvolvableFunction bestFunction;
+    private final Map<String,Integer> lags;
 
     BasicAdvice(NormalModel model, Table inputs, Table market, LocalDate start, double currentValue,
                 Simulater.SimulationResults simulationResults, EvolvableFunction bestFunction) {
@@ -28,6 +33,12 @@ public class BasicAdvice implements Advice {
         this.currentValue = currentValue;
         this.simulationResults = simulationResults;
         this.bestFunction = bestFunction;
+        Map<String,Integer> tmp = new HashMap<>();
+        for (String column : inputs.getColumns()) {
+            int lag = (int) DAYS.between(inputs.getLastDateOf(column), LocalDate.now());
+            tmp.put(column,lag);
+        }
+        this.lags = Collections.unmodifiableMap(tmp);
     }
 
     @Override
@@ -72,7 +83,7 @@ public class BasicAdvice implements Advice {
 
     @Override
     public double getSigmas() {
-        MarketSlice marketSlice = inputs.getLastMarketSlice();
+        MarketSlice marketSlice = inputs.getPresentDayMarketSlice(lags);
         double estimate = getModel().estimateValue(marketSlice);
         return (estimate - getCurrentMarketValue()) / getModel().getStandardDeviation();
     }

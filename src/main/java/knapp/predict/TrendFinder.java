@@ -1,37 +1,19 @@
 package knapp.predict;
 
 import knapp.history.Frequency;
-import knapp.table.DefaultGetMethod;
 import knapp.table.Table;
-import knapp.table.TableImpl;
-import knapp.table.TableUtil;
-import knapp.util.CurrentDirectory;
+import knapp.table.util.TableUtil;
+import knapp.table.values.InterpolatedValuesGetter;
+import knapp.table.values.LagBasedExtrapolatedValuesGetter;
+import knapp.table.values.TableValueGetter;
 import org.apache.commons.math.stat.regression.OLSMultipleLinearRegression;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Writer;
 import java.time.LocalDate;
 import java.util.*;
-import java.util.function.BiFunction;
-
-import static knapp.util.Util.doWithDate;
-import static knapp.util.Util.doWithWriter;
-import static knapp.util.Util.writeToFile;
 
 public class TrendFinder {
 
-    private final BiFunction<Table,Integer,TableImpl.GetMethod> getMethodChooser;
-
     public TrendFinder() {
-        this(new DefaultGetMethod());
-    }
-
-    public TrendFinder(BiFunction<Table,Integer,TableImpl.GetMethod> getMethodChooser) {
-        if (getMethodChooser == null) {
-            throw new IllegalArgumentException("getMethodChooser can't be null");
-        }
-        this.getMethodChooser = getMethodChooser;
     }
 
     public AnalysisBuilder startAnalyzing() {
@@ -45,9 +27,16 @@ public class TrendFinder {
         private Frequency frequency;
         private LocalDate start;
         private LocalDate end;
+        private LocalDate presentDay;
+        private Map<String,Integer> lags;
 
         public AnalysisBuilder() {
 
+        }
+
+        public AnalysisBuilder lags(Map<String,Integer> lags) {
+            this.lags = lags;
+            return this;
         }
 
         public AnalysisBuilder market(Table market) {
@@ -90,13 +79,18 @@ public class TrendFinder {
             return this;
         }
 
+        public AnalysisBuilder presentDay(LocalDate presentDay) {
+            this.presentDay = presentDay;
+            return this;
+        }
+
         public AnalysisBuilder inputColumns(int[] inputColumns) {
             this.inputColumns = inputColumns;
             return this;
         }
 
         public Analasys build() {
-            return new Analasys(market,inputs,inputColumns,frequency,start,end);
+            return new Analasys(market,inputs,inputColumns,frequency,start,end, presentDay,lags);
         }
     }
 
@@ -107,8 +101,11 @@ public class TrendFinder {
         private final Frequency frequency;
         private final LocalDate start;
         private final LocalDate end;
+        private final LocalDate presentDay;
+        private final Map<String,Integer> lags;
 
-        public Analasys(Table market, Table inputs, int[] inputColumns, Frequency frequency,LocalDate start, LocalDate end) {
+        public Analasys(Table market, Table inputs, int[] inputColumns, Frequency frequency,LocalDate start,
+                        LocalDate end, LocalDate presentDay, Map<String,Integer> lags) {
             if (market == null) {
                 throw new IllegalArgumentException("Market cannot be null");
             }
@@ -117,6 +114,12 @@ public class TrendFinder {
             }
             if (inputs == null) {
                 throw new IllegalArgumentException("inputs cannot be null");
+            }
+            if (!market.isExact()) {
+                throw new IllegalArgumentException("Stock market data must be exact.");
+            }
+            if (!inputs.isExact()) {
+                throw new IllegalArgumentException("The inputs data must be exact.");
             }
             if (inputColumns == null) {
                 inputColumns = new int[inputs.getColumnCount()];
@@ -136,11 +139,25 @@ public class TrendFinder {
             if (end.isBefore(start)) {
                 throw new IllegalArgumentException("End is before start.");
             }
-            if (end.minusMonths(1).isAfter(market.getLastDate())) {
+            if (end.minusMonths(1).isAfter(market.getLastDateOf(0))) {
                 throw new IllegalArgumentException("The last date of the market data appears to be pretty old.");
             }
-            if (end.minusMonths(1).isAfter(inputs.getLastDate())) {
-                throw new IllegalArgumentException("The last date of the input data appears to be pretty old.");
+            for (int i = 0; i < inputs.getColumnCount(); i++) {
+                if (end.minusMonths(6).isAfter(inputs.getLastDateOf(i))) {
+                    LocalDate x = inputs.getLastDateOf(i);
+                    String wrnng = String.format("The last date of the input data '%s' appears to be pretty old, %s",
+                            inputs.getColumn(i), x.toString());
+
+                    // don't stop, just warn them.  Hopefully the lag consideration will help us here.
+                    System.out.println(wrnng);
+//                    throw new IllegalArgumentException(wrnng);
+                }
+            }
+            if (presentDay == null) {
+                throw new NullPointerException("The present day is null");
+            }
+            if (lags == null || lags.isEmpty()) {
+                throw new IllegalArgumentException("Lags must be defined.");
             }
             this.market = market;
             this.inputColumns = inputColumns;
@@ -148,19 +165,24 @@ public class TrendFinder {
             this.frequency = frequency;
             this.start = start;
             this.end = end;
-        }
-
-        public void analyzeTrend(String outFileRelativePath, CurrentDirectory currentDirectory) throws IOException {
-            String text = doWithWriter(w -> {
-                analyzeTrend(outFileRelativePath, w, currentDirectory);
-            });
-            System.out.println(text);
+            this.presentDay = presentDay;
+            this.lags = Collections.unmodifiableMap(new HashMap<>(lags));
         }
 
         public NormalModel deriveModel() {
-            TableImpl.GetMethod marketMethod = getMethodChooser.apply(inputs,0);
-            double[][] x = TableUtil.toDoubleRows(inputs,inputColumns,start,end,frequency,marketMethod);
-            double[][] yy = TableUtil.toDoubleColumns(market,new int[]{0},start,end,frequency, marketMethod);
+            LocalDate firstMarketDate = market.getFirstDateOf(0);
+            LocalDate start = TableUtil.getLatestStartDate(inputs);//inputs.getDateOnOrAfter(firstMarketDate);
+            if (firstMarketDate.isAfter(start)) {
+                start = firstMarketDate;
+            }
+
+            double[][] x = TableUtil.toDoubleRows(inputs,inputColumns,start,end,frequency,
+                    lags);
+
+            // For the market price, it is safe to interpolate the value because it
+            // was really known at that time.  People could have current market prices any day.
+            double[][] yy = TableUtil.toDoubleColumns(market,new int[]{0},start,end,frequency,
+                    new InterpolatedValuesGetter());
             double[] y = yy[0];
             OLSMultipleLinearRegression regression = new OLSMultipleLinearRegression();
             regression.newSampleData(y, x);
@@ -175,9 +197,8 @@ public class TrendFinder {
 
         public TestedModel deriveTestedModel() {
             Random random = new Random();
-            TableImpl.GetMethod marketMethod = getMethodChooser.apply(inputs,0);
 
-            List<LocalDate> dates = new ArrayList<LocalDate>(Arrays.asList(inputs.getAllDates()));
+            List<LocalDate> dates = inputs.getTableColumnView(0).getAllDates();
             int testSample = (int) Math.round(dates.size()*0.2);
             Set<LocalDate> testDates = new HashSet<>(testSample);
             for (int i = 0; i < testSample; i++) {
@@ -187,8 +208,8 @@ public class TrendFinder {
                 dates.remove(d);
             }
 
-            double[][] x = getInputs(inputs,inputColumns, dates, marketMethod);
-            double[] y = getColumnAsArray(market,0,dates,marketMethod);
+            double[][] x = getInputs(inputs,inputColumns, dates);
+            double[] y = getColumnAsArray(market,0,dates);
             OLSMultipleLinearRegression regression = new OLSMultipleLinearRegression();
             regression.newSampleData(y, x);
 
@@ -196,7 +217,7 @@ public class TrendFinder {
                 SimpleModel model = new SimpleModel(regression, inputs.getColumns());
                 
                 // test it.
-                double testStandardDeviation = testModel(model,testDates, marketMethod);
+                double testStandardDeviation = testModel(model,testDates);
                 TestedModel testedModel = new TestedModel();
                 testedModel.setModel(model);
                 testedModel.setTestedStandardDeviation(testStandardDeviation);
@@ -207,17 +228,20 @@ public class TrendFinder {
             return null;
         }
 
-        private double testModel(SimpleModel model, Set<LocalDate> testDates, TableImpl.GetMethod marketMethod) {
+        private double testModel(SimpleModel model, Set<LocalDate> testDates) {
             double squareDeviation = 0;
             for (LocalDate date : testDates) {
                 Map<String,Double> values = new HashMap<>(inputs.getColumnCount());
                 for (String col : inputs.getColumns()) {
-                    double v = inputs.getValue(date,col,marketMethod);
+                    int colNo = inputs.getColumn(col);
+                    TableValueGetter tableValueGetter = new LagBasedExtrapolatedValuesGetter(lags.get(col));
+                    double v = inputs.getValue(date,colNo,tableValueGetter);
                     values.put(col,v);
                 }
                 MarketSlice marketSlice = new MarketSlice(values);
 
-                double realValue = market.getValue(date,0,marketMethod);
+                // people typically have up to date information about the market price.
+                double realValue = market.getValue(date,0,new InterpolatedValuesGetter());
 
                 double estimate = model.estimateValue(marketSlice);
                 double deviation = estimate - realValue;
@@ -226,8 +250,7 @@ public class TrendFinder {
             return Math.sqrt(squareDeviation / ((double) testDates.size()));
         }
 
-        private double[][] getInputs(Table inputs, int[] inputColumns, List<LocalDate> dates,
-                                     TableImpl.GetMethod marketMethod) {
+        private double[][] getInputs(Table inputs, int[] inputColumns, List<LocalDate> dates) {
             Collections.sort(dates);
             // each row forms one array.
             double[][] out = new double[dates.size()][];
@@ -236,106 +259,26 @@ public class TrendFinder {
                 double[] rowData = new double[inputColumns.length];
                 int colIndex = 0;
                 for (int col : inputColumns) {
-                    rowData[colIndex++] = inputs.getValue(date,col,marketMethod);
+                    TableValueGetter tableValueGetter = new LagBasedExtrapolatedValuesGetter(lags.get(inputs.getColumn(col)));
+                    rowData[colIndex++] = inputs.getValue(date,col,tableValueGetter);
                 }
                 out[row++] = rowData;
             }
             return out;
         }
 
-        private double[] getColumnAsArray(Table inputs, int inputColumn, List<LocalDate> dates,
-                                     TableImpl.GetMethod marketMethod) {
+        private double[] getColumnAsArray(Table inputs, int inputColumn, List<LocalDate> dates) {
             Collections.sort(dates);
             // each row forms one array.
+            TableValueGetter tableValueGetter = new InterpolatedValuesGetter();
             double[] out = new double[dates.size()];
             int row = 0;
             for (LocalDate date : dates) {
-                out[row++] = inputs.getValue(date,inputColumn,marketMethod);
+                out[row++] = inputs.getValue(date,inputColumn,tableValueGetter);
             }
             return out;
         }
 
-        public void analyzeTrend(String outFileRelativePath, Writer out, CurrentDirectory currentDirectory) throws IOException {
-            TableImpl.GetMethod marketMethod = getMethodChooser.apply(inputs,0);
-            double[][] x = TableUtil.toDoubleRows(inputs,inputColumns,start,end,frequency,marketMethod);
-            double[][] yy = TableUtil.toDoubleColumns(market,new int[]{0},start,end,frequency, marketMethod);
-            double[] y = yy[0];
-            OLSMultipleLinearRegression regression = new OLSMultipleLinearRegression();
-            regression.newSampleData(y, x);
-
-            double[] beta = regression.estimateRegressionParameters();
-            double[] residuals = regression.estimateResiduals();
-            double regressandVariance = regression.estimateRegressandVariance();
-            double rSquared = regression.calculateRSquared();
-            double sigma = regression.estimateRegressionStandardError();
-
-            for (int i = 0; i < beta.length;i++) {
-                System.out.printf("Parameter %d: %f; residual: %f%n",i,beta[i],residuals[i]);
-            }
-            out.write("Regressand variance: "+regressandVariance+"\n");
-            out.write("R Squared: "+rSquared+"\n");
-            out.write("Sigma: "+sigma+"\n");
-
-            out.write("The inputs are: ");
-            for (int i : inputColumns) {
-                out.write("\n");
-                out.write(inputs.getColumn(i));
-            }
-            out.write("\n");
-            out.write("The last known values are: ");
-            double[] t = x[x.length-1];
-            for (int i = 0;i<t.length;i++) {
-                out.write(t[i]+", ");
-            }
-            out.write("\n");
-
-            DoublePointer lastActual = new DoublePointer();
-            DoublePointer lastEstimate = new DoublePointer();
-            File outFile = currentDirectory.toFile(outFileRelativePath);
-            writeToFile(writer -> {
-                writer.write("Date");
-                for (int col : inputColumns) {
-                    writer.write(",");
-                    writer.write(inputs.getColumn(col));
-                }
-                writer.write(",Market Value,SimpleEstimate\n");
-                doWithDate(start,end,Frequency.Monthly, d -> {
-                    writer.write(d.toString());
-                    double[] inputDoubles = new double[inputColumns.length+1];
-                    inputDoubles[0] = 1;
-                    int k = 1;
-                    for (int col : inputColumns) {
-                        writer.write(",");
-                        TableImpl.GetMethod method = getMethodChooser.apply(inputs,1);
-                        double v = inputs.getValue(d,col, method);
-                        writer.write(String.valueOf(v));
-                        inputDoubles[k++] = v;
-                    }
-                    writer.write(",");
-
-                    lastActual.value = market.getValue(d,0,marketMethod);
-                    writer.write(String.valueOf(lastActual.value));
-                    writer.write(",");
-                    double est = 0;
-                    for (int i = 0;i<inputDoubles.length;i++) {
-                        double b = beta[i];
-                        est += b * inputDoubles[i];
-                    }
-                    writer.write(est+"\n");
-                    lastEstimate.value = est;
-                });
-            },outFile);
-
-            double sigmas = Math.abs(lastActual.value - lastEstimate.value) / sigma;
-
-            out.write(String.format("The last actual value was %f, and estimate was %f, sigma is %f, " +
-                            "it is off by %f standard deviations.",
-                    lastActual.value, lastEstimate.value,sigma, sigmas));
-        }
-    }
-
-    private static class DoublePointer {
-        double value;
     }
 
     public static class TestedModel {

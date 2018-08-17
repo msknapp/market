@@ -6,7 +6,7 @@ import knapp.simulation.strategy.IntelligentStrategy;
 import knapp.simulation.strategy.InvestmentStrategy;
 import knapp.table.DefaultGetMethod;
 import knapp.table.Table;
-import knapp.table.TableParser;
+import knapp.table.util.TableParser;
 import knapp.util.InputLoader;
 
 import java.time.LocalDate;
@@ -19,8 +19,7 @@ public class TestBed {
 
     private Simulater simulater;
     private LocalDate trainingStart, trainingEnd, testStart, testEnd, tableStart;
-    DefaultGetMethod defaultGetMethod = new DefaultGetMethod();
-    TrendFinder trendFinder = new TrendFinder(defaultGetMethod);
+    TrendFinder trendFinder = new TrendFinder();
     InvestmentStrategy holdForeverStrategy = new AllStockStrategy();
     InvestmentStrategy strategy = new IntelligentStrategy(trendFinder);
 
@@ -42,10 +41,6 @@ public class TestBed {
 
     public LocalDate getTableStart() {
         return tableStart;
-    }
-
-    public DefaultGetMethod getDefaultGetMethod() {
-        return defaultGetMethod;
     }
 
     public TrendFinder getTrendFinder() {

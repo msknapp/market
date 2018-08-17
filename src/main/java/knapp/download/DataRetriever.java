@@ -1,12 +1,11 @@
 package knapp.download;
 
-import knapp.download.DownloadRequest;
 import knapp.history.Frequency;
 import knapp.indicator.Indicator;
 import knapp.table.DefaultGetMethod;
+import knapp.table.values.GetMethod;
 import knapp.table.Table;
-import knapp.table.TableImpl;
-import knapp.table.TableParser;
+import knapp.table.util.TableParser;
 import knapp.util.CurrentDirectory;
 import knapp.util.Util;
 import org.apache.commons.io.FileUtils;
@@ -15,7 +14,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.time.LocalDate;
-import java.util.Currency;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -26,13 +24,13 @@ import static knapp.util.Util.doWithDate;
 
 public class DataRetriever {
 
-    private final BiFunction<Table,Integer,TableImpl.GetMethod> getMethodChooser;
+    private final BiFunction<Table,Integer,GetMethod> getMethodChooser;
 
     public DataRetriever() {
         this(new DefaultGetMethod());
     }
 
-    public DataRetriever(BiFunction<Table,Integer,TableImpl.GetMethod> getMethodChooser) {
+    public DataRetriever(BiFunction<Table,Integer,GetMethod> getMethodChooser) {
         this.getMethodChooser = getMethodChooser;
     }
 
@@ -74,14 +72,14 @@ public class DataRetriever {
                 writer.write(key);
             }
             writer.write("\n");
-            final TableImpl.GetMethod marketMethod = getMethodChooser.apply(market,1);
+            final GetMethod marketMethod = getMethodChooser.apply(market,1);
 
             doWithDate(start,end,Frequency.Monthly, d -> {
                 writer.write(d.toString());
                 for (String key : downloadedData.keySet()) {
                     writer.write(",");
                     Table table = downloadedData.get(key);
-                    TableImpl.GetMethod method = getMethodChooser.apply(table,0);
+                    GetMethod method = getMethodChooser.apply(table,0);
                     double value = table.getValue(d, 0, method);
                     String sValue = String.valueOf(value);
                     if ("Infinity".equals(sValue)) {

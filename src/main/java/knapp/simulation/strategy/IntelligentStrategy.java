@@ -31,8 +31,8 @@ public class IntelligentStrategy extends AllocationStrategy implements Investmen
                 frequency(Frequency.Monthly).build();
         NormalModel model = analysis.deriveModel();
 
-        double[] lastInputs = inputs.getExactValues(inputs.getLastDate());
-        double lastMarketValue = stockMarket.getExactValues(stockMarket.getLastDate())[0];
+//        double[] lastInputs = inputs.getExactValues(inputs.getLastDate());
+//        double lastMarketValue = stockMarket.getExactValues(stockMarket.getLastDate())[0];
 //        SimpleEstimate estimate = model.produceEstimate(lastInputs,lastMarketValue);
 //
 //        // a positive sigmas means the estimate is higher than the actual value,

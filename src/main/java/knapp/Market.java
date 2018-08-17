@@ -10,11 +10,13 @@ import knapp.predict.TrendFinder;
 import knapp.report.Reporter;
 import knapp.simulation.Account;
 import knapp.simulation.Simulater;
-import knapp.simulation.functions.*;
 import knapp.simulation.strategy.AllStockStrategy;
 import knapp.simulation.strategy.IntelligentStrategy;
 import knapp.simulation.strategy.InvestmentStrategy;
 import knapp.table.*;
+import knapp.table.derivation.LogDeriver;
+import knapp.table.util.TableParser;
+import knapp.table.wraps.TableWithoutColumn;
 import knapp.util.CurrentDirectory;
 
 import java.io.File;
@@ -78,36 +80,36 @@ public class Market {
         reporter.produceReport(currentDirectory,advice);
     }
 
-    public void analyzeMarket(boolean logarithmicMethod) throws IOException {
-        Table market = marketContext.getMarket();
-        String inputText = marketContext.getCurrentDirectory().toText(marketContext.getConsolidatedDataFile());
-        Table tmpInput = TableParser.parse(inputText, true, Frequency.Monthly);
-        tmpInput = new TableWithoutColumn(tmpInput, "Market Price");
-        if (logarithmicMethod) {
-            // experimentally this seems to be less accurate.
-            LogDeriver logDeriver = new LogDeriver("Adj Close");
-            market = market.withDerivedColumn(logDeriver)
-                    .retainColumns(Collections.singleton("Log Adj Close"));
-
-            // it seems that if you take the log of any input, it becomes a singular matrix
-            // and cannot be solved.
-//            tmpInput = tmpInput.replaceColumnWithLog("INDPRO");
-//                    .replaceColumnWithLog("CPIAUCSL")
-//                    .replaceColumnWithLog("M1SL");
-        } else {
-            market = market.retainColumns(Collections.singleton("Adj Close"));
-        }
-
-        tmpInput = TableParser.solidifyTable(tmpInput);
-        TrendFinder tf = marketContext.getTrendFinder();
-        final Table inputs = tmpInput;
-
-        LocalDate end = LocalDate.now().minusMonths(2);
-        TrendFinder.Analasys analasys = tf.startAnalyzing().market(market).inputs(inputs)
-                .end(end).start(end.minusYears(30)).build();
-
-        analasys.analyzeTrend(marketContext.getPredictionFile(), marketContext.getCurrentDirectory());
-    }
+//    public void analyzeMarket(boolean logarithmicMethod) throws IOException {
+//        Table market = marketContext.getMarket();
+//        String inputText = marketContext.getCurrentDirectory().toText(marketContext.getConsolidatedDataFile());
+//        Table tmpInput = TableParser.parse(inputText, true, Frequency.Monthly);
+//        tmpInput = new TableWithoutColumn(tmpInput, "Market Price");
+//        if (logarithmicMethod) {
+//            // experimentally this seems to be less accurate.
+//            LogDeriver logDeriver = new LogDeriver("Adj Close");
+//            market = market.withDerivedColumn(logDeriver)
+//                    .retainColumns(Collections.singleton("Log Adj Close"));
+//
+//            // it seems that if you take the log of any input, it becomes a singular matrix
+//            // and cannot be solved.
+////            tmpInput = tmpInput.replaceColumnWithLog("INDPRO");
+////                    .replaceColumnWithLog("CPIAUCSL")
+////                    .replaceColumnWithLog("M1SL");
+//        } else {
+//            market = market.retainColumns(Collections.singleton("Adj Close"));
+//        }
+//
+//        tmpInput = TableParser.solidifyTable(tmpInput);
+//        TrendFinder tf = marketContext.getTrendFinder();
+//        final Table inputs = tmpInput;
+//
+//        LocalDate end = LocalDate.now().minusMonths(2);
+//        TrendFinder.Analasys analasys = tf.startAnalyzing().market(market).inputs(inputs)
+//                .end(end).start(end.minusYears(30)).build();
+//
+//        analasys.analyzeTrend(marketContext.getPredictionFile(), marketContext.getCurrentDirectory());
+//    }
 
     public void retrieveData() throws IOException {
         DataRetriever dataRetriever = marketContext.getDataRetriever();
@@ -171,7 +173,7 @@ public class Market {
         mc.loadMarketData();
 
         DefaultGetMethod gmc = new DefaultGetMethod();
-        TrendFinder trendFinder = new TrendFinder(gmc);
+        TrendFinder trendFinder = new TrendFinder();
         mc.setTrendFinder(trendFinder);
 
         DataRetriever dataRetriever = new DataRetriever(gmc);

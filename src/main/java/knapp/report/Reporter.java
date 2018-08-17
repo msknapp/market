@@ -1,24 +1,20 @@
 package knapp.report;
 
 import knapp.advisor.Advice;
-import knapp.advisor.BasicAdvice;
 import knapp.advisor.CombinedAdvice;
+import knapp.history.Frequency;
 import knapp.predict.*;
 import knapp.simulation.Simulater;
-import knapp.simulation.functions.EvolvableFunction;
 import knapp.simulation.functions.Line;
-import knapp.simulation.strategy.StrategyBank;
 import knapp.table.DoubleRange;
-import knapp.table.Table;
-import knapp.table.TableImpl;
-import knapp.table.TableUtil;
+import knapp.table.values.GetMethod;
+import knapp.table.util.TableUtil;
 import knapp.util.CurrentDirectory;
 import knapp.util.Util;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.Writer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -84,7 +80,7 @@ public class Reporter {
                     e.printStackTrace();
                 }
             };
-            double estimate = advice.getModel().estimateValue(advice.getInputs().getLastMarketSlice());
+            double estimate = advice.getModel().estimateValue(advice.getInputs().getPresentDayMarketSlice(GetMethod.EXTRAPOLATE));
             double sigma = advice.getSigmas();
 
             double recommendedPercentStock = Math.round(1000.0 * advice.getRecommendedPercentStock()) / 10.0;
@@ -145,7 +141,7 @@ public class Reporter {
 
     private void writeSimpleModelToSummaryText(Advice advice, NormalModel model, Consumer<String> writer) throws IOException {
 
-        double estimate = advice.getModel().estimateValue(advice.getInputs().getLastMarketSlice());
+        double estimate = advice.getModel().estimateValue(advice.getInputs().getPresentDayMarketSlice(GetMethod.EXTRAPOLATE));
         double sigma = advice.getSigmas();
 
         double recommendedPercentStock = Math.round(1000.0 * advice.getRecommendedPercentStock()) / 10.0;
@@ -160,11 +156,12 @@ public class Reporter {
         writer.accept("SimpleEstimate From Inputs:");
         List<ParameterInfo> parameters = model.getParameters();
         double sum = 0;
-        MarketSlice marketSlice = advice.getInputs().getLastMarketSlice();
+        MarketSlice lastKnownMarketSlice = advice.getInputs().getPresentDayMarketSlice(GetMethod.LAST_KNOWN_VALUE);
+        MarketSlice extrapolatedMarketSlice = advice.getInputs().getPresentDayMarketSlice(GetMethod.EXTRAPOLATE);
         for (ParameterInfo parameterInfo : parameters) {
             double parmVal = parameterInfo.getValue();
             double presentVal = ("INTERCEPT".equalsIgnoreCase(parameterInfo.getName()) ? 1 :
-                    marketSlice.getValue(parameterInfo.getName()));
+                    extrapolatedMarketSlice.getValue(parameterInfo.getName()));
             double product = parmVal * presentVal;
             sum += product;
             writer.accept(String.format("%s =>  parameter: '%f' (stderr: %f) x last value: '%f' = '%.2f' --> Cumulative Sum: %f",
@@ -174,6 +171,16 @@ public class Reporter {
                     presentVal,
                     product,
                     sum));
+            if (!"INTERCEPT".equalsIgnoreCase(parameterInfo.getName())) {
+                LocalDate fd = advice.getInputs().getFirstDateOf(parameterInfo.getName());
+                LocalDate ld = advice.getInputs().getLastDateOf(parameterInfo.getName());
+                writer.accept(String.format("The parameter's data goes from '%s' to '%s'",
+                        fd.toString(), ld.toString()));
+                writer.accept(String.format("The last value is %.4f, we extrapolated it to %.4f",
+                        lastKnownMarketSlice.getValue(parameterInfo.getName()),
+                        presentVal));
+            }
+
         }
         writer.accept("");
         writer.accept(String.format("Yields: $%.2f",sum));
@@ -188,7 +195,7 @@ public class Reporter {
             writer.accept("----");
             double parmVal = parameterInfo.getValue();
             double presentVal = ("INTERCEPT".equalsIgnoreCase(parameterInfo.getName()) ? 1 :
-                    marketSlice.getValue(parameterInfo.getName()));
+                    extrapolatedMarketSlice.getValue(parameterInfo.getName()));
             double product = parmVal * presentVal;
             double percent = product / estimate;
             double averageChange = TableUtil.getStandardChange(advice.getInputs(),parameterInfo.getName());
@@ -249,15 +256,15 @@ public class Reporter {
                 double[] currentInputs = new double[advice.getInputs().getColumnCount()];
                 for (int i = 0;i<advice.getInputs().getColumnCount();i++) {
                     writer.write(",");
-                    double v = advice.getInputs().getValue(date,i,TableImpl.GetMethod.INTERPOLATE);
+                    double v = advice.getInputs().getValue(date,i,GetMethod.INTERPOLATE);
                     currentInputs[i] = v;
                     writer.write(String.format("%.2f",v));
                 }
                 writer.write(",");
-                double presentValue = advice.getMarket().getValue(date,0,TableImpl.GetMethod.INTERPOLATE);
+                double presentValue = advice.getMarket().getValue(date,0,GetMethod.INTERPOLATE);
                 writer.write(String.valueOf(presentValue));
                 List<String> inputNames = advice.getInputs().getColumns();
-                MarketSlice marketSlice = advice.getInputs().getMarketSlice(date, inputNames, TableImpl.GetMethod.INTERPOLATE);
+                MarketSlice marketSlice = advice.getInputs().getMarketSlice(date, inputNames, GetMethod.INTERPOLATE);
                 double est = advice.getModel().estimateValue(marketSlice);
                 writer.write(",");
                 writer.write(String.format("%.2f",est));
@@ -277,8 +284,8 @@ public class Reporter {
                 writer.write(","+advice.getInputs().getColumn(i));
             }
             writer.write(",Market Value,SimpleEstimate,Sigma,Recommended Percent Stock");
-            Util.doWithDate(advice.getMarket().getFirstDate(),advice.getMarket().getLastDate(),
-                    advice.getMarket().getFrequency(), cons);
+            Util.doWithDate(advice.getMarket().getFirstDateOf(0),advice.getMarket().getLastDateOf(0),
+                    Frequency.Weekly, cons);
         });
         File dataFile = currentDirectory.toFile(filePrefix+"data.csv");
         try {

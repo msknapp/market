@@ -1,4 +1,7 @@
-package knapp.table;
+package knapp.table.derivation;
+
+import knapp.table.values.GetMethod;
+import knapp.table.Table;
 
 import java.time.LocalDate;
 
@@ -13,7 +16,7 @@ public class RealDeriver implements ValueDeriver {
         this.cpi = cpi;
         this.baseDate = baseDate;
         this.coreColumnName = coreColumnName;
-        this.baseCpi = cpi.getValue(baseDate,0,TableImpl.GetMethod.EXACT);
+        this.baseCpi = cpi.getValue(baseDate,0,GetMethod.EXACT);
         this.coreColumnNumber = coreColumnNumber;
     }
 
@@ -23,8 +26,8 @@ public class RealDeriver implements ValueDeriver {
     }
 
     @Override
-    public double deriveValue(Table core, LocalDate date, TableImpl.GetMethod getMethod) {
-        double cpiThatDay = cpi.getValue(date,0,TableImpl.GetMethod.INTERPOLATE);
+    public double deriveValue(Table core, LocalDate date, GetMethod getMethod) {
+        double cpiThatDay = cpi.getValue(date,0,GetMethod.INTERPOLATE);
         double coreValue = core.getValue(date,coreColumnNumber,getMethod);
 
         return coreValue * baseCpi / cpiThatDay;

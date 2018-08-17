@@ -1,4 +1,8 @@
-package knapp.table;
+package knapp.table.wraps;
+
+import knapp.table.values.GetMethod;
+import knapp.table.Table;
+import knapp.table.derivation.ValueDeriver;
 
 import java.time.LocalDate;
 
@@ -33,7 +37,7 @@ public class TableWithDerived extends AbstractWrappingTable {
     }
 
     @Override
-    public double getValue(LocalDate date, String column, TableImpl.GetMethod getMethod) {
+    public double getValue(LocalDate date, String column, GetMethod getMethod) {
         if (valueDeriver.getColumnName().equals(column)) {
             return valueDeriver.deriveValue(core,date,getMethod);
         } else {
@@ -42,7 +46,7 @@ public class TableWithDerived extends AbstractWrappingTable {
     }
 
     @Override
-    public double getValue(LocalDate date, int column, TableImpl.GetMethod getMethod) {
+    public double getValue(LocalDate date, int column, GetMethod getMethod) {
         if (column == core.getColumnCount()) {
             return valueDeriver.deriveValue(core,date,getMethod);
         } else {
@@ -55,7 +59,7 @@ public class TableWithDerived extends AbstractWrappingTable {
         double[] x = core.getExactValues(date);
         double[] y = new double[x.length+1];
         System.arraycopy(x,0,y,0,x.length);
-        y[y.length-1] = valueDeriver.deriveValue(core,date,TableImpl.GetMethod.LAST_KNOWN_VALUE);
+        y[y.length-1] = valueDeriver.deriveValue(core,date,GetMethod.LAST_KNOWN_VALUE);
         return y;
     }
 

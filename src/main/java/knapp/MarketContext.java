@@ -5,7 +5,7 @@ import knapp.history.Frequency;
 import knapp.predict.TrendFinder;
 import knapp.simulation.Simulater;
 import knapp.table.Table;
-import knapp.table.TableParser;
+import knapp.table.util.TableParser;
 import knapp.util.CurrentDirectory;
 
 import java.io.IOException;

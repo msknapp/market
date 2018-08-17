@@ -75,7 +75,7 @@ public class IEXRetriever {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        Table t = builder.build();
+        Table t = builder.exact(true).build();
         t.setName(symbol);
         return t;
     }

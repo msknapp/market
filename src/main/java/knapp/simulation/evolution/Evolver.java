@@ -7,6 +7,7 @@ import knapp.simulation.strategy.FunctionStrategy;
 import knapp.simulation.strategy.InvestmentStrategy;
 import knapp.simulation.functions.Line;
 
+import java.util.Map;
 import java.util.function.Function;
 
 public class Evolver {
@@ -14,15 +15,18 @@ public class Evolver {
     private final Function<InvestmentStrategy,Simulater.SimulationResults> sim;
     private final TrendFinder trendFinder;
     private final double accuracy;
+    private final Map<String, Integer> lags;
 
-    public Evolver(Function<InvestmentStrategy,Simulater.SimulationResults> sim, TrendFinder trendFinder) {
-        this(sim,trendFinder,0.01);
+    public Evolver(Function<InvestmentStrategy,Simulater.SimulationResults> sim, TrendFinder trendFinder,Map<String, Integer> lags) {
+        this(sim,trendFinder,0.01,lags);
     }
 
-    public Evolver(Function<InvestmentStrategy,Simulater.SimulationResults> sim, TrendFinder trendFinder, double accuracy) {
+    public Evolver(Function<InvestmentStrategy,Simulater.SimulationResults> sim, TrendFinder trendFinder,
+                   double accuracy, Map<String, Integer> lags) {
         this.sim = sim;
         this.trendFinder = trendFinder;
         this.accuracy = accuracy;
+        this.lags = lags;
     }
 
     public EvolvableFunction evolve() {
@@ -36,7 +40,7 @@ public class Evolver {
         while (deviation > accuracy) {
             for (int i = 0;i<10;i++) {
                 EvolvableFunction spawn = currentBest.deviateRandomly(deviation);
-                FunctionStrategy strategy = new FunctionStrategy(trendFinder,spawn);
+                FunctionStrategy strategy = new FunctionStrategy(trendFinder,spawn, lags);
                 Simulater.SimulationResults res = sim.apply(strategy);
                 if (res.getFinalDollars() > bestFinalDollars) {
                     currentBest = spawn;

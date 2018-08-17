@@ -1,6 +1,14 @@
 package knapp.table;
 
 import knapp.history.Frequency;
+import knapp.table.derivation.LogDeriver;
+import knapp.table.derivation.ValueDeriver;
+import knapp.table.util.TableParser;
+import knapp.table.values.GetMethod;
+import knapp.table.values.TableColumnView;
+import knapp.table.values.TableValueGetter;
+import knapp.table.wraps.TableWithDerived;
+import knapp.table.wraps.TableWithoutColumn;
 import knapp.util.Util;
 
 import java.time.Duration;
@@ -14,23 +22,28 @@ public class TableImpl implements Table {
     private final List<String> columns;
     private final SortedMap<LocalDate,TableRow> rows;
     private final Frequency frequency;
+    private final boolean exact;
     private String name;
 
     // getting first and last key is a bit slow, cache them.
     private LocalDate firstDate;
     private LocalDate lastDate;
 
+    private Map<Integer,TableImplColumnView> views = new HashMap<>();
+    private List<LocalDate> allDates;
+
     public static TableBuilder newBuilder() {
         return new TableBuilder();
     }
 
-    private TableImpl(List<String> columns, SortedMap<LocalDate,TableRow> rows, Frequency frequency) {
+    private TableImpl(List<String> columns, SortedMap<LocalDate,TableRow> rows, Frequency frequency, boolean exact) {
         this.columns = columns;
         this.rows = rows;
         this.frequency = frequency;
+        this.exact = exact;
     }
 
-    private TableImpl(List<String> columns, List<TableRow> rows, Frequency frequency) {
+    private TableImpl(List<String> columns, List<TableRow> rows, Frequency frequency, boolean exact) {
         if (frequency == null) {
             throw new IllegalArgumentException("Frequency can't be null");
         }
@@ -50,6 +63,12 @@ public class TableImpl implements Table {
             tmp.put(tr.getDate(),tr);
         }
         this.rows = Collections.unmodifiableSortedMap(tmp);
+        this.exact = exact;
+    }
+
+    @Override
+    public boolean isExact() {
+        return exact;
     }
 
     public String getName() {
@@ -68,48 +87,103 @@ public class TableImpl implements Table {
         return columns.indexOf(name);
     }
 
-    public enum GetMethod {
-        EXACT,
-        LAST_KNOWN_VALUE,
-        EXTRAPOLATE,
-        INTERPOLATE;
-    }
-
     public double getValue(LocalDate date,String column,GetMethod getMethod) {
         return getValue(date,getColumn(column), getMethod);
     }
 
-    public double getValue(LocalDate date,int column,GetMethod getMethod) {
+    @Override
+    public double getValue(LocalDate date, int column, TableValueGetter getter) {
+        TableColumnView view = getTableColumnView(column);
+        return getter.getValue(date, view);
+    }
+
+    @Override
+    public TableColumnView getTableColumnView(int column) {
+        if (!views.containsKey(column)) {
+            views.put(column,new TableImplColumnView(column));
+        }
+        return views.get(column);
+    }
+
+    public class TableImplColumnView implements TableColumnView {
+        private final int column;
+        private List<LocalDate> dates;
+
+        public TableImplColumnView(int column){
+            this.column = column;
+        }
+
+        @Override
+        public List<LocalDate> getAllDates() {
+            if (allDates == null) {
+                allDates = new ArrayList<>(rows.keySet());
+                Collections.sort(allDates);
+                allDates = Collections.unmodifiableList(allDates);
+            }
+            return allDates;
+        }
+
+        @Override
+        public double getExactValue(LocalDate date) {
+            return rows.get(date).getValue(column);
+        }
+
+        @Override
+        public LocalDate getLastDate() {
+            return rows.lastKey();
+        }
+
+        @Override
+        public LocalDate getFirstDate() {
+            return rows.firstKey();
+        }
+
+        @Override
+        public LocalDate getDateBefore(LocalDate date) {
+            return rows.headMap(date).lastKey();
+        }
+
+        @Override
+        public LocalDate getDateOnOrBefore(LocalDate date) {
+            if (containsDate(date)) {
+                return date;
+            }
+            return getDateBefore(date);
+        }
+
+        @Override
+        public LocalDate getDateAfter(LocalDate date) {
+            return rows.tailMap(date.plusDays(1)).firstKey();
+        }
+
+        @Override
+        public LocalDate getDateOnOrAfter(LocalDate date) {
+            if (containsDate(date)) {
+                return date;
+            }
+            return null;
+        }
+
+        @Override
+        public boolean containsDate(LocalDate date) {
+            return rows.containsKey(date);
+        }
+    }
+
+    @Override
+    public double getExactValue(LocalDate date, int column) {
         if (column < 0 || column >= columns.size()) {
-            throw new IllegalArgumentException("illegal column number "+column);
+            throw new IllegalArgumentException("illegal column number " + column);
         }
         if (date == null) {
             throw new IllegalArgumentException("date can't be null");
         }
-        if (rows.containsKey(date)) {
-            return rows.get(date).getValue(column);
-        } else if (getMethod == GetMethod.EXACT) {
+        if (!rows.containsKey(date)) {
             throw new IllegalArgumentException("There is no record on that date.");
         }
-        if (getMethod == GetMethod.LAST_KNOWN_VALUE) {
-            if (date.isBefore(rows.firstKey())) {
-                return 0;
-            }
-            return getLastKnownValue(date, column);
-        }
-        if (date.isBefore(rows.firstKey())) {
-            return extrapolateDataBeforeStart(date,column);
-        }
-        if (date.isAfter(rows.lastKey())) {
-            return extrapolateDataAfterEnd(date,column);
-        }
-        if (getMethod == GetMethod.EXTRAPOLATE) {
-            return extrapolateValue(date, column);
-        } else if (getMethod == GetMethod.INTERPOLATE) {
-            return interpolateValue(date, column);
-        }
-        return 0;
+        return rows.get(date).getValue(column);
     }
+
 
     public double getLastKnownValue(LocalDate date,int column) {
         LocalDate lb = getDateBefore(date);
@@ -119,34 +193,6 @@ public class TableImpl implements Table {
         return rows.get(lb).getValue(column);
     }
 
-    private double extrapolateDataBeforeStart(LocalDate date,int column) {
-        Iterator<LocalDate> iter = rows.keySet().iterator();
-        LocalDate first = iter.next();
-        LocalDate second= iter.next();
-        double firstValue = rows.get(first).getValue(column);
-        double secondValue = rows.get(second).getValue(column);
-        long days = DAYS.between(first,second);
-        double slope = (secondValue - firstValue) / days;
-        long x = - DAYS.between(date,first);
-        return firstValue + (x * slope);
-    }
-
-    private double extrapolateDataAfterEnd(LocalDate date,int column) {
-        LocalDate secondLast = null;
-        LocalDate last = null;
-        for (LocalDate d : rows.keySet()) {
-            secondLast = last;
-            last = d;
-        }
-        double firstValue = rows.get(secondLast).getValue(column);
-        double secondValue = rows.get(last).getValue(column);
-        long days = DAYS.between(secondLast,last);
-        double slope = (secondValue - firstValue) / days;
-        long x = DAYS.between(last,date);
-        return secondValue + (x * slope);
-    }
-
-    @Override
     public LocalDate getDateBefore(LocalDate date) {
         if (date.isBefore(rows.firstKey())) {
             return null;
@@ -159,7 +205,6 @@ public class TableImpl implements Table {
         }
     }
 
-    @Override
     public LocalDate getDateOnOrBefore(LocalDate date) {
         if (rows.containsKey(date)) {
             return date;
@@ -167,13 +212,11 @@ public class TableImpl implements Table {
         return rows.headMap(date).lastKey();
     }
 
-    @Override
     public LocalDate getDateAfter(LocalDate date) {
         LocalDate d = date.plusDays(1);
         return rows.tailMap(d).firstKey();
     }
 
-    @Override
     public LocalDate getDateOnOrAfter(LocalDate date) {
         if (rows.containsKey(date)) {
             return date;
@@ -181,40 +224,10 @@ public class TableImpl implements Table {
         return rows.tailMap(date).firstKey();
     }
 
-    private double extrapolateValue(LocalDate date, int column) {
-        LocalDate second = getDateBefore(date);
-        if (second == null) {
-            return extrapolateDataBeforeStart(date, column);
-        }
-        LocalDate first = getDateBefore(second);
-        double secondVal = rows.get(second).getValue(column);
-        if (first == null) {
-            // it's between the first and second value,
-            // we interpolate it figuring that this is due to the table
-            // just not going far enough in the past.
-            return interpolateValue(date, column);
-        }
-        double firstVal = rows.get(first).getValue(column);
-        long days = DAYS.between(first,second);
-        double slope = (secondVal - firstVal) / days;
-        long elapsed = DAYS.between(second,date);
-        return slope * elapsed + secondVal;
-    }
-
-    private double interpolateValue(LocalDate date, int column) {
-        LocalDate first = getDateBefore(date);
-        LocalDate second = getDateAfter(date);
-        double firstVal = rows.get(first).getValue(column);
-        double secondVal = rows.get(second).getValue(column);
-        long days = DAYS.between(first,second);
-        double slope = (secondVal - firstVal) / days;
-        long elapsed = DAYS.between(first,date);
-        return slope * elapsed + firstVal;
-    }
-
     public int getColumnCount() {
         return columns.size();
     }
+
 
     public double[][] toDoubleRows(int[] xColumns, LocalDate start, LocalDate end,
                                    Frequency frequency, final GetMethod getMethod) {
@@ -225,9 +238,9 @@ public class TableImpl implements Table {
     }
 
     @Override
-    public LocalDate[] getAllDates() {
-        LocalDate[] dates = new LocalDate[rows.size()];
-        rows.keySet().toArray(dates);
+    public List<LocalDate> getAllDates(int column) {
+        List<LocalDate> dates = new ArrayList<>(rows.keySet());
+        Collections.sort(dates);
         return dates;
     }
 
@@ -267,7 +280,6 @@ public class TableImpl implements Table {
         return TableParser.retainColumns(this,columns);
     }
 
-    @Override
     public LocalDate getLastDate() {
         if (lastDate == null) {
             lastDate = rows.lastKey();
@@ -275,7 +287,6 @@ public class TableImpl implements Table {
         return lastDate;
     }
 
-    @Override
     public LocalDate getFirstDate() {
         if (firstDate == null) {
             firstDate = rows.firstKey();
@@ -285,17 +296,17 @@ public class TableImpl implements Table {
 
     @Override
     public Table untilExclusive(LocalDate date) {
-        return new TableImpl(columns,rows.headMap(date), frequency);
+        return new TableImpl(columns,rows.headMap(date), frequency, isExact());
     }
 
     @Override
     public Table onOrAfter(LocalDate date) {
-        return new TableImpl(columns,rows.tailMap(date), frequency);
+        return new TableImpl(columns,rows.tailMap(date), frequency, isExact());
     }
 
     @Override
     public Table inTimeFrame(LocalDate start, LocalDate end) {
-        return new TableImpl(columns,rows.subMap(start,end), frequency);
+        return new TableImpl(columns,rows.subMap(start,end), frequency, isExact());
     }
 
     public double[][] toDoubleColumns(int[] xColumns, LocalDate start, LocalDate end,
@@ -322,6 +333,7 @@ public class TableImpl implements Table {
         private List<String> columns;
         private List<TableRow> rows;
         private Frequency frequency;
+        private Boolean exact = null;
 
         public TableBuilder() {
             this.columns = new ArrayList<>();
@@ -332,12 +344,19 @@ public class TableImpl implements Table {
             this.columns.add(c);
             return this;
         }
+
         public TableBuilder frequency(String c) {
             this.frequency = Frequency.valueOf(c);
             return this;
         }
+
         public TableBuilder frequency(Frequency frequency) {
             this.frequency = frequency;
+            return this;
+        }
+
+        public TableBuilder exact(boolean ex) {
+            this.exact = ex;
             return this;
         }
 
@@ -375,10 +394,13 @@ public class TableImpl implements Table {
         }
 
         public TableImpl build() {
+            if (exact == null) {
+                throw new IllegalArgumentException("You have not specified if this table has exact values or not.");
+            }
             if (frequency == null) {
                 guessFrequency();
             }
-            return new TableImpl(columns, rows,frequency);
+            return new TableImpl(columns, rows,frequency, exact);
         }
     }
 

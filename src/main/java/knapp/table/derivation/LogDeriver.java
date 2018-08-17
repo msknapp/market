@@ -1,4 +1,7 @@
-package knapp.table;
+package knapp.table.derivation;
+
+import knapp.table.values.GetMethod;
+import knapp.table.Table;
 
 import java.time.LocalDate;
 
@@ -16,7 +19,7 @@ public class LogDeriver implements ValueDeriver {
     }
 
     @Override
-    public double deriveValue(Table core, LocalDate date, TableImpl.GetMethod getMethod) {
+    public double deriveValue(Table core, LocalDate date, GetMethod getMethod) {
         double d = core.getValue(date,coreColumn,getMethod);
         return Math.log(d);
     }

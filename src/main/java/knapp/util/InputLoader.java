@@ -1,9 +1,10 @@
 package knapp.util;
 
 import knapp.history.Frequency;
+import knapp.table.values.GetMethod;
 import knapp.table.Table;
 import knapp.table.TableImpl;
-import knapp.table.TableParser;
+import knapp.table.util.TableParser;
 import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
@@ -65,11 +66,11 @@ public class InputLoader {
             }
         }
 
-        TableImpl.GetMethod tgm = TableImpl.GetMethod.INTERPOLATE;
+        GetMethod tgm = GetMethod.INTERPOLATE;
         if (frequency == Frequency.Weekly || frequency == Frequency.Daily) {
-            tgm = TableImpl.GetMethod.LAST_KNOWN_VALUE;
+            tgm = GetMethod.LAST_KNOWN_VALUE;
         }
-        TableImpl.GetMethod gm = tgm;
+        GetMethod gm = tgm;
         Util.doWithDate(start,end,frequency,date -> {
             double[] values = new double[series.size()];
             int i = 0;

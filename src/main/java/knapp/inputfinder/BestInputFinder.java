@@ -1,13 +1,12 @@
 package knapp.inputfinder;
 
 import knapp.predict.NormalModel;
-import knapp.predict.SimpleModel;
 import knapp.predict.TrendFinder;
 import knapp.history.Frequency;
-import knapp.table.RealDeriver;
+import knapp.table.values.GetMethod;
+import knapp.table.derivation.RealDeriver;
 import knapp.table.Table;
-import knapp.table.TableImpl;
-import knapp.table.TableParser;
+import knapp.table.util.TableParser;
 import knapp.util.InputLoader;
 
 import java.io.File;
@@ -132,8 +131,8 @@ public class BestInputFinder {
         // also adjust things for inflation.
 
         // adjust the stock market for CPI.
-        BiFunction<Table, Integer, TableImpl.GetMethod> getMethodChooser = (t, i) -> {
-            return TableImpl.GetMethod.INTERPOLATE;
+        BiFunction<Table, Integer, GetMethod> getMethodChooser = (t, i) -> {
+            return GetMethod.INTERPOLATE;
         };
 
         LocalDate marketStart = LocalDate.of(1992, 1, 25);
@@ -143,14 +142,14 @@ public class BestInputFinder {
         Table stockMarket = TableParser.parse(stockMarketText, true, Frequency.Weekly);
         stockMarket = stockMarket.retainColumns(Collections.singleton("Adj Close"));
 
-        if (stockMarket.getFirstDate().minusMonths(1).isAfter(marketStart)) {
+        if (stockMarket.getFirstDateOf(0).minusMonths(1).isAfter(marketStart)) {
             throw new IllegalArgumentException("The stock market start date is too recent.");
         }
-        if (stockMarket.getLastDate().plusMonths(1).isBefore(marketEnd)) {
+        if (stockMarket.getLastDateOf(0).plusMonths(1).isBefore(marketEnd)) {
             throw new IllegalArgumentException("The stock market end date is too old.");
         }
 
-        TrendFinder trendFinder = new TrendFinder(getMethodChooser);
+        TrendFinder trendFinder = new TrendFinder();
 
         try {
             Table inputs = InputLoader.loadInputsTableFromClasspath(inputSeries, marketStart, marketEnd, Frequency.Monthly);
@@ -160,7 +159,7 @@ public class BestInputFinder {
             Table cpi = TableParser.parse(cpiText, true, Frequency.Weekly);
 
             if (adjustForInflation) {
-                LocalDate cpiBaseDate = cpi.getDateOnOrAfter(marketStart);
+                LocalDate cpiBaseDate = cpi.getTableColumnView(0).getDateOnOrAfter(marketStart);
                 Set<String> retainColumns = new HashSet<>(inputs.getColumnCount());
                 for (int colNumber = 0; colNumber < inputs.getColumnCount(); colNumber++) {
                     String colName = inputs.getColumn(colNumber);
@@ -214,29 +213,29 @@ public class BestInputFinder {
     }
 
     private void checkZeroes(Table inputs) {
-        LocalDate firstDate = inputs.getFirstDate();
-        LocalDate secondDate = inputs.getDateAfter(firstDate);
-        if (!secondDate.isAfter(firstDate)) {
-            throw new RuntimeException("Second date is not after the first.");
-        }
-        if (MONTHS.between(firstDate,secondDate) >= 2) {
-            throw new RuntimeException("The input series is less frequent than monthly.");
-        }
-        LocalDate lastDate = inputs.getLastDate();
-
-        for (int i = 0;i<inputs.getColumnCount();i++) {
-            double v1 = inputs.getValue(firstDate,i,TableImpl.GetMethod.EXACT);
-            if (Math.abs(v1) < 1e-3) {
-                double v2 = inputs.getValue(secondDate,i,TableImpl.GetMethod.EXACT);
-                if (Math.abs(v2) < 1e-3) {
-                    throw new RuntimeException("The input data does not cover the time range for column "+inputs.getColumn(i));
-                }
-            }
-            double lastValue = inputs.getValue(lastDate,i,TableImpl.GetMethod.EXACT);
-            if (Math.abs(lastValue) < 1e-3) {
-                throw new RuntimeException("The last value is zero for column "+inputs.getColumn(i));
-            }
-        }
+//        LocalDate firstDate = inputs.getFirstDate();
+//        LocalDate secondDate = inputs.getDateAfter(firstDate);
+//        if (!secondDate.isAfter(firstDate)) {
+//            throw new RuntimeException("Second date is not after the first.");
+//        }
+//        if (MONTHS.between(firstDate,secondDate) >= 2) {
+//            throw new RuntimeException("The input series is less frequent than monthly.");
+//        }
+//        LocalDate lastDate = inputs.getLastDate();
+//
+//        for (int i = 0;i<inputs.getColumnCount();i++) {
+//            double v1 = inputs.getValue(firstDate,i,GetMethod.EXACT);
+//            if (Math.abs(v1) < 1e-3) {
+//                double v2 = inputs.getValue(secondDate,i,GetMethod.EXACT);
+//                if (Math.abs(v2) < 1e-3) {
+//                    throw new RuntimeException("The input data does not cover the time range for column "+inputs.getColumn(i));
+//                }
+//            }
+//            double lastValue = inputs.getValue(lastDate,i,GetMethod.EXACT);
+//            if (Math.abs(lastValue) < 1e-3) {
+//                throw new RuntimeException("The last value is zero for column "+inputs.getColumn(i));
+//            }
+//        }
     }
 
     public static class Leaders {

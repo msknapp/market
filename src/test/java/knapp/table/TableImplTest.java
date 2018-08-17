@@ -1,12 +1,13 @@
 package knapp.table;
 
 import knapp.history.Frequency;
+import knapp.table.util.TableParser;
+import knapp.table.values.GetMethod;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.time.LocalDate;
-
-import static knapp.table.TableImpl.GetMethod.INTERPOLATE;
+import java.util.List;
 
 public class TableImplTest {
     private static String testTableText = "Date,Value\n2000-01-01,10\n2000-01-08,20\n2000-01-15,14\n2000-01-22,28";
@@ -14,24 +15,24 @@ public class TableImplTest {
 
     @Test
     public void testBasics() {
-        Assert.assertEquals(LocalDate.of(2000,1,1),testTable.getFirstDate());
-        Assert.assertEquals(LocalDate.of(2000,1,22),testTable.getLastDate());
+        Assert.assertEquals(LocalDate.of(2000,1,1),testTable.getFirstDateOf(0));
+        Assert.assertEquals(LocalDate.of(2000,1,22),testTable.getLastDateOf(0));
         Assert.assertEquals(1,testTable.getColumnCount());
         Assert.assertEquals(0,testTable.getColumn("Value"));
         Assert.assertEquals("Value",testTable.getColumn(0));
         Assert.assertNull(testTable.getName());
         testTable.setName("Test");
         Assert.assertEquals("Test",testTable.getName());
-        LocalDate[] dates = testTable.getAllDates();
-        Assert.assertEquals(4,dates.length);
-        Assert.assertEquals(LocalDate.of(2000,1,1),dates[0]);
-        Assert.assertEquals(LocalDate.of(2000,1,15),dates[2]);
-        Assert.assertEquals(LocalDate.of(2000,1,22),dates[3]);
+        List<LocalDate> dates = testTable.getTableColumnView(0).getAllDates();
+        Assert.assertEquals(4,dates.size());
+        Assert.assertEquals(LocalDate.of(2000,1,1),dates.get(0));
+        Assert.assertEquals(LocalDate.of(2000,1,15),dates.get(2));
+        Assert.assertEquals(LocalDate.of(2000,1,22),dates.get(3));
     }
 
     @Test
     public void testGetLastKnownValue() {
-        TableImpl.GetMethod gm = TableImpl.GetMethod.LAST_KNOWN_VALUE;
+        GetMethod gm = GetMethod.LAST_KNOWN_VALUE;
         double v = testTable.getValue(LocalDate.of(2000,1,1),0,gm);
         assertDoubleEquals(10,v);
         v = testTable.getValue(LocalDate.of(2000,1,2),0,gm);
@@ -52,7 +53,7 @@ public class TableImplTest {
 
     @Test
     public void testGetInterpolatedValue() {
-        TableImpl.GetMethod gm = TableImpl.GetMethod.INTERPOLATE;
+        GetMethod gm = GetMethod.INTERPOLATE;
         double v = testTable.getValue(LocalDate.of(2000,1,1),0,gm);
         assertDoubleEquals(10,v);
         v = testTable.getValue(LocalDate.of(2000,1,2),0,gm);
@@ -75,7 +76,7 @@ public class TableImplTest {
 
     @Test
     public void testGetExtrapolatedValue() {
-        TableImpl.GetMethod gm = TableImpl.GetMethod.EXTRAPOLATE;
+        GetMethod gm = GetMethod.EXTRAPOLATE;
         double v = testTable.getValue(LocalDate.of(2000,1,1),0,gm);
         assertDoubleEquals(10,v);
 
@@ -105,7 +106,7 @@ public class TableImplTest {
 
     @Test
     public void testGetExactValue() {
-        TableImpl.GetMethod gm = TableImpl.GetMethod.EXACT;
+        GetMethod gm = GetMethod.EXACT;
         double v = testTable.getValue(LocalDate.of(2000,1,1),0,gm);
         assertDoubleEquals(10,v);
         v = testTable.getValue(LocalDate.of(2000,1,22),0,gm);
@@ -114,7 +115,7 @@ public class TableImplTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testGetExactMissingValue() {
-        TableImpl.GetMethod gm = TableImpl.GetMethod.EXACT;
+        GetMethod gm = GetMethod.EXACT;
         testTable.getValue(LocalDate.of(2000,1,2),0,gm);
     }
 

@@ -1,10 +1,11 @@
-package knapp.table;
+package knapp.table.wraps;
 
 import knapp.history.Frequency;
+import knapp.table.values.GetMethod;
+import knapp.table.Table;
 import knapp.util.Util;
 
 import java.time.LocalDate;
-import java.util.Set;
 
 public class TableWithoutColumn extends AbstractWrappingTable {
 
@@ -41,7 +42,7 @@ public class TableWithoutColumn extends AbstractWrappingTable {
     }
 
     @Override
-    public double getValue(LocalDate date, String column, TableImpl.GetMethod getMethod) {
+    public double getValue(LocalDate date, String column, GetMethod getMethod) {
         if (column.equals(removeColumn)) {
             throw new IllegalArgumentException("The column does not exist.");
         }
@@ -49,7 +50,7 @@ public class TableWithoutColumn extends AbstractWrappingTable {
     }
 
     @Override
-    public double getValue(LocalDate date, int column, TableImpl.GetMethod getMethod) {
+    public double getValue(LocalDate date, int column, GetMethod getMethod) {
         int x = core.getColumn(removeColumn);
         if (column < x) {
             return core.getValue(date,column,getMethod);
@@ -63,7 +64,7 @@ public class TableWithoutColumn extends AbstractWrappingTable {
     }
 
     public double[][] toDoubleRows(int[] xColumns, LocalDate start, LocalDate end,
-                                   Frequency frequency, final TableImpl.GetMethod getMethod) {
+                                   Frequency frequency, final GetMethod getMethod) {
         return Util.toDoubleRows(xColumns,start,end,frequency,(date, col) -> {
             double v =  getValue(date,col, getMethod);
             return String.valueOf(v);
@@ -81,7 +82,7 @@ public class TableWithoutColumn extends AbstractWrappingTable {
     }
 
     public double[][] toDoubleColumns(int[] xColumns, LocalDate start, LocalDate end,
-                                      Frequency frequency, final TableImpl.GetMethod getMethod) {
+                                      Frequency frequency, final GetMethod getMethod) {
         return Util.toDoubleColumns(xColumns,start,end,frequency,(date,col) -> {
             double v = getValue(date,col, getMethod);
             return String.valueOf(v);

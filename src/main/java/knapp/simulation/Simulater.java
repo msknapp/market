@@ -2,8 +2,9 @@ package knapp.simulation;
 
 import knapp.history.Frequency;
 import knapp.simulation.strategy.InvestmentStrategy;
+import knapp.table.values.GetMethod;
 import knapp.table.Table;
-import knapp.table.TableImpl;
+import knapp.table.wraps.ConsistentLagTable;
 import knapp.util.Util;
 
 import java.time.LocalDate;
@@ -26,6 +27,12 @@ public class Simulater {
         if (bondROI > 0.06) {
             throw new IllegalArgumentException("bond yield is too high.");
         }
+        if (!stockMarket.isExact()) {
+            throw new IllegalArgumentException("Stock market data must be exact.");
+        }
+        if (!inputs.isExact()) {
+            throw new IllegalArgumentException("The inputs data must be exact.");
+        }
         this.stockMarket = stockMarket;
         this.bondMarket = bondMarket;
         this.inputs = inputs;
@@ -43,8 +50,8 @@ public class Simulater {
         Util.doWithDate(start, end, Frequency.Monthly, date -> {
             // bonds pay dividends
 
-            double stockPrice = stockMarket.getValue(date,0,TableImpl.GetMethod.INTERPOLATE);
-            double bondPrice = bondMarket.getValue(date,0,TableImpl.GetMethod.INTERPOLATE);
+            double stockPrice = stockMarket.getValue(date,0,GetMethod.INTERPOLATE);
+            double bondPrice = bondMarket.getValue(date,0,GetMethod.INTERPOLATE);
             if (stockPrice < 1e-3 || bondPrice < 1e-3) {
                 throw new IllegalStateException("Couldn't determine the true price of assets.");
             }
@@ -61,9 +68,17 @@ public class Simulater {
             }
 
             LocalDate timeFrameStart = date.minusYears(frameYears);
-            Table currentKnownStockMarket = stockMarket.inTimeFrame(timeFrameStart, date);
-            Table currentKnownBondMarket = bondMarket.inTimeFrame(timeFrameStart, date);
-            Table currentKnownInputs = inputs.inTimeFrame(timeFrameStart, date);
+            // the end date is exclusive in these functions, but I think we can argue that
+            // you know what happened today.  I add one to the end date so the present day data is known.
+            Table currentKnownStockMarket = stockMarket.untilExclusive(date.plusDays(1));
+            Table currentKnownBondMarket = bondMarket.untilExclusive(date.plusDays(1));
+
+            // IMPORTANT: You must maintain the lag associated with each parameter.
+            // often times the inputs are not reported until three months later.
+//            Table currentKnownInputs = new ConsistentLagTable(inputs, date);
+            Table currentKnownInputs = inputs.untilExclusive(date.plusDays(1));
+            //inputs.inTimeFrame(timeFrameStart, date.plusDays(1));
+
             Set<Order> orders = investmentStrategy.rebalance(date, account, currentKnownInputs,
                     currentKnownStockMarket, currentKnownBondMarket, currentPrices);
             // always do all sales first.
@@ -94,8 +109,8 @@ public class Simulater {
         });
 
 
-        double stockPrice = stockMarket.getValue(end,0,TableImpl.GetMethod.INTERPOLATE);
-        double bondPrice = bondMarket.getValue(end,0,TableImpl.GetMethod.INTERPOLATE);
+        double stockPrice = stockMarket.getValue(end,0,GetMethod.INTERPOLATE);
+        double bondPrice = bondMarket.getValue(end,0,GetMethod.INTERPOLATE);
         if (stockPrice < 1e-3 || bondPrice < 1e-3) {
             throw new IllegalStateException("Couldn't determine the true price of assets.");
         }
