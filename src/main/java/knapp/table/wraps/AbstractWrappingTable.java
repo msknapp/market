@@ -71,25 +71,11 @@ public class AbstractWrappingTable implements Table {
         return core.getAllDates(column);
     }
 
-//    @Override
-//    public LocalDate[] getAllDates() {
-//        return core.getAllDates();
-//    }
-
     @Override
     public double[] getExactValues(LocalDate date) {
         return core.getExactValues(date);
     }
 
-//    @Override
-//    public LocalDate getLastDate() {
-//        return core.getLastDate();
-//    }
-//
-//    @Override
-//    public LocalDate getFirstDate() {
-//        return core.getFirstDate();
-//    }
 
     @Override
     public Frequency getFrequency() {
@@ -110,26 +96,6 @@ public class AbstractWrappingTable implements Table {
     public Table inTimeFrame(LocalDate startInclusive, LocalDate endExclusive) {
         return core.inTimeFrame(startInclusive,endExclusive);
     }
-
-//    @Override
-//    public LocalDate getDateBefore(LocalDate date) {
-//        return core.getDateBefore(date);
-//    }
-//
-//    @Override
-//    public LocalDate getDateOnOrBefore(LocalDate date) {
-//        return core.getDateOnOrBefore(date);
-//    }
-//
-//    @Override
-//    public LocalDate getDateAfter(LocalDate date) {
-//        return core.getDateAfter(date);
-//    }
-//
-//    @Override
-//    public LocalDate getDateOnOrAfter(LocalDate date) {
-//        return core.getDateOnOrAfter(date);
-//    }
 
     @Override
     public boolean isExact() {

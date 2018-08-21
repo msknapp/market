@@ -13,6 +13,27 @@ import java.util.Set;
 
 public class TableParser {
 
+    public static Table parseExact(String csv, boolean header) {
+        UnevenTable.UnevenTableBuilder builder = UnevenTable.defineTable();
+        boolean first = true;
+        String[] headerParts = null;
+        for (String line : csv.split("\n")) {
+            String[] parts = line.split(",",-1);
+            if (header && first) {
+                first = false;
+                headerParts = parts;
+                continue;
+            }
+            LocalDate date = LocalDate.parse(parts[0]);
+            for (int col = 1; col < parts.length; col ++) {
+                builder.add(headerParts[col],date,Double.parseDouble(parts[col]));
+            }
+            first = false;
+        }
+        // this delivers a table with exact values.
+        return builder.exact(true).build();
+    }
+
     public static TableImpl parse(String csv, boolean header, Frequency frequency) {
         TableImpl.TableBuilder tableBuilder = TableImpl.newBuilder();
         tableBuilder.frequency(frequency);

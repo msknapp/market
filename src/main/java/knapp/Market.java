@@ -58,19 +58,28 @@ public class Market {
         AdvisorImpl advisorImpl = AdvisorImpl.define()
                 .addInputs("M1SL", "UNRATE", "M1V", "UMCSENT", "IPMAN", "TTLCONS", "REVOLSL")
                 .addInputs("CE16OV", "RSAFS", "IPMAN", "CSUSHPISA", "REVOLSL")
-                .addInputs("EXUSEU", "CPIAUCSL", "INDPRO", "RSAFS")
+                .addInputs("EXUSEU", "CPIAUCSL", "INDPRO", "RSAFS", "M2V")
+                .addInputs("MZMV", "TOTALSL", "UNEMPLOY", "TWEXBMTH","TCU","M2MSL","PPIACO")
                 .build();
 
         MixedAdvisor mixedAdvisor = MixedAdvisor.define().core(advisorImpl)
-                .addInputs("M1SL", "UNRATE", "M1V", "UMCSENT", "IPMAN", "TTLCONS", "REVOLSL")
-                .addInputs("M1SL", "UNRATE", "M1V", "UMCSENT", "IPMAN", "CE16OV", "RSAFS")
-                .addInputs("M1SL", "UNRATE", "M1V", "IPMAN", "CSUSHPISA", "REVOLSL")
-                .addInputs("M1SL", "UNRATE", "M1V", "EXUSEU", "CE16OV")
-                .addInputs("M1SL", "UNRATE", "M1V", "CPIAUCSL", "INDPRO")
-                .addInputs("M1SL", "UNRATE", "M1V", "REVOLSL")
-                .addInputs("M1SL", "UNRATE", "UMCSENT", "M1V")
-                .addInputs("UNRATE", "CSUSHPISA", "RSAFS")
-                .addInputs("UNRATE", "UMCSENT", "CPIAUCSL")
+                .addInputs("M1SL","INDPRO","MZMV","TOTALSL","UNEMPLOY")
+                .addInputs("M1SL","M1V","PPIACO","TOTALSL","UNEMPLOY")
+                .addInputs("M1SL","M1V","IPMAN","CE16OV","TWEXBMTH","UNEMPLOY")
+                .addInputs("M1SL","UNRATE","M1V","IPMAN","CE16OV","TWEXBMTH")
+                .addInputs("M1SL","UNRATE","IPMAN","UNEMPLOY","M2MSL")
+                .addInputs("CPIAUCSL","IPMAN","CE16OV","M2V","M2MSL")
+                .addInputs("INDPRO","TCU","TWEXBMTH","UNEMPLOY","M2MSL")
+                .addInputs("M1SL","CPIAUCSL","INDPRO","TCU","TWEXBMTH")
+//                .addInputs("M1SL", "UNRATE", "M1V", "UMCSENT", "IPMAN", "TTLCONS", "REVOLSL")
+//                .addInputs("M1SL", "UNRATE", "M1V", "UMCSENT", "IPMAN", "CE16OV", "RSAFS")
+//                .addInputs("M1SL", "UNRATE", "M1V", "IPMAN", "CSUSHPISA", "REVOLSL")
+//                .addInputs("M1SL", "UNRATE", "M1V", "EXUSEU", "CE16OV")
+//                .addInputs("M1SL", "UNRATE", "M1V", "CPIAUCSL", "INDPRO")
+//                .addInputs("M1SL", "UNRATE", "M1V", "REVOLSL")
+//                .addInputs("M1SL", "UNRATE", "UMCSENT", "M1V")
+//                .addInputs("UNRATE", "CSUSHPISA", "RSAFS")
+//                .addInputs("UNRATE", "UMCSENT", "CPIAUCSL")
                 .build();
 
         mixedAdvisor.initialize();
@@ -111,18 +120,18 @@ public class Market {
 //        analasys.analyzeTrend(marketContext.getPredictionFile(), marketContext.getCurrentDirectory());
 //    }
 
-    public void retrieveData() throws IOException {
-        DataRetriever dataRetriever = marketContext.getDataRetriever();
-
-        LocalDate end = LocalDate.now();
-        LocalDate start = end.minusYears(50);
-        String indicatorText = marketContext.getCurrentDirectory().toText(marketContext.getIndicatorsFile());
-        List<Indicator> indicators = Indicator.parseFromText(indicatorText, true);
-        Map<String, Table> data = dataRetriever.retrieveData(start, end, indicators);
-        dataRetriever.writeData(start, end, data, marketContext.getMarket(),
-                marketContext.getCurrentDirectory(),
-                marketContext.getConsolidatedDataFile());
-    }
+//    public void retrieveData() throws IOException {
+//        DataRetriever dataRetriever = marketContext.getDataRetriever();
+//
+//        LocalDate end = LocalDate.now();
+//        LocalDate start = end.minusYears(50);
+//        String indicatorText = marketContext.getCurrentDirectory().toText(marketContext.getIndicatorsFile());
+//        List<Indicator> indicators = Indicator.parseFromText(indicatorText, true);
+//        Map<String, Table> data = dataRetriever.retrieveData(start, end, indicators);
+//        dataRetriever.writeData(start, end, data, marketContext.getMarket(),
+//                marketContext.getCurrentDirectory(),
+//                marketContext.getConsolidatedDataFile());
+//    }
 
     public void simulate() throws IOException {
 //        String bmText = marketContext.getCurrentDirectory().toText("ishares-20year-t-bond.csv");
@@ -161,7 +170,6 @@ public class Market {
         finalCents = finalAccount.getCurrentCents();
 
         System.out.println("The intelligent investor ends up with: $" + (finalCents / 100));
-
     }
 
     public static MarketContext createContext() throws IOException {

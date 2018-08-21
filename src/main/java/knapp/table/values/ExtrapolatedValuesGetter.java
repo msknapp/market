@@ -8,6 +8,9 @@ public class ExtrapolatedValuesGetter implements TableValueGetter {
 
     @Override
     public double getValue(LocalDate date, TableColumnView view) {
+        if (view.containsDate(date)){
+            return view.getExactValue(date);
+        }
         if (date.isBefore(view.getFirstDate())) {
             return extrapolateDataBeforeStart(date,view);
         }
@@ -61,7 +64,15 @@ public class ExtrapolatedValuesGetter implements TableValueGetter {
 
     double interpolateValue(LocalDate date, TableColumnView view) {
         LocalDate first = view.getDateBefore(date);
+        if (first == null) {
+            view.getDateBefore(date);
+            throw new IllegalStateException("The first date was null");
+        }
         LocalDate second = view.getDateAfter(date);
+        if (second == null) {
+            view.getDateAfter(date);
+            throw new IllegalStateException("The second date was null");
+        }
         double firstVal = view.getExactValue(first);
         double secondVal = view.getExactValue(second);
         long days = DAYS.between(first,second);

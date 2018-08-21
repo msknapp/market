@@ -27,7 +27,7 @@ public class TrendFinder {
         private Frequency frequency;
         private LocalDate start;
         private LocalDate end;
-        private LocalDate presentDay;
+//        private LocalDate presentDay;
         private Map<String,Integer> lags;
 
         public AnalysisBuilder() {
@@ -79,10 +79,10 @@ public class TrendFinder {
             return this;
         }
 
-        public AnalysisBuilder presentDay(LocalDate presentDay) {
-            this.presentDay = presentDay;
-            return this;
-        }
+//        public AnalysisBuilder presentDay(LocalDate presentDay) {
+//            this.presentDay = presentDay;
+//            return this;
+//        }
 
         public AnalysisBuilder inputColumns(int[] inputColumns) {
             this.inputColumns = inputColumns;
@@ -90,7 +90,7 @@ public class TrendFinder {
         }
 
         public Analasys build() {
-            return new Analasys(market,inputs,inputColumns,frequency,start,end, presentDay,lags);
+            return new Analasys(market,inputs,inputColumns,frequency,start,end, lags);
         }
     }
 
@@ -101,11 +101,10 @@ public class TrendFinder {
         private final Frequency frequency;
         private final LocalDate start;
         private final LocalDate end;
-        private final LocalDate presentDay;
         private final Map<String,Integer> lags;
 
         public Analasys(Table market, Table inputs, int[] inputColumns, Frequency frequency,LocalDate start,
-                        LocalDate end, LocalDate presentDay, Map<String,Integer> lags) {
+                        LocalDate end, Map<String,Integer> lags) {
             if (market == null) {
                 throw new IllegalArgumentException("Market cannot be null");
             }
@@ -153,9 +152,6 @@ public class TrendFinder {
 //                    throw new IllegalArgumentException(wrnng);
                 }
             }
-            if (presentDay == null) {
-                throw new NullPointerException("The present day is null");
-            }
             if (lags == null || lags.isEmpty()) {
                 throw new IllegalArgumentException("Lags must be defined.");
             }
@@ -165,7 +161,6 @@ public class TrendFinder {
             this.frequency = frequency;
             this.start = start;
             this.end = end;
-            this.presentDay = presentDay;
             this.lags = Collections.unmodifiableMap(new HashMap<>(lags));
         }
 
@@ -198,7 +193,7 @@ public class TrendFinder {
         public TestedModel deriveTestedModel() {
             Random random = new Random();
 
-            List<LocalDate> dates = inputs.getTableColumnView(0).getAllDates();
+            List<LocalDate> dates = new ArrayList<>(inputs.getTableColumnView(0).getAllDates());
             int testSample = (int) Math.round(dates.size()*0.2);
             Set<LocalDate> testDates = new HashSet<>(testSample);
             for (int i = 0; i < testSample; i++) {

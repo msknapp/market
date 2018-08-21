@@ -34,7 +34,7 @@ public class FunctionStrategy extends AllocationStrategy {
 
         TrendFinder.Analasys analysis = trendFinder.startAnalyzing().start(start).
                 end(end).inputs(inputs).market(stockMarket).
-                frequency(Frequency.Monthly).presentDay(presentDay).
+                frequency(Frequency.Monthly).
                 lags(lags).build();
         NormalModel model = analysis.deriveModel();
 

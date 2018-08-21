@@ -15,8 +15,6 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.function.BiFunction;
 
-import static java.time.temporal.ChronoUnit.MONTHS;
-
 public class BestInputFinder {
 
     private String marketSymbol = "s-and-p-500-weekly";// "nasdaq-weekly";
@@ -26,9 +24,12 @@ public class BestInputFinder {
 
     public static void main(String[] args) throws IOException {
 
+        // Note: INDPRO and IPMAN are almost exactly the same, but slightly off.
+
         // the two arguments I keep changing and experimenting with:
-        int numberOfInputs = 7;
-        Set<String> mustHave = new HashSet<>(Arrays.asList("UNRATE","M1SL","M1V","IPMAN"));
+        int numberOfInputs = 5;
+//        Set<String> mustHave = new HashSet<>(Arrays.asList("TOTALSL","UNEMPLOY","M1SL")); // Arrays.asList("UNRATE","M1SL","M1V","IPMAN")
+        Set<String> mustHave = new HashSet<>(Arrays.asList("CSUSHPISA","TTLCONS"));
 
         List<String> allSeries = getAllSeries();
         BestInputFinder bestInputFinder = new BestInputFinder();
@@ -44,7 +45,7 @@ public class BestInputFinder {
 
     public static List<String> getAllSeries() {
         List<String> out = new ArrayList<>();
-        for (String sub : Arrays.asList("best-inputs","good-inputs")) {
+        for (String sub : Arrays.asList("best-inputs","good-inputs","inputs")) {
             File file = new File("./src/main/resources/"+sub);
             String[] x = file.list();
             for (String s : x) {
@@ -139,7 +140,7 @@ public class BestInputFinder {
         LocalDate marketEnd = LocalDate.of(2018, 6, 1);
         String stockMarketText = InputLoader.loadTextFromClasspath("/market/" + marketSymbol + ".csv");
 
-        Table stockMarket = TableParser.parse(stockMarketText, true, Frequency.Weekly);
+        Table stockMarket = TableParser.parseExact(stockMarketText, true);
         stockMarket = stockMarket.retainColumns(Collections.singleton("Adj Close"));
 
         if (stockMarket.getFirstDateOf(0).minusMonths(1).isAfter(marketStart)) {
@@ -152,8 +153,8 @@ public class BestInputFinder {
         TrendFinder trendFinder = new TrendFinder();
 
         try {
-            Table inputs = InputLoader.loadInputsTableFromClasspath(inputSeries, marketStart, marketEnd, Frequency.Monthly);
-            checkZeroes(inputs);
+            Table inputs = InputLoader.loadExactTableFromClasspath(inputSeries, Arrays.asList("/best-inputs","/good-inputs","/inputs"));
+//            checkZeroes(inputs);
 
             String cpiText = InputLoader.loadTextFromClasspath("/good-inputs/CPIAUCSL.csv");
             Table cpi = TableParser.parse(cpiText, true, Frequency.Weekly);
@@ -179,12 +180,16 @@ public class BestInputFinder {
                         .retainColumns(Collections.singleton(realDeriver.getColumnName()));
             }
 
+            LocalDate present = LocalDate.of(2018,8,3);
+            Map<String,Integer> lags = inputs.getLags(present);
+
             TrendFinder.Analasys analasys = trendFinder.startAnalyzing()
                     .start(marketStart)
                     .end(marketEnd)
                     .frequency(trendFrequency)
                     .market(stockMarket)
                     .inputs(inputs)
+                    .lags(lags)
                     .build();
 
             // first I want to know that I am not over-fitting this model

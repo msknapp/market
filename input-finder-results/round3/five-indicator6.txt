@@ -1,0 +1,57 @@
+requiring: "CSUSHPISA","TTLCONS"
+
+**********************
+Place: 1
+Indicators:
+UNRATE
+INDPRO
+M2SL
+CSUSHPISA
+TTLCONS
+Score: 0.9392716443281174
+R-Squared: 0.9410696542212478
+Trust Score: 0.998089397649722
+**********************
+Place: 2
+Indicators:
+UNRATE
+M1V
+M2SL
+CSUSHPISA
+TTLCONS
+Score: 0.9260571025270228
+R-Squared: 0.9292669612726254
+Trust Score: 0.9965458163483971
+**********************
+Place: 3
+Indicators:
+M1SL
+M2SL
+CSUSHPISA
+TTLCONS
+UNEMPLOY
+Score: 0.9239198119666772
+R-Squared: 0.9285782733644553
+Trust Score: 0.9949832323979545
+**********************
+Place: 4
+Indicators:
+M1SL
+EXUSEU
+CSUSHPISA
+TTLCONS
+UNEMPLOY
+Score: 0.9168392761612731
+R-Squared: 0.9217048327169696
+Trust Score: 0.9947211337263429
+**********************
+Place: 5
+Indicators:
+M1SL
+UNRATE
+CE16OV
+CSUSHPISA
+TTLCONS
+Score: 0.9137089830713725
+R-Squared: 0.9330964911447023
+Trust Score: 0.9792223974076404

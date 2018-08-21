@@ -124,6 +124,7 @@ public class Reporter {
                 advice.getBestSimulationResults().getAverageROI() * 100.0,
                 advice.getRecommendedPercentStock() * 100.0));
         writer.accept("");
+        writer.accept(String.format("Advice type: %s",advice.getClass().getSimpleName()));
         writer.accept(String.format("The simulation's ROI was: %.1f%%",advice.getBestSimulationResults().getAverageROI() * 100.0));
         writer.accept(String.format("The simulation's ended with: $%d",advice.getBestSimulationResults().getFinalDollars()));
         writer.accept(String.format("The simulation made %d transactions.",advice.getBestSimulationResults().getTransactions().size()));
@@ -232,7 +233,10 @@ public class Reporter {
 
     private void writeCombinedSummaryText(CombinedAdvice advice, Consumer<String> writer) throws IOException {
         int i = 0;
-        for (Advice x : advice.getAllAdvice().keySet()) {
+        List<Advice> superList = new ArrayList<>();
+        superList.add(advice);
+        superList.addAll(advice.getAllAdvice().keySet());
+        for (Advice x : superList) {
             writer.accept("");
             writer.accept(String.format("------------ Advice %d (weight: %.2f) ------------",i, advice.getAllAdvice().get(x)));
             writer.accept("");

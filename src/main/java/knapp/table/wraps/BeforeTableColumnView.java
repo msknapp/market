@@ -12,6 +12,12 @@ public class BeforeTableColumnView implements TableColumnView {
     private List<LocalDate> dates;
 
     public BeforeTableColumnView(TableColumnView core, LocalDate maxExclusive) {
+        if (core == null) {
+            throw new IllegalArgumentException("Can't have an null core table.");
+        }
+        if (maxExclusive == null) {
+            throw new IllegalArgumentException("max exclusive date is null");
+        }
         this.core = core;
         this.maxExclusive = maxExclusive;
     }
@@ -32,6 +38,9 @@ public class BeforeTableColumnView implements TableColumnView {
 
     @Override
     public double getExactValue(LocalDate date) {
+        if (date == null) {
+            throw new IllegalArgumentException("Given a null date.");
+        }
         if (date.isBefore(maxExclusive)) {
             return core.getExactValue(date);
         }
@@ -61,19 +70,19 @@ public class BeforeTableColumnView implements TableColumnView {
         if (date.isBefore(maxExclusive)) {
             return core.getDateOnOrBefore(date);
         }
-        return core.getDateOnOrBefore(maxExclusive);
+        return core.getDateBefore(maxExclusive);
     }
 
     @Override
     public LocalDate getDateAfter(LocalDate date) {
         LocalDate t = core.getDateAfter(date);
-        return !t.isBefore(date) ? null : t;
+        return !t.isBefore(maxExclusive) ? null : t;
     }
 
     @Override
     public LocalDate getDateOnOrAfter(LocalDate date) {
         LocalDate t = core.getDateOnOrAfter(date);
-        return !t.isBefore(date) ? null : t;
+        return !t.isBefore(maxExclusive) ? null : t;
     }
 
     @Override

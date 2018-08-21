@@ -140,7 +140,11 @@ public class TableImpl implements Table {
 
         @Override
         public LocalDate getDateBefore(LocalDate date) {
-            return rows.headMap(date).lastKey();
+            SortedMap<LocalDate,TableRow> tmp = rows.headMap(date);
+            if (!tmp.isEmpty()) {
+                return tmp.lastKey();
+            }
+            return null;
         }
 
         @Override

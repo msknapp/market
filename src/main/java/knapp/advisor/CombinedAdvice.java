@@ -16,7 +16,9 @@ public class CombinedAdvice implements Advice {
     private final Map<Advice,Double> allAdvice;
     private final Table allInputs;
     private final Model model;
-    private final EvolvableFunction mixedFunction;
+
+    private EvolvableFunction mixedFunction;
+    private Simulater.SimulationResults simulationResults;
 
     public Map<Advice,Double> getAllAdvice() {
         return Collections.unmodifiableMap(allAdvice);
@@ -42,6 +44,8 @@ public class CombinedAdvice implements Advice {
         }
         this.first = f;
         this.model = new ModelOfModels(models);
+
+
         this.mixedFunction = new MixedFunction(weightedFunctions);
     }
 
@@ -70,10 +74,17 @@ public class CombinedAdvice implements Advice {
         return first.getCurrentMarketValue();
     }
 
+    public void setSimulationResults(Simulater.SimulationResults simulationResults) {
+        this.simulationResults = simulationResults;
+    }
+
+    public void setMixedFunction(EvolvableFunction mixedFunction) {
+        this.mixedFunction = mixedFunction;
+    }
+
     @Override
     public Simulater.SimulationResults getBestSimulationResults() {
-        // TODO improve on this.
-        return first.getBestSimulationResults();
+        return simulationResults;
     }
 
     @Override

@@ -24,14 +24,14 @@ import static knapp.util.Util.doWithDate;
 
 public class DataRetriever {
 
-    private final BiFunction<Table,Integer,GetMethod> getMethodChooser;
+//    private final BiFunction<Table,Integer,GetMethod> getMethodChooser;
 
     public DataRetriever() {
         this(new DefaultGetMethod());
     }
 
     public DataRetriever(BiFunction<Table,Integer,GetMethod> getMethodChooser) {
-        this.getMethodChooser = getMethodChooser;
+//        this.getMethodChooser = getMethodChooser;
     }
 
     public Map<String,Table> retrieveData(List<Indicator> indicators) throws IOException {
@@ -60,42 +60,42 @@ public class DataRetriever {
         return downloadedData;
     }
 
-    public void writeData(LocalDate start, LocalDate end, Map<String,Table> downloadedData,
-                          Table market, CurrentDirectory currentDirectory, String destinationFile) {
-
-        Frequency frequency = Frequency.Monthly;
-
-        Util.ExceptionalConsumer<Writer> consumer = writer -> {
-            writer.write("Date");
-            for (String key : downloadedData.keySet()) {
-                writer.write(",");
-                writer.write(key);
-            }
-            writer.write("\n");
-            final GetMethod marketMethod = getMethodChooser.apply(market,1);
-
-            doWithDate(start,end,Frequency.Monthly, d -> {
-                writer.write(d.toString());
-                for (String key : downloadedData.keySet()) {
-                    writer.write(",");
-                    Table table = downloadedData.get(key);
-                    GetMethod method = getMethodChooser.apply(table,0);
-                    double value = table.getValue(d, 0, method);
-                    String sValue = String.valueOf(value);
-                    if ("Infinity".equals(sValue)) {
-                        throw new IllegalArgumentException("got an infinity (not like the car).");
-                    }
-                    writer.write(sValue);
-                }
-                writer.write("\n");
-            });
-        };
-        String text = Util.doWithWriter(consumer);
-        File file = currentDirectory.toFile(destinationFile);
-        try {
-            FileUtils.writeStringToFile(file, text);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+//    public void writeData(LocalDate start, LocalDate end, Map<String,Table> downloadedData,
+//                          Table market, CurrentDirectory currentDirectory, String destinationFile) {
+//
+//        Frequency frequency = Frequency.Monthly;
+//
+//        Util.ExceptionalConsumer<Writer> consumer = writer -> {
+//            writer.write("Date");
+//            for (String key : downloadedData.keySet()) {
+//                writer.write(",");
+//                writer.write(key);
+//            }
+//            writer.write("\n");
+//            final GetMethod marketMethod = getMethodChooser.apply(market,1);
+//
+//            doWithDate(start,end,Frequency.Monthly, d -> {
+//                writer.write(d.toString());
+//                for (String key : downloadedData.keySet()) {
+//                    writer.write(",");
+//                    Table table = downloadedData.get(key);
+//                    GetMethod method = getMethodChooser.apply(table,0);
+//                    double value = table.getValue(d, 0, method);
+//                    String sValue = String.valueOf(value);
+//                    if ("Infinity".equals(sValue)) {
+//                        throw new IllegalArgumentException("got an infinity (not like the car).");
+//                    }
+//                    writer.write(sValue);
+//                }
+//                writer.write("\n");
+//            });
+//        };
+//        String text = Util.doWithWriter(consumer);
+//        File file = currentDirectory.toFile(destinationFile);
+//        try {
+//            FileUtils.writeStringToFile(file, text);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//    }
 }

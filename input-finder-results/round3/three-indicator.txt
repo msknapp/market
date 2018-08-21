@@ -1,0 +1,45 @@
+**********************
+Place: 1
+Indicators:
+DGS10
+TOTALSL
+UNEMPLOY
+Score: 0.9550355694258724
+R-Squared: 0.9555601737967693
+Trust Score: 0.9994509980791556
+**********************
+Place: 2
+Indicators:
+WTB3MS
+TOTALSL
+UNEMPLOY
+Score: 0.9542254556057329
+R-Squared: 0.9602708583720536
+Trust Score: 0.9937044816953318
+**********************
+Place: 3
+Indicators:
+UNRATE
+M3SL
+TOTALSL
+Score: 0.9534204272565769
+R-Squared: 0.9537162070793614
+Trust Score: 0.9996898659993518
+**********************
+Place: 4
+Indicators:
+M1SL
+IPMAN
+UNEMPLOY
+Score: 0.9497176023184255
+R-Squared: 0.9562435651375008
+Trust Score: 0.9931754177941716
+**********************
+Place: 5
+Indicators:
+M1SL
+CPIAUCSL
+IPMAN
+Score: 0.9495164536105379
+R-Squared: 0.9526116810067052
+Trust Score: 0.9967507984020348

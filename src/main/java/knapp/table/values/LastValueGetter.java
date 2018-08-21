@@ -7,6 +7,9 @@ public class LastValueGetter implements TableValueGetter {
     @Override
     public double getValue(LocalDate date, TableColumnView view) {
         LocalDate x = view.getDateOnOrBefore(date);
-        return view.getExactValue(x);
+        if (x != null) {
+            return view.getExactValue(x);
+        }
+        return 0;
     }
 }

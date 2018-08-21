@@ -1,6 +1,7 @@
 package knapp.util;
 
 import knapp.history.Frequency;
+import knapp.table.UnevenTable;
 import knapp.table.values.GetMethod;
 import knapp.table.Table;
 import knapp.table.TableImpl;
@@ -82,5 +83,42 @@ public class InputLoader {
             tableBuilder.addRow(date,values);
         });
         return tableBuilder.build();
+    }
+
+    public static Table loadExactTableFromClasspath(Collection<String> series, Collection<String> prefixes) {
+        UnevenTable.UnevenTableBuilder builder = UnevenTable.defineTable();
+        for (String symbol : series) {
+            for (String prefix : prefixes) {
+                String cp = prefix+"/"+symbol + ".csv";
+                String text = loadTextFromClasspath(cp);
+                if (text == null || text.isEmpty()){
+                    continue;
+                }
+                String[] header = null;
+                boolean first = true;
+                for (String line : text.split("\n")) {
+                    String[] parts = line.split(",");
+                    if (first) {
+                        header = parts;
+                        first = false;
+                    } else {
+                        LocalDate date = LocalDate.parse(parts[0]);
+                        for (int i = 1; i < parts.length; i++) {
+                            String v = parts[i];
+                            String col = header[i];
+                            if (".".equals(v)){
+                                continue;
+                            }
+                            if (!v.matches("-?[\\d\\.]+")) {
+                                continue;
+                            }
+                            builder.add(header[i],date,Double.parseDouble(v));
+                        }
+                    }
+                }
+                break;
+            }
+        }
+        return builder.exact(true).build();
     }
 }

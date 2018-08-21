@@ -19,6 +19,9 @@ public class UnevenTable implements Table {
         UnevenTable.UnevenTableBuilder unevenTableBuilder = UnevenTable.defineTable();
         boolean exact = true;
         for (Table table : tables) {
+            if (table == null) {
+                throw new IllegalArgumentException("Table is null");
+            }
             exact &= table.isExact();
             for (String column : table.getColumns()) {
                 TableColumnView view = table.getTableColumnView(column);
@@ -75,21 +78,17 @@ public class UnevenTable implements Table {
 
     @Override
     public double getExactValue(LocalDate date, int column) {
-        return columnsByNumber.get(column).values.get(date);
+        SortedMap<LocalDate,Double> mp = columnsByNumber.get(column).values;
+        if (mp.containsKey(date)) {
+            return mp.get(date);
+        }
+        throw new IllegalArgumentException("There is no exact value on that date.");
     }
 
     @Override
     public int getColumnCount() {
         return columnsByNumber.size();
     }
-
-//    @Override
-//    public LocalDate[] getAllDates() {
-//        List<LocalDate> dates = getAllDates(DatePolicy.ANYMUSTHAVE);
-//        LocalDate[] x = new LocalDate[dates.size()];
-//        dates.toArray(x);
-//        return x;
-//    }
 
     public List<LocalDate> getAllDates(DatePolicy datePolicy) {
         Set<LocalDate> dates = new HashSet<>();
@@ -157,6 +156,8 @@ public class UnevenTable implements Table {
 
         private SortedMap<LocalDate,Double> values;
 
+        private List<LocalDate> cachedDates;
+
         TableColumn(String name, int columnNumber, Map<LocalDate, Double> x) {
             this.name = name;
             this.columnNumber = columnNumber;
@@ -173,9 +174,12 @@ public class UnevenTable implements Table {
 
         @Override
         public List<LocalDate> getAllDates() {
-            List<LocalDate> dts = new ArrayList<>(values.keySet());
-            Collections.sort(dts);
-            return dts;
+            if (cachedDates == null) {
+                List<LocalDate> dts = new ArrayList<>(values.keySet());
+                Collections.sort(dts);
+                cachedDates = Collections.unmodifiableList(dts);
+            }
+            return cachedDates;
         }
 
         @Override
@@ -195,7 +199,11 @@ public class UnevenTable implements Table {
 
         @Override
         public LocalDate getDateBefore(LocalDate date) {
-            return values.headMap(date).lastKey();
+            SortedMap<LocalDate,Double> tmp = values.headMap(date);
+            if (tmp.isEmpty()) {
+                return null;
+            }
+            return tmp.lastKey();
         }
 
         @Override

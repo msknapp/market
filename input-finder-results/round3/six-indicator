@@ -1,0 +1,50 @@
+requiring: "CE16OV","M1V","IPMAN"
+
+**********************
+Place: 1
+Indicators:
+M1SL
+UNRATE
+M1V
+IPMAN
+CE16OV
+TWEXBMTH
+Score: 0.9661763919714135
+R-Squared: 0.9684911972509411
+Trust Score: 0.9976098850602895
+**********************
+Place: 2
+Indicators:
+M1SL
+UNRATE
+M1V
+UMCSENT
+IPMAN
+CE16OV
+Score: 0.9563746324113883
+R-Squared: 0.96524261930111
+Trust Score: 0.9908126861450206
+**********************
+Place: 3
+Indicators:
+M1SL
+UNRATE
+M1V
+EXUSEU
+IPMAN
+CE16OV
+Score: 0.908021677717741
+R-Squared: 0.9163920064747243
+Trust Score: 0.9908659954497168
+**********************
+Place: 4
+Indicators:
+M1SL
+UNRATE
+M1V
+CPIAUCSL
+IPMAN
+CE16OV
+Score: 0.8879887120838199
+R-Squared: 0.9629991692979746
+Trust Score: 0.9221074538736755

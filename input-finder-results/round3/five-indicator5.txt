@@ -1,0 +1,57 @@
+requiring: "INDPRO","TWEXBMTH"
+
+**********************
+Place: 1
+Indicators:
+INDPRO
+TCU
+TWEXBMTH
+UNEMPLOY
+M2MSL
+Score: 0.9675747984164216
+R-Squared: 0.9692222527148564
+Trust Score: 0.9983002306294348
+**********************
+Place: 2
+Indicators:
+M1SL
+CPIAUCSL
+INDPRO
+TCU
+TWEXBMTH
+Score: 0.9648175726145078
+R-Squared: 0.9693755082142534
+Trust Score: 0.9952980701893923
+**********************
+Place: 3
+Indicators:
+M1SL
+CPIAUCSL
+INDPRO
+M2V
+TWEXBMTH
+Score: 0.9626559886434176
+R-Squared: 0.9639621018830759
+Trust Score: 0.9986450574798462
+**********************
+Place: 4
+Indicators:
+M1SL
+CPIAUCSL
+UMCSENT
+INDPRO
+TWEXBMTH
+Score: 0.9590557867122895
+R-Squared: 0.9609575884456236
+Trust Score: 0.9980209306256582
+**********************
+Place: 5
+Indicators:
+M1SL
+UNRATE
+CPIAUCSL
+INDPRO
+TWEXBMTH
+Score: 0.9589413292575459
+R-Squared: 0.9639087386017325
+Trust Score: 0.9948465978725409

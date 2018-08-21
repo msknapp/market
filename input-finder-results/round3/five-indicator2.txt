@@ -1,0 +1,57 @@
+Requiring M1SL and UNRATE
+
+**********************
+Place: 1
+Indicators:
+M1SL
+UNRATE
+IPMAN
+UNEMPLOY
+M2MSL
+Score: 0.9615976598164498
+R-Squared: 0.9631955931626637
+Trust Score: 0.998341008453987
+**********************
+Place: 2
+Indicators:
+M1SL
+UNRATE
+INDPRO
+DGS10
+UNEMPLOY
+Score: 0.9613155333885502
+R-Squared: 0.9616642996032101
+Trust Score: 0.9996373305998738
+**********************
+Place: 3
+Indicators:
+M1SL
+UNRATE
+M1V
+IPMAN
+CE16OV
+Score: 0.9612382906694437
+R-Squared: 0.9617894809711149
+Trust Score: 0.9994269116968146
+**********************
+Place: 4
+Indicators:
+M1SL
+UNRATE
+M1V
+UMCSENT
+M2V
+Score: 0.9564156924587214
+R-Squared: 0.956799231479138
+Trust Score: 0.9995991436784248
+**********************
+Place: 5
+Indicators:
+M1SL
+UNRATE
+M1V
+UMCSENT
+DGS10
+Score: 0.9496207091147039
+R-Squared: 0.9570332925065753
+Trust Score: 0.9922546232718226

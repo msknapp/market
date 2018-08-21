@@ -1,0 +1,57 @@
+requiring: "UMCSENT","RSAFS"
+
+**********************
+Place: 1
+Indicators:
+M1SL
+UMCSENT
+IPMAN
+RSAFS
+WTB3MS
+Score: 0.9389789889572857
+R-Squared: 0.9401718603553402
+Trust Score: 0.9987312198456955
+**********************
+Place: 2
+Indicators:
+M1SL
+UMCSENT
+INDPRO
+RSAFS
+UNEMPLOY
+Score: 0.9344952403112065
+R-Squared: 0.9456445442723334
+Trust Score: 0.9882098363188822
+**********************
+Place: 3
+Indicators:
+M1SL
+UNRATE
+UMCSENT
+INDPRO
+RSAFS
+Score: 0.927216253090014
+R-Squared: 0.9429318104236841
+Trust Score: 0.9833333045296152
+**********************
+Place: 4
+Indicators:
+M1SL
+UNRATE
+CPIAUCSL
+UMCSENT
+RSAFS
+Score: 0.9186908540246593
+R-Squared: 0.9256202651935038
+Trust Score: 0.9925137646296066
+**********************
+Place: 5
+Indicators:
+M1SL
+UNRATE
+M1V
+UMCSENT
+RSAFS
+Score: 0.9028425572449531
+R-Squared: 0.9326061126009074
+Trust Score: 0.9680856098262663

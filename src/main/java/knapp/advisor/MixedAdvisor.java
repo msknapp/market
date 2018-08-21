@@ -36,7 +36,16 @@ public class MixedAdvisor implements Advisor {
             allAdvice.add(advice);
         }
 
-        return new CombinedAdvice(allAdvice,core.getAllInputsTable());
+        CombinedAdvice advice = new CombinedAdvice(allAdvice,core.getAllInputsTable());
+
+        if (core instanceof AdvisorImpl) {
+            AdvisorImpl advisor = (AdvisorImpl)core;
+            Advice ad2 = advisor.getAdvice(advisor.getAllInputsTable(),advice.getModel());
+            advice.setSimulationResults(ad2.getBestSimulationResults());
+            advice.setMixedFunction(ad2.getBestFunction());
+        }
+
+        return advice;
     }
 
     @Override

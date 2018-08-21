@@ -1,11 +1,11 @@
 package knapp.advisor;
 
 import knapp.predict.MarketSlice;
+import knapp.predict.Model;
 import knapp.predict.NormalModel;
 import knapp.simulation.Simulater;
 import knapp.simulation.functions.EvolvableFunction;
 import knapp.table.Table;
-import knapp.table.values.GetMethod;
 
 import java.time.LocalDate;
 import java.util.Collections;
@@ -15,7 +15,7 @@ import java.util.Map;
 import static java.time.temporal.ChronoUnit.DAYS;
 
 public class BasicAdvice implements Advice {
-    private final NormalModel model;
+    private final Model model;
     private final Table inputs;
     private final Table market;
     private final LocalDate start;
@@ -24,7 +24,7 @@ public class BasicAdvice implements Advice {
     private final EvolvableFunction bestFunction;
     private final Map<String,Integer> lags;
 
-    BasicAdvice(NormalModel model, Table inputs, Table market, LocalDate start, double currentValue,
+    BasicAdvice(Model model, Table inputs, Table market, LocalDate start, double currentValue,
                 Simulater.SimulationResults simulationResults, EvolvableFunction bestFunction) {
         this.model = model;
         this.inputs = inputs;
@@ -42,7 +42,7 @@ public class BasicAdvice implements Advice {
     }
 
     @Override
-    public NormalModel getModel() {
+    public Model getModel() {
         return model;
     }
 
@@ -83,9 +83,13 @@ public class BasicAdvice implements Advice {
 
     @Override
     public double getSigmas() {
-        MarketSlice marketSlice = inputs.getPresentDayMarketSlice(lags);
-        double estimate = getModel().estimateValue(marketSlice);
-        return (estimate - getCurrentMarketValue()) / getModel().getStandardDeviation();
+        if (model instanceof NormalModel) {
+            NormalModel normalModel = (NormalModel) model;
+            MarketSlice marketSlice = inputs.getPresentDayMarketSlice(lags);
+            double estimate = normalModel.estimateValue(marketSlice);
+            return (estimate - getCurrentMarketValue()) / normalModel.getStandardDeviation();
+        }
+        throw new UnsupportedOperationException("Can't get the sigmas of this model.");
     }
 
     public static BasicAdviceBuilder define() {
@@ -93,7 +97,7 @@ public class BasicAdvice implements Advice {
     }
 
     public static class BasicAdviceBuilder {
-        private NormalModel model;
+        private Model model;
         private Table inputs;
         private Table market;
         private LocalDate start;
@@ -130,7 +134,7 @@ public class BasicAdvice implements Advice {
             return this;
         }
 
-        public BasicAdviceBuilder model(NormalModel x) {
+        public BasicAdviceBuilder model(Model x) {
             this.model = x;
             return this;
         }

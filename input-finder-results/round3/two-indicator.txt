@@ -1,0 +1,41 @@
+============== Finished: =============
+**********************
+Place: 1
+Indicators: 
+TOTALSL
+UNEMPLOY
+Score: 0.9537077317120279
+R-Squared: 0.9577925391194827
+Trust Score: 0.9957351856058411
+**********************
+Place: 2
+Indicators: 
+CPIAUCSL
+TOTALSL
+Score: 0.9361339747055222
+R-Squared: 0.9375893753341044
+Trust Score: 0.9984477206473639
+**********************
+Place: 3
+Indicators: 
+UNRATE
+TASACBW027SBOG
+Score: 0.9356912307373949
+R-Squared: 0.9373543752449467
+Trust Score: 0.9982257035850319
+**********************
+Place: 4
+Indicators: 
+M1SL
+REVOLSL
+Score: 0.9165685403436902
+R-Squared: 0.9304404588546229
+Trust Score: 0.9850910196574973
+**********************
+Place: 5
+Indicators: 
+M1SL
+INDPRO
+Score: 0.8973791765789016
+R-Squared: 0.9230453657821258
+Trust Score: 0.9721940110912356

@@ -1,0 +1,58 @@
+Requiring TOTALSL and UNEMPLOY
+
+
+**********************
+Place: 1
+Indicators:
+M1SL
+INDPRO
+MZMV
+TOTALSL
+UNEMPLOY
+Score: 0.9669944044053238
+R-Squared: 0.9676844314640378
+Trust Score: 0.9992869296681046
+**********************
+Place: 2
+Indicators:
+M1SL
+M1V
+PPIACO
+TOTALSL
+UNEMPLOY
+Score: 0.963880584772027
+R-Squared: 0.9657486767380475
+Trust Score: 0.9980656541282249
+**********************
+Place: 3
+Indicators:
+M1SL
+M1V
+CPIAUCSL
+TOTALSL
+UNEMPLOY
+Score: 0.9589582823051803
+R-Squared: 0.96552915236445
+Trust Score: 0.9931945399647659
+**********************
+Place: 4
+Indicators:
+M1SL
+UNRATE
+CPIAUCSL
+TOTALSL
+UNEMPLOY
+Score: 0.9540089015231435
+R-Squared: 0.9645007359888919
+Trust Score: 0.9891220047074498
+**********************
+Place: 5
+Indicators:
+M1SL
+UNRATE
+M1V
+TOTALSL
+UNEMPLOY
+Score: 0.9071017612204154
+R-Squared: 0.965492186866494
+Trust Score: 0.9395226326630517

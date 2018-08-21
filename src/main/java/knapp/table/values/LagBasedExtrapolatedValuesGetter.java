@@ -18,9 +18,15 @@ public class LagBasedExtrapolatedValuesGetter implements TableValueGetter {
     @Override
     public double getValue(LocalDate date, TableColumnView view) {
         LocalDate second = view.getDateOnOrBefore(date.minusDays(lagDays));
-        LocalDate first = view.getDateBefore(second);
-        double firstValue = view.getExactValue(first);
+        if (second == null) {
+            return 0;
+        }
         double secondValue = view.getExactValue(second);
+        LocalDate first = view.getDateBefore(second);
+        if (first == null) {
+            return secondValue;
+        }
+        double firstValue = view.getExactValue(first);
         long delta = DAYS.between(first,second);
 
         double slope = (secondValue - firstValue) / ((double)delta);

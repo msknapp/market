@@ -4,6 +4,7 @@ import knapp.download.DataRetriever;
 import knapp.download.IEXRetriever;
 import knapp.history.Frequency;
 import knapp.indicator.Indicator;
+import knapp.predict.Model;
 import knapp.predict.NormalModel;
 import knapp.predict.TrendFinder;
 import knapp.simulation.Simulater;
@@ -123,11 +124,14 @@ public class AdvisorImpl implements Advisor {
                 .frequency(Frequency.Monthly)
                 .start(marketStart)
                 .end(end)
-                .presentDay(LocalDate.now())
                 .lags(inputs.getLags(LocalDate.now()))
                 .build();
         NormalModel model = analasys.deriveModel();
 
+        return getAdvice(inputs, model);
+    }
+
+    public Advice getAdvice(Table inputs, Model model) {
         int frameYears = 8;
         LocalDate simStart = marketStart.plusYears(frameYears);
 
@@ -151,9 +155,15 @@ public class AdvisorImpl implements Advisor {
         FunctionStrategy strategy = new FunctionStrategy(trendFinder,evolvableFunction, lags);
         Simulater.SimulationResults results = simulater.simulate(simStart, end, 10000, strategy);
 
-        return BasicAdvice.define().bestFunction(evolvableFunction).simulationResults(results)
-                .currentValue(lastMarketValue).
-                        inputs(inputs).market(stockMarket).start(marketStart).model(model).build();
+        return BasicAdvice.define()
+                .bestFunction(evolvableFunction)
+                .simulationResults(results)
+                .currentValue(lastMarketValue)
+                .inputs(inputs)
+                .market(stockMarket)
+                .start(marketStart)
+                .model(model)
+                .build();
     }
 
     public static AdvisorImplBuilder define() {
