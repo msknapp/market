@@ -1,6 +1,5 @@
 package knapp.table;
 
-import knapp.history.Frequency;
 import knapp.table.util.TableParser;
 import knapp.table.values.GetMethod;
 import org.junit.Assert;

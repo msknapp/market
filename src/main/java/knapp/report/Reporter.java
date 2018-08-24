@@ -2,9 +2,9 @@ package knapp.report;
 
 import knapp.advisor.Advice;
 import knapp.advisor.CombinedAdvice;
-import knapp.history.Frequency;
+import knapp.simulation.Stance;
+import knapp.table.Frequency;
 import knapp.predict.*;
-import knapp.simulation.Simulater;
 import knapp.simulation.functions.Line;
 import knapp.table.DoubleRange;
 import knapp.table.values.GetMethod;
@@ -94,7 +94,7 @@ public class Reporter {
             writer.write(String.format("Current Sigma: %.2f\n\n",sigma));
 
             writer.write("Simulation Results:\n");
-            writer.write(String.format("The simulation ended with: $%d\n",advice.getBestSimulationResults().getFinalDollars()));
+            writer.write(String.format("The simulation ended with: %s\n",advice.getBestSimulationResults().getFinalDollars().toString()));
             writer.write(String.format("The simulation had ROI: %.1f%%\n",advice.getBestSimulationResults().getAverageROI()*100.0));
             writer.write(String.format("The simulation made %d transactions.\n",advice.getBestSimulationResults().getTransactions().size()));
 
@@ -126,7 +126,7 @@ public class Reporter {
         writer.accept("");
         writer.accept(String.format("Advice type: %s",advice.getClass().getSimpleName()));
         writer.accept(String.format("The simulation's ROI was: %.1f%%",advice.getBestSimulationResults().getAverageROI() * 100.0));
-        writer.accept(String.format("The simulation's ended with: $%d",advice.getBestSimulationResults().getFinalDollars()));
+        writer.accept(String.format("The simulation's ended with: %s",advice.getBestSimulationResults().getFinalDollars().toString()));
         writer.accept(String.format("The simulation made %d transactions.",advice.getBestSimulationResults().getTransactions().size()));
         writer.accept("");
 
@@ -306,9 +306,9 @@ public class Reporter {
             List<LocalDate> dates = new ArrayList<>(advice.getBestSimulationResults().getWorthOverTime().keySet());
             Collections.sort(dates);
             for (LocalDate date : dates) {
-                Simulater.Stance stance = advice.getBestSimulationResults().getWorthOverTime().get(date);
-                writer.write(String.format("%s,%d,%d%%\n",date.toString(),
-                        (int) Math.round(stance.getNetWorthDollars()),
+                Stance stance = advice.getBestSimulationResults().getWorthOverTime().get(date);
+                writer.write(String.format("%s,%s,%d%%\n",date.toString(),
+                        stance.getNetWorthDollars().toString(),
                         stance.getPercentStock()));
             }
         });

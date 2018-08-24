@@ -1,31 +1,3 @@
-import knapp.Market;
-import knapp.MarketContext;
-import knapp.download.DataRetriever;
-import knapp.download.IEXRetriever;
-import knapp.history.Frequency;
-import knapp.indicator.Indicator;
-import knapp.predict.NormalModel;
-import knapp.predict.SimpleEstimate;
-import knapp.predict.TrendFinder;
-import knapp.simulation.Simulater;
-import knapp.simulation.evolution.Evolver;
-import knapp.simulation.functions.Line;
-import knapp.simulation.strategy.FunctionStrategy;
-import knapp.simulation.strategy.InvestmentStrategy;
-import knapp.table.DatePolicy;
-import knapp.table.Table;
-import knapp.table.util.TableParser;
-import knapp.util.InputLoader;
-import org.junit.Test;
-
-import java.io.IOException;
-import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-
 public class Tasks {
 
 //    @Test

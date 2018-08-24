@@ -1,6 +1,5 @@
 package knapp.table;
 
-import knapp.history.Frequency;
 import knapp.table.values.TableColumnView;
 import knapp.table.wraps.UntilTable;
 
@@ -154,14 +153,14 @@ public class UnevenTable implements Table {
         private final int columnNumber;
         private final String name;
 
-        private SortedMap<LocalDate,Double> values;
+        private NavigableMap<LocalDate,Double> values;
 
         private List<LocalDate> cachedDates;
 
         TableColumn(String name, int columnNumber, Map<LocalDate, Double> x) {
             this.name = name;
             this.columnNumber = columnNumber;
-            this.values = Collections.unmodifiableSortedMap(new TreeMap<>(x));
+            this.values = Collections.unmodifiableNavigableMap(new TreeMap<>(x));
         }
 
         public int getColumnNumber() {
@@ -199,29 +198,26 @@ public class UnevenTable implements Table {
 
         @Override
         public LocalDate getDateBefore(LocalDate date) {
-            SortedMap<LocalDate,Double> tmp = values.headMap(date);
-            if (tmp.isEmpty()) {
-                return null;
-            }
-            return tmp.lastKey();
+            // lowerkey is strictly less than, not equal to
+            return values.lowerKey(date);
         }
 
         @Override
         public LocalDate getDateOnOrBefore(LocalDate date) {
-            if (values.containsKey(date)) {
-                return date;
-            }
-            return getDateBefore(date);
+            // floorKey is less than or equal to.
+            return values.floorKey(date);
         }
 
         @Override
         public LocalDate getDateAfter(LocalDate date) {
-            return values.tailMap(date.plusDays(1)).firstKey();
+            // higher key is strictly greater than the given value.
+            return values.higherKey(date);
         }
 
         @Override
         public LocalDate getDateOnOrAfter(LocalDate date) {
-            return values.tailMap(date).firstKey();
+            // ceilingKey is greater than or equal to.
+            return values.ceilingKey(date);
         }
 
         @Override

@@ -11,17 +11,18 @@ public abstract class AllocationStrategy implements InvestmentStrategy {
 
 
     public abstract InvestmentAllocation chooseAllocation(LocalDate presentDay, Account account, Table inputs,
-                                                   Table stockMarket, Table bondMarket, CurrentPrices currentPrices);
+                                                   Table stockMarket, Table bondMarket, CurrentPrices currentPrices,
+                                                  InvestmentAllocation current);
 
 
     @Override
     public final Set<Order> rebalance(LocalDate presentDay, Account account, Table inputs, Table stockMarket, Table bondMarket, CurrentPrices currentPrices) {
-        InvestmentAllocation desired = chooseAllocation(presentDay,account,inputs,stockMarket,bondMarket,currentPrices);
+        InvestmentAllocation current = approximateCurrentAllocation(account,currentPrices);
+        InvestmentAllocation desired = chooseAllocation(presentDay,account,inputs,stockMarket,bondMarket,currentPrices, current);
         if (desired == null) {
             // this is an easy way that child classes can say to not trade anything.
             return Collections.emptySet();
         }
-        InvestmentAllocation current = approximateCurrentAllocation(account,currentPrices);
 
 
         if (Math.abs(current.getPercentBond() - desired.getPercentBond()) < getMinimumPercentChange() &&
@@ -30,72 +31,70 @@ public abstract class AllocationStrategy implements InvestmentStrategy {
             return Collections.emptySet();
         }
 
-        double liquidValueDollars = account.netValueCents(currentPrices,presentDay) / 100.0;
+        USDollars liquidValue = account.netValue(currentPrices,presentDay);
 
         double moreStockPercent = (desired.getPercentStock() - current.getPercentStock())/100.0;
         double moreBondPercent = (desired.getPercentBond() - current.getPercentBond())/100.0;
 
-        double moreStockDollars = liquidValueDollars * moreStockPercent;
-        double moreBondDollars = liquidValueDollars * moreBondPercent;
+        USDollars moreStockDollars = liquidValue.times(moreStockPercent);
+        USDollars moreBondDollars = liquidValue.times(moreBondPercent);
 
         Account simAccount = account;
         Set<Order> orders = new HashSet<>();
         // focus on sales first so you have more money available to buy things.
-        if (moreBondDollars < 0) {
-            // you want to sell bonds.
-            int bondSharesToSell = (int) Math.floor(- moreBondDollars / currentPrices.getBondPriceDollars());
-            if (bondSharesToSell > 0) {
-                Map<LocalDate,Integer> toSell = chooseBondsToSell(account,bondSharesToSell, presentDay);
+        updateOrders(presentDay, account, currentPrices, moreStockDollars, moreBondDollars, simAccount, orders);
+        return orders;
+    }
+
+    public static void updateOrders(LocalDate presentDay, Account account, CurrentPrices currentPrices,
+                                    USDollars moreStockDollars, USDollars moreBondDollars,
+                                    Account simAccount, Set<Order> orders) {
+        simAccount = deriveSellOrders(presentDay,currentPrices,moreBondDollars,Asset.BONDS,simAccount,orders);
+        simAccount = deriveSellOrders(presentDay,currentPrices,moreStockDollars,Asset.STOCK,simAccount,orders);
+        simAccount = derivePurchaseOrders(presentDay,currentPrices,moreStockDollars,Asset.STOCK,simAccount,orders);
+        derivePurchaseOrders(presentDay,currentPrices,moreBondDollars,Asset.BONDS,simAccount,orders);
+    }
+
+    public static Account deriveSellOrders(LocalDate presentDay, CurrentPrices currentPrices,
+                                          USDollars dollars, Asset asset, Account simAccount, Set<Order> orders) {
+        if (dollars.isDebt()) {
+            // you want to sell an asset.
+            int sharesToSell = (int) Math.floor(- dollars.dividedBy(currentPrices.getPrice(asset)));
+            if (sharesToSell > 0) {
+                Map<LocalDate,Integer> toSell = chooseThingsToSell(simAccount,sharesToSell, presentDay, asset);
                 for (LocalDate d : toSell.keySet()) {
                     int q = toSell.get(d);
-                    Order order = Order.SellBonds(q,d);
+                    Order order = Order.SellAsset(q,d, asset);
                     orders.add(order);
                     simAccount = simAccount.executeOrder(order,currentPrices,presentDay);
                 }
             }
         }
-        if (moreStockDollars < 0) {
-            // you want to sell stock.
-            int stockSharesToSell = (int) Math.floor(- moreStockDollars / currentPrices.getStockPriceDollars());
-            if (stockSharesToSell > 0) {
-                Map<LocalDate,Integer> toSell = chooseStockToSell(account,stockSharesToSell, presentDay);
-                for (LocalDate d : toSell.keySet()) {
-                    int q = toSell.get(d);
-                    Order order = Order.SellStock(q,d);
-                    orders.add(order);
-                    simAccount = simAccount.executeOrder(order,currentPrices,presentDay);
-                }
-            }
-        }
-        if (moreStockDollars > 0) {
+        return simAccount;
+    }
+
+    public static Account derivePurchaseOrders(LocalDate presentDay, CurrentPrices currentPrices,
+                                              USDollars dollars, Asset asset, Account simAccount, Set<Order> orders) {
+        if (!dollars.isDebt()) {
             // must worry about the maximum amount of money you have.
-            double dollarsAvailable = (simAccount.getCurrentCents() - simAccount.getTradeFeeCents())/100.0;
-            double availableMoreStockDollars = Math.min(dollarsAvailable,moreStockDollars);
-            int stockSharesToBuy = (int) Math.floor(availableMoreStockDollars / currentPrices.getStockPriceDollars());
-            if (stockSharesToBuy > 0) {
-                Order order = Order.BuyStock(stockSharesToBuy);
+            USDollars dollarsAvailable = simAccount.getCurrentCash().minus(simAccount.getTradeFee());
+            USDollars availableMoreDollars = dollarsAvailable.isLessThan(dollars) ? dollarsAvailable :
+                    dollars;
+            int sharesToBuy = (int) Math.floor(availableMoreDollars.dividedBy(currentPrices.getPrice(asset)));
+            if (sharesToBuy > 0) {
+                Order order = Order.BuyAsset(sharesToBuy, asset);
                 orders.add(order);
                 simAccount = simAccount.executeOrder(order, currentPrices,presentDay);
             }
         }
-        if (moreBondDollars > 0) {
-            // must worry about the maximum amount of money you have.
-            double dollarsAvailable = (simAccount.getCurrentCents() - simAccount.getTradeFeeCents())/100.0;
-            double availableMoreBondDollars = Math.min(dollarsAvailable,moreBondDollars);
-            int bondSharesToBuy = (int) Math.floor(availableMoreBondDollars / currentPrices.getBondPriceDollars());
-            if (bondSharesToBuy > 0) {
-                Order order = Order.BuyBonds(bondSharesToBuy);
-                orders.add(order);
-            }
-        }
-        return orders;
+        return simAccount;
     }
 
-    private Map<LocalDate,Integer> chooseBondsToSell(Account account, int bondSharesToSell, LocalDate presentDay) {
+    public static Map<LocalDate,Integer> chooseBondsToSell(Account account, int bondSharesToSell, LocalDate presentDay) {
         return chooseThingsToSell(account, bondSharesToSell, presentDay, Asset.BONDS);
     }
 
-    private Map<LocalDate,Integer> chooseThingsToSell(Account account, int sharesToSell, LocalDate presentDay, Asset asset) {
+    public static Map<LocalDate,Integer> chooseThingsToSell(Account account, int sharesToSell, LocalDate presentDay, Asset asset) {
         Map<LocalDate,Integer> m = new HashMap<>();
         int total = 0;
         Map<LocalDate,PurchaseInfo> purchaseMap = (asset == Asset.BONDS) ?
@@ -115,7 +114,7 @@ public abstract class AllocationStrategy implements InvestmentStrategy {
             if (needed < 1) {
                 break;
             }
-            int trade = Math.min(needed,purchaseMap.get(d).getQuantity());
+            int trade = Math.min(needed,purchaseMap.get(d).getCurrentQuantity());
             m.put(d,trade);
             total += trade;
         }
@@ -124,24 +123,24 @@ public abstract class AllocationStrategy implements InvestmentStrategy {
             if (needed < 1) {
                 break;
             }
-            int trade = Math.min(needed,purchaseMap.get(d).getQuantity());
+            int trade = Math.min(needed,purchaseMap.get(d).getCurrentQuantity());
             m.put(d,trade);
             total += trade;
         }
         return m;
     }
 
-    private Map<LocalDate,Integer> chooseStockToSell(Account account, int stockSharesToSell, LocalDate presentDay) {
+    public static Map<LocalDate,Integer> chooseStockToSell(Account account, int stockSharesToSell, LocalDate presentDay) {
         return chooseThingsToSell(account, stockSharesToSell, presentDay, Asset.STOCK);
     }
 
-    private InvestmentAllocation approximateCurrentAllocation(Account account, CurrentPrices currentPrices) {
-        double s = account.getCurrentSharesStock() * currentPrices.getStockPriceDollars();
-        double b = account.getCurrentSharesBonds() * currentPrices.getBondPriceDollars();
-        double c = account.getCurrentCents() / 100.0;
-        double total = s + b + c;
-        int pctStock = (int) Math.round(100 * s / total);
-        int pctBond = (int) Math.round(100 * b / total);
+    public static InvestmentAllocation approximateCurrentAllocation(Account account, CurrentPrices currentPrices) {
+        USDollars s = currentPrices.getStockPrice().times(account.getCurrentSharesStock());
+        USDollars b = currentPrices.getBondPrice().times(account.getCurrentSharesBonds());
+        USDollars c = account.getCurrentCash();
+        USDollars total = s.plus(b).plus(c);
+        int pctStock = (int) Math.round(100.0 * s.dividedBy(total));
+        int pctBond = (int) Math.round(100.0 * b.dividedBy(total));
         int pctMoney = 100 - pctBond - pctStock;
 
         return new InvestmentAllocation(pctStock,pctBond,pctMoney);

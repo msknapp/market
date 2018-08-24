@@ -1,6 +1,6 @@
 package knapp.predict;
 
-import knapp.history.Frequency;
+import knapp.table.Frequency;
 import knapp.table.Table;
 import knapp.table.util.TableUtil;
 import knapp.table.values.InterpolatedValuesGetter;
@@ -27,7 +27,6 @@ public class TrendFinder {
         private Frequency frequency;
         private LocalDate start;
         private LocalDate end;
-//        private LocalDate presentDay;
         private Map<String,Integer> lags;
 
         public AnalysisBuilder() {
@@ -78,11 +77,6 @@ public class TrendFinder {
             this.end = end;
             return this;
         }
-
-//        public AnalysisBuilder presentDay(LocalDate presentDay) {
-//            this.presentDay = presentDay;
-//            return this;
-//        }
 
         public AnalysisBuilder inputColumns(int[] inputColumns) {
             this.inputColumns = inputColumns;

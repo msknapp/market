@@ -1,6 +1,5 @@
 package knapp.util;
 
-import knapp.history.ValueHistory;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -22,8 +21,4 @@ public class CurrentDirectory {
         return new File(baseDir+"/"+relativeFilePath);
     }
 
-    public ValueHistory readToValueHistory(String relativeFilePath) throws IOException {
-        String text = toText(relativeFilePath);
-        return ValueHistory.parseText(text);
-    }
 }

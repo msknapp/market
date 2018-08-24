@@ -8,19 +8,27 @@ import java.util.Map;
 import static java.time.temporal.ChronoUnit.DAYS;
 
 public class BasicAccount implements Account {
-    private final long cents;
+    private final USDollars cash;
     private final Map<LocalDate, PurchaseInfo> stockShares;
     private final Map<LocalDate, PurchaseInfo> bondShares;
     private final double effectiveTaxRate;
+    private final USDollars tradeFee = USDollars.dollars(7);
 
     public static BasicAccount createAccount(int dollars, double effectiveTaxRate) {
-        return new BasicAccount(100L * dollars, Collections.emptyMap(), Collections.emptyMap(), effectiveTaxRate);
+        return new BasicAccount(USDollars.dollars(dollars), Collections.emptyMap(), Collections.emptyMap(), effectiveTaxRate);
     }
 
-    private BasicAccount(long cents,Map<LocalDate, PurchaseInfo> stockShares,Map<LocalDate, PurchaseInfo> bondShares,
+    public static BasicAccount createAccount(USDollars dollars, double effectiveTaxRate) {
+        return new BasicAccount(dollars, Collections.emptyMap(), Collections.emptyMap(), effectiveTaxRate);
+    }
+
+    private BasicAccount(USDollars cash,Map<LocalDate, PurchaseInfo> stockShares,Map<LocalDate, PurchaseInfo> bondShares,
                          double effectiveTaxRate) {
-        if (cents < 0) {
-            throw new IllegalArgumentException("Can't have negative cents.");
+        if (cash == null) {
+            throw new IllegalArgumentException("Can't have null cash");
+        }
+        if (cash.isDebt()) {
+            throw new IllegalArgumentException("Can't have a negative amount of cash in an account.");
         }
         if (effectiveTaxRate < 0.15) {
             throw new IllegalArgumentException("The effective tax rate cannot be less than 15%.");
@@ -35,7 +43,7 @@ public class BasicAccount implements Account {
                 throw new IllegalArgumentException("The bonds shares has stocks in it.");
             }
         }
-        this.cents = cents;
+        this.cash = cash;
         this.stockShares = Collections.unmodifiableMap(new HashMap<>(stockShares));
         this.bondShares = Collections.unmodifiableMap(new HashMap<>(bondShares));
         this.effectiveTaxRate = effectiveTaxRate;
@@ -46,100 +54,114 @@ public class BasicAccount implements Account {
         if (assetShares.get(presentDay) != null) {
             throw new IllegalArgumentException("A trade already exists for that asset on that date.");
         }
-        double priceDollars = (order.getAsset() == Asset.STOCK) ? currentPrices.getStockPriceDollars() :
-                currentPrices.getBondPriceDollars();
+        USDollars price = (order.getAsset() == Asset.STOCK) ? currentPrices.getStockPrice() :
+                currentPrices.getBondPrice();
         Map newAssets = new HashMap(assetShares);
+        USDollars newCash = null;
         if (order.isPurchase()) {
-            double expenseDollars = priceDollars * order.getQuantity() + (getTradeFeeCents()/100);
-            long expenseCents = Math.round(expenseDollars * 100);
-            if (expenseCents > cents) {
+            USDollars expense = price.times(order.getQuantity()).plus(getTradeFee());
+            if (expense.isGreaterThan(cash)) {
                 throw new IllegalArgumentException("Insufficient funds");
             }
-            PurchaseInfo purchaseInfo = new PurchaseInfo(order.getQuantity(), priceDollars,presentDay,order.getAsset());
+            PurchaseInfo purchaseInfo = new PurchaseInfo(order.getQuantity(), order.getQuantity(),
+                    price,presentDay,order.getAsset());
 
             newAssets.put(presentDay,purchaseInfo);
-            long newCents = cents - expenseCents;
-            if (order.getAsset() == Asset.STOCK) {
-                return new BasicAccount(newCents, newAssets, bondShares, effectiveTaxRate);
-            } else {
-                return new BasicAccount(newCents, stockShares,newAssets, effectiveTaxRate);
-            }
+            newCash = cash.minus(expense);
         } else {
             PurchaseInfo purchaseInfo = assetShares.get(order.getDateSharesWerePurchased());
-            if (order.getQuantity() > purchaseInfo.getQuantity()) {
-                throw new IllegalArgumentException("Selling more assets than we have.");
+
+            USDollars totalGain = calculateNetGainToSellPosition(presentDay, purchaseInfo, price, order.getQuantity());
+            newCash = cash.plus(totalGain);
+
+            if (order.getQuantity() > purchaseInfo.getCurrentQuantity()) {
+                throw new IllegalArgumentException("Insufficient shares");
             }
-            if (order.getQuantity() == purchaseInfo.getQuantity()) {
+            if (order.getQuantity() == purchaseInfo.getCurrentQuantity()) {
                 newAssets.remove(purchaseInfo.getDateExchanged());
             } else {
                 newAssets.put(purchaseInfo.getDateExchanged(),purchaseInfo.lessQuantity(order.getQuantity()));
             }
-            boolean longTerm = DAYS.between(purchaseInfo.getDateExchanged(), presentDay) > 365;
-
-            // trade fees are paid before capital gains taxes.
-            double gainedDollars = priceDollars * order.getQuantity() - (getTradeFeeCents() / 100.0);
-
-            double capitalGainDollars = gainedDollars -
-                    (purchaseInfo.getQuantity() * purchaseInfo.getPriceDollars());
-            double taxRate = (longTerm ? getLongTermTaxRate() : getShortTermTaxRate());
-            // we always assume that we pay tax immediately.
-            double tax = capitalGainDollars * taxRate;
-            long gainCents = Math.round((gainedDollars - tax) * 100);
-            long newCents = gainCents + cents;
-            if (order.getAsset() == Asset.STOCK) {
-                return new BasicAccount(newCents, newAssets, bondShares, effectiveTaxRate);
-            } else {
-                return new BasicAccount(newCents, stockShares,newAssets, effectiveTaxRate);
-            }
+        }
+        if (order.getAsset() == Asset.STOCK) {
+            return new BasicAccount(newCash, newAssets, bondShares, effectiveTaxRate);
+        } else {
+            return new BasicAccount(newCash, stockShares,newAssets, effectiveTaxRate);
         }
     }
 
     @Override
     public Account cashOut(final CurrentPrices currentPrices, LocalDate presentDay) {
-        return new BasicAccount(netValueCents(currentPrices,presentDay),Collections.emptyMap(),
+        return new BasicAccount(netValue(currentPrices,presentDay),Collections.emptyMap(),
                 Collections.emptyMap(),effectiveTaxRate);
     }
 
     @Override
-    public Account addCash(long cents) {
-        if (cents < 0) {
-            throw new IllegalArgumentException("Can't subtract funds");
+    public Account addCash(USDollars cash) {
+        if (cash == null) {
+            throw new IllegalArgumentException("Can't have null cash");
         }
-        if (cents == 0) {
+        if (cash.getTotalInCents() == 0) {
             return this;
         }
-        return new BasicAccount(this.cents + cents,this.stockShares,this.bondShares,this.effectiveTaxRate);
+        return new BasicAccount(this.cash.plus(cash),this.stockShares,this.bondShares,this.effectiveTaxRate);
     }
 
     @Override
-    public long netValueCents(CurrentPrices currentPrices, LocalDate presentDay) {
-        long totalCents = cents;
+    public USDollars netValue(CurrentPrices currentPrices, LocalDate presentDay) {
+        USDollars netCash = cash;
         for (PurchaseInfo purchaseInfo : stockShares.values()) {
-            double valueDollars = currentPrices.getStockPriceDollars() * purchaseInfo.getQuantity();
-            double valueDollarsAfterFee = valueDollars - (getTradeFeeCents()/100);
-            double capitalGainsDollars = valueDollarsAfterFee - (purchaseInfo.getQuantity() * purchaseInfo.getPriceDollars());
-            boolean longTerm = DAYS.between(purchaseInfo.getDateExchanged(),presentDay) >= 365;
-            double taxRate = (longTerm) ? getLongTermTaxRate() : getShortTermTaxRate();
-            double taxDollars = taxRate * capitalGainsDollars;
-            totalCents += Math.round((valueDollarsAfterFee - taxDollars) * 100);
+            USDollars price = currentPrices.getStockPrice();
+            USDollars totalGain = calculateNetGainToClosePosition(presentDay, purchaseInfo, price);
+            netCash = netCash.plus(totalGain);
         }
         for (PurchaseInfo purchaseInfo : bondShares.values()) {
-            double valueDollars = currentPrices.getBondPriceDollars() * purchaseInfo.getQuantity();
-            double valueDollarsAfterFee = valueDollars - (getTradeFeeCents()/100);
-            double capitalGainsDollars = valueDollarsAfterFee - (purchaseInfo.getQuantity() * purchaseInfo.getPriceDollars());
-            boolean longTerm = DAYS.between(purchaseInfo.getDateExchanged(),presentDay) >= 365;
-            double taxRate = (longTerm) ? getLongTermTaxRate() : getShortTermTaxRate();
-            double taxDollars = taxRate * capitalGainsDollars;
-            totalCents += Math.round((valueDollarsAfterFee - taxDollars) * 100);
+            USDollars price = currentPrices.getBondPrice();
+            USDollars totalGain = calculateNetGainToClosePosition(presentDay, purchaseInfo, price);
+            netCash = netCash.plus(totalGain);
         }
-        return totalCents;
+        return netCash;
+    }
+
+    public USDollars calculateNetGainToClosePosition(LocalDate presentDay, PurchaseInfo purchaseInfo, USDollars price) {
+        return calculateNetGainToSellPosition(presentDay,purchaseInfo, price,purchaseInfo.getCurrentQuantity());
+    }
+
+    public USDollars calculateNetGainToSellPosition(LocalDate presentDay, PurchaseInfo purchaseInfo, USDollars price, int quantity) {
+        if (quantity < 0) {
+            throw new IllegalArgumentException("Quantity cannot be negative.");
+        }
+        if (quantity == 0) {
+            return USDollars.cents(0);
+        }
+        if (quantity > purchaseInfo.getCurrentQuantity()){
+            throw new IllegalArgumentException("Trying to sell more than we have.");
+        }
+        if (presentDay == null) {
+            throw new IllegalArgumentException("present day cannot be null.");
+        }
+        if (purchaseInfo == null) {
+            throw new IllegalArgumentException("purchase info is null");
+        }
+        if (price == null) {
+            throw new IllegalArgumentException("price is null");
+        }
+        USDollars value = price.times(quantity);
+        USDollars valueAfterFee = value.minus(tradeFee);
+        USDollars costBasis = purchaseInfo.getCostBasis(tradeFee,quantity);
+        USDollars capitalGains = valueAfterFee.minus(costBasis);
+
+        boolean longTerm = DAYS.between(purchaseInfo.getDateExchanged(),presentDay) >= 365;
+        double taxRate = (longTerm) ? getLongTermTaxRate() : getShortTermTaxRate();
+        USDollars tax = capitalGains.times(taxRate);
+        return valueAfterFee.minus(tax);
     }
 
     @Override
     public int getCurrentSharesStock() {
         int bonds = 0;
         for (PurchaseInfo purchaseInfo : stockShares.values()) {
-            bonds += purchaseInfo.getQuantity();
+            bonds += purchaseInfo.getCurrentQuantity();
         }
         return bonds;
     }
@@ -148,7 +170,7 @@ public class BasicAccount implements Account {
     public int getCurrentSharesBonds() {
         int bonds = 0;
         for (PurchaseInfo purchaseInfo : bondShares.values()) {
-            bonds += purchaseInfo.getQuantity();
+            bonds += purchaseInfo.getCurrentQuantity();
         }
         return bonds;
     }
@@ -164,13 +186,13 @@ public class BasicAccount implements Account {
     }
 
     @Override
-    public long getCurrentCents() {
-        return cents;
+    public USDollars getCurrentCash() {
+        return cash;
     }
 
     @Override
-    public long getTradeFeeCents() {
-        return 700;
+    public USDollars getTradeFee() {
+        return tradeFee;
     }
 
     @Override

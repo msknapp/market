@@ -1,7 +1,7 @@
 package knapp.indicator;
 
 import knapp.download.DownloadRequest;
-import knapp.history.Frequency;
+import knapp.table.Frequency;
 
 import java.time.LocalDate;
 import java.util.ArrayList;

@@ -1,10 +1,12 @@
 import knapp.predict.TrendFinder;
-import knapp.history.Frequency;
+import knapp.simulation.SimulationResults;
+import knapp.simulation.Stance;
+import knapp.simulation.USDollars;
+import knapp.table.Frequency;
 import knapp.simulation.Simulater;
 import knapp.simulation.strategy.AllStockStrategy;
 import knapp.simulation.strategy.IntelligentStrategy;
 import knapp.simulation.strategy.InvestmentStrategy;
-import knapp.table.DefaultGetMethod;
 import knapp.table.Table;
 import knapp.table.util.TableParser;
 import knapp.util.InputLoader;
@@ -75,39 +77,39 @@ public class TestBed {
                 .bondMarket(bondMarket).bondROI(0.04).frameYears(20).inputs(inputs).build();
     }
 
-    public Simulater.SimulationResults testIntelligentInvestment() {
-        return simulater.simulate(trainingStart, trainingEnd,10000,strategy);
+    public SimulationResults testIntelligentInvestment() {
+        return simulater.simulate(trainingStart, trainingEnd,USDollars.dollars(10000),strategy);
     }
 
-    public Simulater.SimulationResults trainHoldForever() {
-        return simulater.simulate(trainingStart, trainingEnd,10000,holdForeverStrategy);
+    public SimulationResults trainHoldForever() {
+        return simulater.simulate(trainingStart, trainingEnd,USDollars.dollars(10000),holdForeverStrategy);
     }
 
-    public Simulater.SimulationResults trainStrategy(InvestmentStrategy strategy) {
-        return simulater.simulate(trainingStart, trainingEnd,10000,strategy);
+    public SimulationResults trainStrategy(InvestmentStrategy strategy) {
+        return simulater.simulate(trainingStart, trainingEnd,USDollars.dollars(10000),strategy);
     }
 
-    public Simulater.SimulationResults trainStrategyWithoutTestHoldout(InvestmentStrategy strategy) {
-        return simulater.simulate(trainingStart, testEnd,10000,strategy);
+    public SimulationResults trainStrategyWithoutTestHoldout(InvestmentStrategy strategy) {
+        return simulater.simulate(trainingStart, testEnd,USDollars.dollars(10000),strategy);
     }
 
-    public Simulater.SimulationResults testStrategy(InvestmentStrategy strategy) {
-        return simulater.simulate(testStart, testEnd,10000,strategy);
+    public SimulationResults testStrategy(InvestmentStrategy strategy) {
+        return simulater.simulate(testStart, testEnd,USDollars.dollars(10000),strategy);
     }
 
-    public static void printResults(Simulater.SimulationResults simulationResults,String name) {
+    public static void printResults(SimulationResults simulationResults, String name) {
         printWorthOverTime(simulationResults,name);
         System.out.println(String.format("The strategy '%s' ended with this much money: $%d",name,simulationResults.getFinalDollars()));
         System.out.println(String.format("The strategy '%s' ended with this average ROI: %f%%",name,simulationResults.getAverageROI()));
     }
 
-    public static void printWorthOverTime(Simulater.SimulationResults simulationResults,String name) {
+    public static void printWorthOverTime(SimulationResults simulationResults, String name) {
         System.out.println(String.format("The strategy '%s' had this worth over time:",name));
         List<LocalDate> dates = new ArrayList<>(simulationResults.getWorthOverTime().keySet());
         Collections.sort(dates);
         System.out.println("Date,Value,Percent Stock");
         for (LocalDate d : dates) {
-            Simulater.Stance v = simulationResults.getWorthOverTime().get(d);
+            Stance v = simulationResults.getWorthOverTime().get(d);
             System.out.println(d.toString()+","+v.getNetWorthDollars()+","+v.getPercentStock());
         }
     }

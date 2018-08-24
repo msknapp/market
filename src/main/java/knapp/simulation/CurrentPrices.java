@@ -1,19 +1,28 @@
 package knapp.simulation;
 
 public class CurrentPrices {
-    private final double stockPrice;
-    private final double bondPrice;
+    private final USDollars stockPrice;
+    private final USDollars bondPrice;
 
-    public CurrentPrices(double stockPrice, double bondPrice) {
+    public CurrentPrices(USDollars stockPrice, USDollars bondPrice) {
         this.stockPrice = stockPrice;
         this.bondPrice = bondPrice;
     }
 
-    public double getStockPriceDollars() {
+    public USDollars getStockPrice() {
         return stockPrice;
     }
 
-    public double getBondPriceDollars() {
+    public USDollars getBondPrice() {
         return bondPrice;
+    }
+
+    public USDollars getPrice(Asset asset) {
+        if (asset == Asset.STOCK) {
+            return stockPrice;
+        } else if (asset == Asset.BONDS) {
+            return bondPrice;
+        }
+        throw new IllegalArgumentException("Can only get the price of bonds or stock.");
     }
 }

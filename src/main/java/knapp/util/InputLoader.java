@@ -1,6 +1,6 @@
 package knapp.util;
 
-import knapp.history.Frequency;
+import knapp.table.Frequency;
 import knapp.table.UnevenTable;
 import knapp.table.values.GetMethod;
 import knapp.table.Table;

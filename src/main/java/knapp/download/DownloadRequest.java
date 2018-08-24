@@ -1,6 +1,6 @@
 package knapp.download;
 
-import knapp.history.Frequency;
+import knapp.table.Frequency;
 
 import java.time.LocalDate;
 

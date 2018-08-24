@@ -6,9 +6,18 @@ public class Transaction {
     private final boolean purchase;
     private final LocalDate date;
     private final int quantity;
-    private final double price;
+    private final USDollars price;
 
-    public Transaction(LocalDate date, int quantity, double price, boolean purchase) {
+    public Transaction(LocalDate date, int quantity, USDollars price, boolean purchase) {
+        if (date == null) {
+            throw new IllegalArgumentException("Date can't be null");
+        }
+        if (quantity < 0){
+            throw new IllegalArgumentException("Quantity can't be negative");
+        }
+        if (price == null) {
+            throw new IllegalArgumentException("Price cannot be null");
+        }
         this.purchase = purchase;
         this.price = price;
         this.quantity = quantity;
@@ -27,7 +36,7 @@ public class Transaction {
         return quantity;
     }
 
-    public double getPrice() {
+    public USDollars getPrice() {
         return price;
     }
 }

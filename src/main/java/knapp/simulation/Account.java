@@ -8,12 +8,12 @@ public interface Account {
     int getCurrentSharesBonds();
     Map<LocalDate,PurchaseInfo> getOwnedStockShares();
     Map<LocalDate,PurchaseInfo> getOwnedBondShares();
-    long getCurrentCents();
-    long getTradeFeeCents();
+    USDollars getCurrentCash();
+    USDollars getTradeFee();
     double getShortTermTaxRate();
     double getLongTermTaxRate();
     Account executeOrder(final Order order, final CurrentPrices currentPrices, LocalDate presentDay);
     Account cashOut(final CurrentPrices currentPrices, final LocalDate presentDay);
-    Account addCash(long cents);
-    long netValueCents(final CurrentPrices currentPrices, final LocalDate presentDay);
+    Account addCash(USDollars cash);
+    USDollars netValue(final CurrentPrices currentPrices, final LocalDate presentDay);
 }

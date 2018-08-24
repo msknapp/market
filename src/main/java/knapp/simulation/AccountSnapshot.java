@@ -4,23 +4,23 @@ import java.time.LocalDate;
 
 public class AccountSnapshot {
     private final LocalDate date;
-    private final long cents;
+    private final USDollars value;
     private final int sharesOfStockMarket;
     private final int sharesOfBondMarket;
 
-    public AccountSnapshot(LocalDate date, int sharesOfStockMarket, int sharesOfBondMarket, long cents) {
+    public AccountSnapshot(LocalDate date, int sharesOfStockMarket, int sharesOfBondMarket, USDollars value) {
         this.date = date;
         this.sharesOfBondMarket = sharesOfBondMarket;
         this.sharesOfStockMarket = sharesOfStockMarket;
-        this.cents = cents;
+        this.value = value;
     }
 
     public LocalDate getDate() {
         return date;
     }
 
-    public long getCents() {
-        return cents;
+    public USDollars getValue() {
+        return value;
     }
 
     public int getSharesOfStockMarket() {

@@ -1,9 +1,7 @@
 package knapp.inputfinder;
 
-import knapp.predict.Model;
 import knapp.predict.NormalModel;
-import knapp.predict.SimpleModel;
-import knapp.history.Frequency;
+import knapp.table.Frequency;
 
 import java.util.List;
 

@@ -12,13 +12,12 @@ public class StrategyUtil {
 
     public static Set<Order> buyAsMuchStockAsPossible(LocalDate presentDay, Account account, Table inputs, Table stockMarket,
                                                Table bondMarket, CurrentPrices currentPrices) {
-        long cents = account.getCurrentCents();
-        long centsToInvestInStock = cents - account.getTradeFeeCents();
-        if (centsToInvestInStock < 1) {
+        USDollars cash = account.getCurrentCash();
+        USDollars cashToInvestInStock = cash.minus(account.getTradeFee());
+        if (cashToInvestInStock.isDebt()) {
             return Collections.emptySet();
         }
-        double approximateDollars = centsToInvestInStock / 100;
-        double shares = approximateDollars/currentPrices.getStockPriceDollars();
+        double shares = cashToInvestInStock.dividedBy(currentPrices.getStockPrice());
         int quantity = (int)Math.floor(shares);
         if (quantity < 1) {
             return Collections.emptySet();
@@ -30,13 +29,12 @@ public class StrategyUtil {
 
     public static Set<Order> buyAsMuchBondsAsPossible(LocalDate presentDay, Account account, Table inputs, Table stockMarket,
                                                       Table bondMarket, CurrentPrices currentPrices) {
-        long cents = account.getCurrentCents();
-        long centsToInvestInStock = cents - account.getTradeFeeCents();
-        if (centsToInvestInStock < 1) {
+        USDollars cash = account.getCurrentCash();
+        USDollars cashToInvestInStock = cash.minus(account.getTradeFee());
+        if (cashToInvestInStock.isDebt()) {
             return Collections.emptySet();
         }
-        double approximateDollars = centsToInvestInStock / 100;
-        double shares = approximateDollars/currentPrices.getBondPriceDollars();
+        double shares = cashToInvestInStock.dividedBy(currentPrices.getBondPrice());
         int quantity = (int)Math.floor(shares);
         if (quantity < 1) {
             return Collections.emptySet();

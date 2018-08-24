@@ -3,7 +3,7 @@ package knapp.advisor;
 import knapp.predict.MarketSlice;
 import knapp.predict.Model;
 import knapp.predict.NormalModel;
-import knapp.simulation.Simulater;
+import knapp.simulation.SimulationResults;
 import knapp.simulation.functions.EvolvableFunction;
 import knapp.table.Table;
 
@@ -20,12 +20,12 @@ public class BasicAdvice implements Advice {
     private final Table market;
     private final LocalDate start;
     private final double currentValue;
-    private final Simulater.SimulationResults simulationResults;
+    private final SimulationResults simulationResults;
     private final EvolvableFunction bestFunction;
     private final Map<String,Integer> lags;
 
     BasicAdvice(Model model, Table inputs, Table market, LocalDate start, double currentValue,
-                Simulater.SimulationResults simulationResults, EvolvableFunction bestFunction) {
+                SimulationResults simulationResults, EvolvableFunction bestFunction) {
         this.model = model;
         this.inputs = inputs;
         this.market = market;
@@ -67,7 +67,7 @@ public class BasicAdvice implements Advice {
     }
 
     @Override
-    public Simulater.SimulationResults getBestSimulationResults() {
+    public SimulationResults getBestSimulationResults() {
         return simulationResults;
     }
 
@@ -102,7 +102,7 @@ public class BasicAdvice implements Advice {
         private Table market;
         private LocalDate start;
         private double currentValue;
-        private Simulater.SimulationResults simulationResults;
+        private SimulationResults simulationResults;
         private EvolvableFunction bestFunction;
 
         public BasicAdviceBuilder() {
@@ -124,7 +124,7 @@ public class BasicAdvice implements Advice {
             return this;
         }
 
-        public BasicAdviceBuilder simulationResults(Simulater.SimulationResults simulationResults) {
+        public BasicAdviceBuilder simulationResults(SimulationResults simulationResults) {
             this.simulationResults = simulationResults;
             return this;
         }

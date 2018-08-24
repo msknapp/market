@@ -1,4 +1,10 @@
 
-* In tables, adjust the prices and some indicators for inflation.  Have predictions factor in inflation/CPI.
-* Experiment with some different indicators.
 * write some more unit tests
+  - Simulater needs a lot of tests
+  - MixedAdvisor
+  - TrendFinder
+  - tests for all the value getters
+  - test for DefaultTableColumnView, and BeforeTableColumnView
+  - test the AfterTable - not used.
+
+* Currently it keeps concluding that the best strategy is to always have 100% stock.

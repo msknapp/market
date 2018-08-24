@@ -3,7 +3,7 @@ package knapp.advisor;
 import knapp.predict.Model;
 import knapp.predict.ModelOfModels;
 import knapp.predict.WithWeight;
-import knapp.simulation.Simulater;
+import knapp.simulation.SimulationResults;
 import knapp.simulation.functions.EvolvableFunction;
 import knapp.simulation.functions.MixedFunction;
 import knapp.table.Table;
@@ -18,7 +18,7 @@ public class CombinedAdvice implements Advice {
     private final Model model;
 
     private EvolvableFunction mixedFunction;
-    private Simulater.SimulationResults simulationResults;
+    private SimulationResults simulationResults;
 
     public Map<Advice,Double> getAllAdvice() {
         return Collections.unmodifiableMap(allAdvice);
@@ -74,7 +74,7 @@ public class CombinedAdvice implements Advice {
         return first.getCurrentMarketValue();
     }
 
-    public void setSimulationResults(Simulater.SimulationResults simulationResults) {
+    public void setSimulationResults(SimulationResults simulationResults) {
         this.simulationResults = simulationResults;
     }
 
@@ -83,7 +83,7 @@ public class CombinedAdvice implements Advice {
     }
 
     @Override
-    public Simulater.SimulationResults getBestSimulationResults() {
+    public SimulationResults getBestSimulationResults() {
         return simulationResults;
     }
 

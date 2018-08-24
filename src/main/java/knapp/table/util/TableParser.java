@@ -1,10 +1,9 @@
 package knapp.table.util;
 
-import knapp.history.Frequency;
+import knapp.table.Frequency;
 import knapp.table.Table;
 import knapp.table.TableImpl;
 import knapp.table.UnevenTable;
-import knapp.table.values.TableColumnView;
 import knapp.util.Util;
 
 import java.time.LocalDate;

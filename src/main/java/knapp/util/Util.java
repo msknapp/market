@@ -1,6 +1,6 @@
 package knapp.util;
 
-import knapp.history.Frequency;
+import knapp.table.Frequency;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 
@@ -91,24 +91,18 @@ public class Util {
 
     public static double[][] toDoubleRows(int[] xColumns, LocalDate start, LocalDate end,
                                           Frequency frequency,
-                                          BiFunction<LocalDate,Integer,String> valueProvider) {
+                                          BiFunction<LocalDate,Integer,Double> valueProvider) {
         List<double[]> values = new ArrayList<>();
         LocalDate cd = start;
         while (!cd.isAfter(end)) {
             double[] t = new double[xColumns.length];
             int curCol = 0;
             for (int i : xColumns) {
-                String v = valueProvider.apply(cd,i);
-                if (v.isEmpty()) {
-                    t[curCol] = 0.0;
-                } else if (!v.matches("[\\d\\.]+")) {
-                    t[curCol] = 0.0;
-                } else if (".".equals(v)) {
-                    t[curCol] = 0.0;
-                } else {
-                    double d = Double.parseDouble(v);
-                    t[curCol] = d;
+                Double v = valueProvider.apply(cd,i);
+                if (v == null) {
+                    v = 0.0;
                 }
+                t[curCol] = v;
                 curCol++;
             }
             values.add(t);
@@ -135,7 +129,7 @@ public class Util {
 
     public static double[][] toDoubleColumns(int[] xColumns, LocalDate start, LocalDate end,
                                              Frequency frequency,
-                                             BiFunction<LocalDate,Integer,String> valueProvider) {
+                                             BiFunction<LocalDate,Integer,Double> valueProvider) {
         Map<Integer,List<Double>> values = new HashMap<>(xColumns.length);
         for (int i : xColumns) {
             values.put(i,new ArrayList<>());
@@ -144,16 +138,11 @@ public class Util {
         while (!cd.isAfter(end)) {
             for (int i : xColumns) {
                 List<Double> ds = values.get(i);
-                String v = valueProvider.apply(cd,i);
-                if (v.isEmpty()) {
-                    ds.add(0.0);
-                } else if (!v.matches("[\\d\\.]+")) {
-                    ds.add(0.0);
-                } else if (".".equals(v)) {
+                Double v = valueProvider.apply(cd,i);
+                if (v == null) {
                     ds.add(0.0);
                 } else {
-                    double d = Double.parseDouble(v);
-                    ds.add(d);
+                    ds.add(v);
                 }
             }
             if (frequency == Frequency.Annual) {

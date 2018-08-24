@@ -1,12 +1,11 @@
 package knapp.simulation.strategy;
 
 import knapp.predict.*;
-import knapp.history.Frequency;
+import knapp.table.Frequency;
 import knapp.simulation.Account;
 import knapp.simulation.CurrentPrices;
 import knapp.simulation.InvestmentAllocation;
 import knapp.simulation.functions.EvolvableFunction;
-import knapp.table.values.GetMethod;
 import knapp.table.Table;
 
 import java.time.LocalDate;
@@ -28,7 +27,8 @@ public class FunctionStrategy extends AllocationStrategy {
 
     @Override
     public InvestmentAllocation chooseAllocation(LocalDate presentDay, Account account, Table inputs, Table stockMarket,
-                                                 Table bondMarket, CurrentPrices currentPrices) {
+                                                 Table bondMarket, CurrentPrices currentPrices,
+                                                 InvestmentAllocation current) {
         LocalDate end = presentDay;
         LocalDate start = end.minusYears(10);
 

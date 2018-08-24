@@ -1,6 +1,6 @@
 package knapp.table.util;
 
-import knapp.history.Frequency;
+import knapp.table.Frequency;
 import knapp.table.DoubleRange;
 import knapp.table.values.GetMethod;
 import knapp.table.Table;
@@ -10,9 +10,9 @@ import knapp.table.wraps.TableWithoutColumn;
 import knapp.util.Util;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiFunction;
 
 public class TableUtil {
 
@@ -20,18 +20,21 @@ public class TableUtil {
                                              Frequency frequency,
                                              TableValueGetter tableValueGetter) {
         return Util.toDoubleColumns(xColumns,start,end,frequency,(date, col) -> {
-            double v = table.getValue(date,col, tableValueGetter);
-            return String.valueOf(v);
+            return table.getValue(date,col, tableValueGetter);
         });
     }
 
     public static double[][] toDoubleRows(Table table, int[] xColumns, LocalDate start, LocalDate end,
                                           Frequency frequency,
                                           Map<String,Integer> lags) {
+        // this was shown to be one of the most time consuming methods in the code, so I'm optimizing it with a cache.
+        Map<Integer,TableValueGetter> getterCache = new HashMap<>(table.getColumnCount());
         return Util.toDoubleRows(xColumns,start,end,frequency,(date, col) -> {
-            LagBasedExtrapolatedValuesGetter tableValueGetter = new LagBasedExtrapolatedValuesGetter(lags.get(table.getColumn(col)));
-            double v =  table.getValue(date,col, tableValueGetter);
-            return String.valueOf(v);
+            if (!getterCache.containsKey(col)) {
+                LagBasedExtrapolatedValuesGetter tableValueGetter = new LagBasedExtrapolatedValuesGetter(lags.get(table.getColumn(col)));
+                getterCache.put(col,tableValueGetter);
+            }
+            return table.getValue(date,col, getterCache.get(col));
         });
     }
 

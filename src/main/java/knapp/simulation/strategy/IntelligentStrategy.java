@@ -1,10 +1,8 @@
 package knapp.simulation.strategy;
 
 import knapp.predict.NormalModel;
-import knapp.predict.SimpleEstimate;
-import knapp.predict.SimpleModel;
 import knapp.predict.TrendFinder;
-import knapp.history.Frequency;
+import knapp.table.Frequency;
 import knapp.simulation.Account;
 import knapp.simulation.CurrentPrices;
 import knapp.simulation.InvestmentAllocation;
@@ -22,7 +20,8 @@ public class IntelligentStrategy extends AllocationStrategy implements Investmen
 
     @Override
     public InvestmentAllocation chooseAllocation(LocalDate presentDay, Account account, Table inputs,
-                                Table stockMarket, Table bondMarket, CurrentPrices currentPrices) {
+                                Table stockMarket, Table bondMarket, CurrentPrices currentPrices,
+                                                 InvestmentAllocation current) {
         LocalDate end = presentDay;
         LocalDate start = end.minusYears(10);
 

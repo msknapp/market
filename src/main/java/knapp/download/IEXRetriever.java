@@ -1,7 +1,7 @@
 package knapp.download;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import knapp.history.Frequency;
+import knapp.table.Frequency;
 import knapp.table.Table;
 import knapp.table.TableImpl;
 import org.apache.commons.io.IOUtils;

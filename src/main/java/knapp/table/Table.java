@@ -1,6 +1,5 @@
 package knapp.table;
 
-import knapp.history.Frequency;
 import knapp.predict.MarketSlice;
 import knapp.table.derivation.LogDeriver;
 import knapp.table.derivation.ValueDeriver;

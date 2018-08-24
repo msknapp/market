@@ -1,6 +1,6 @@
 package knapp.table.wraps;
 
-import knapp.history.Frequency;
+import knapp.table.Frequency;
 import knapp.table.DefaultTableColumnView;
 import knapp.table.values.GetMethod;
 import knapp.table.Table;

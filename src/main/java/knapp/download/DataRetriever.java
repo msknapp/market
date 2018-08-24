@@ -1,18 +1,12 @@
 package knapp.download;
 
-import knapp.history.Frequency;
 import knapp.indicator.Indicator;
 import knapp.table.DefaultGetMethod;
 import knapp.table.values.GetMethod;
 import knapp.table.Table;
 import knapp.table.util.TableParser;
-import knapp.util.CurrentDirectory;
-import knapp.util.Util;
-import org.apache.commons.io.FileUtils;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.Writer;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;

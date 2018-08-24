@@ -1,4 +1,4 @@
-package knapp.history;
+package knapp.table;
 
 public enum Frequency {
     Daily,

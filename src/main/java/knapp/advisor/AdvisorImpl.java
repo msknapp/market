@@ -2,7 +2,9 @@ package knapp.advisor;
 
 import knapp.download.DataRetriever;
 import knapp.download.IEXRetriever;
-import knapp.history.Frequency;
+import knapp.simulation.SimulationResults;
+import knapp.simulation.USDollars;
+import knapp.table.Frequency;
 import knapp.indicator.Indicator;
 import knapp.predict.Model;
 import knapp.predict.NormalModel;
@@ -87,12 +89,6 @@ public class AdvisorImpl implements Advisor {
         stockMarket = stockMarket.retainColumns(Collections.singleton("Adj Close"));
         stockMarket = TableParser.mergeTableRowsExacly(Arrays.asList(stockMarket, recentData));
 
-//        Table[] combined = new Table[] {stockMarket, recentData};
-//        stockMarket = new ExactlyMergedTables(combined, DatePolicy.ANYMUSTHAVE);
-
-//        stockMarket = TableParser.mergeTableRowsApproximately(marketStart,LocalDate.now(),
-//                Arrays.asList(recentData,stockMarket),Frequency.Weekly);
-
         stockMarket.setName(marketSymbol);
 
         lastMarketValue = iexRetriever.getPrice(marketSymbol);
@@ -141,9 +137,10 @@ public class AdvisorImpl implements Advisor {
                 .stockMarket(stockMarket)
                 .bondMarket(bondMarket)
                 .inputs(inputs)
+                .frequency(Frequency.Weekly)
                 .build();
-        Function<InvestmentStrategy, Simulater.SimulationResults> sim = strategy -> {
-            return simulater.simulate(simStart, end, 10000, strategy);
+        Function<InvestmentStrategy, SimulationResults> sim = strategy -> {
+            return simulater.simulate(simStart, end, USDollars.dollars(10000), strategy);
         };
 
         Map<String,Integer> lags = inputs.getLags(LocalDate.now());
@@ -152,8 +149,15 @@ public class AdvisorImpl implements Advisor {
         System.out.println("Running the evolver to find the best investment strategy.");
         EvolvableFunction evolvableFunction = evolver.evolve(initialFunction);
 
+        // TODO something is very wrong here.  The simulation is not using the input model
+        // somehow that is supposed to influence the results here.
+        // specifically I wanted the simulation results to use it.
+        // If you already have an evolved model, you should be able to tell the simulator
+        // that it's not needed to evolve the function.
+        // I think I meant to provide an evolved function here instead of a model.
+
         FunctionStrategy strategy = new FunctionStrategy(trendFinder,evolvableFunction, lags);
-        Simulater.SimulationResults results = simulater.simulate(simStart, end, 10000, strategy);
+        SimulationResults results = simulater.simulate(simStart, end, USDollars.dollars(10000), strategy);
 
         return BasicAdvice.define()
                 .bestFunction(evolvableFunction)

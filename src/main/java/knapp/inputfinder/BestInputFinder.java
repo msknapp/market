@@ -2,7 +2,7 @@ package knapp.inputfinder;
 
 import knapp.predict.NormalModel;
 import knapp.predict.TrendFinder;
-import knapp.history.Frequency;
+import knapp.table.Frequency;
 import knapp.table.values.GetMethod;
 import knapp.table.derivation.RealDeriver;
 import knapp.table.Table;

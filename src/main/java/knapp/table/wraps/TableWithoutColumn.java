@@ -1,6 +1,6 @@
 package knapp.table.wraps;
 
-import knapp.history.Frequency;
+import knapp.table.Frequency;
 import knapp.table.values.GetMethod;
 import knapp.table.Table;
 import knapp.util.Util;
@@ -62,14 +62,14 @@ public class TableWithoutColumn extends AbstractWrappingTable {
     public int getColumnCount() {
         return core.getColumnCount()-1;
     }
-
-    public double[][] toDoubleRows(int[] xColumns, LocalDate start, LocalDate end,
-                                   Frequency frequency, final GetMethod getMethod) {
-        return Util.toDoubleRows(xColumns,start,end,frequency,(date, col) -> {
-            double v =  getValue(date,col, getMethod);
-            return String.valueOf(v);
-        });
-    }
+//
+//    public double[][] toDoubleRows(int[] xColumns, LocalDate start, LocalDate end,
+//                                   Frequency frequency, final GetMethod getMethod) {
+//        return Util.toDoubleRows(xColumns,start,end,frequency,(date, col) -> {
+//            double v =  getValue(date,col, getMethod);
+//            return String.valueOf(v);
+//        });
+//    }
 
     @Override
     public double[] getExactValues(LocalDate date) {
@@ -84,8 +84,7 @@ public class TableWithoutColumn extends AbstractWrappingTable {
     public double[][] toDoubleColumns(int[] xColumns, LocalDate start, LocalDate end,
                                       Frequency frequency, final GetMethod getMethod) {
         return Util.toDoubleColumns(xColumns,start,end,frequency,(date,col) -> {
-            double v = getValue(date,col, getMethod);
-            return String.valueOf(v);
+            return getValue(date,col, getMethod);
         });
     }
 

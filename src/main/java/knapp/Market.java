@@ -4,8 +4,8 @@ import knapp.advisor.Advice;
 import knapp.advisor.AdvisorImpl;
 import knapp.advisor.MixedAdvisor;
 import knapp.download.DataRetriever;
-import knapp.history.Frequency;
-import knapp.indicator.Indicator;
+import knapp.simulation.USDollars;
+import knapp.table.Frequency;
 import knapp.predict.TrendFinder;
 import knapp.report.Reporter;
 import knapp.simulation.Account;
@@ -14,7 +14,6 @@ import knapp.simulation.strategy.AllStockStrategy;
 import knapp.simulation.strategy.IntelligentStrategy;
 import knapp.simulation.strategy.InvestmentStrategy;
 import knapp.table.*;
-import knapp.table.derivation.LogDeriver;
 import knapp.table.util.TableParser;
 import knapp.table.wraps.TableWithoutColumn;
 import knapp.util.CurrentDirectory;
@@ -64,13 +63,18 @@ public class Market {
 
         MixedAdvisor mixedAdvisor = MixedAdvisor.define().core(advisorImpl)
                 .addInputs("M1SL","INDPRO","MZMV","TOTALSL","UNEMPLOY")
-                .addInputs("M1SL","M1V","PPIACO","TOTALSL","UNEMPLOY")
-                .addInputs("M1SL","M1V","IPMAN","CE16OV","TWEXBMTH","UNEMPLOY")
-                .addInputs("M1SL","UNRATE","M1V","IPMAN","CE16OV","TWEXBMTH")
-                .addInputs("M1SL","UNRATE","IPMAN","UNEMPLOY","M2MSL")
-                .addInputs("CPIAUCSL","IPMAN","CE16OV","M2V","M2MSL")
-                .addInputs("INDPRO","TCU","TWEXBMTH","UNEMPLOY","M2MSL")
-                .addInputs("M1SL","CPIAUCSL","INDPRO","TCU","TWEXBMTH")
+//                .addInputs("M1SL","M1V","PPIACO","TOTALSL","UNEMPLOY")
+//                .addInputs("M1SL","M1V","IPMAN","CE16OV","TWEXBMTH","UNEMPLOY")
+//                .addInputs("M1SL","UNRATE","M1V","IPMAN","CE16OV","TWEXBMTH")
+//                .addInputs("M1SL","UNRATE","IPMAN","UNEMPLOY","M2MSL")
+//                .addInputs("CPIAUCSL","IPMAN","CE16OV","M2V","M2MSL")
+//                .addInputs("INDPRO","TCU","TWEXBMTH","UNEMPLOY","M2MSL")
+//                .addInputs("M1SL","CPIAUCSL","INDPRO","TCU","TWEXBMTH")
+
+
+
+
+
 //                .addInputs("M1SL", "UNRATE", "M1V", "UMCSENT", "IPMAN", "TTLCONS", "REVOLSL")
 //                .addInputs("M1SL", "UNRATE", "M1V", "UMCSENT", "IPMAN", "CE16OV", "RSAFS")
 //                .addInputs("M1SL", "UNRATE", "M1V", "IPMAN", "CSUSHPISA", "REVOLSL")
@@ -160,16 +164,16 @@ public class Market {
         LocalDate start = LocalDate.of(2000, 02, 01);
 
         InvestmentStrategy strategy = new AllStockStrategy();
-        Account finalAccount = simulater.simulate(start, end, 10000, strategy).getAccount();
-        long finalCents = finalAccount.getCurrentCents();
+        Account finalAccount = simulater.simulate(start, end, USDollars.dollars(10000), strategy).getAccount();
+        USDollars finalCash = finalAccount.getCurrentCash();
 
-        System.out.println("The investor that just bought stock and never sold it wound up with: $" + (finalCents / 100));
+        System.out.println("The investor that just bought stock and never sold it wound up with: "+finalCash);
 
         strategy = new IntelligentStrategy(marketContext.getTrendFinder());
-        finalAccount = simulater.simulate(start, end, 10000, strategy).getAccount();
-        finalCents = finalAccount.getCurrentCents();
+        finalAccount = simulater.simulate(start, end, USDollars.dollars(10000), strategy).getAccount();
+        finalCash = finalAccount.getCurrentCash();
 
-        System.out.println("The intelligent investor ends up with: $" + (finalCents / 100));
+        System.out.println("The intelligent investor ends up with: "+finalCash);
     }
 
     public static MarketContext createContext() throws IOException {

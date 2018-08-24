@@ -1,22 +1,6 @@
 package knapp;
 
-import knapp.download.DataRetriever;
-import knapp.download.IEXRetriever;
-import knapp.history.Frequency;
-import knapp.indicator.Indicator;
-import knapp.predict.NormalModel;
-import knapp.predict.TrendFinder;
-import knapp.table.*;
-import knapp.table.derivation.RealDeriver;
-import knapp.table.util.TableParser;
-import knapp.table.values.GetMethod;
-import knapp.util.InputLoader;
-import org.junit.Test;
-
-import java.io.IOException;
-import java.time.LocalDate;
 import java.util.*;
-import java.util.function.BiFunction;
 
 public class BetterCorrelation {
 

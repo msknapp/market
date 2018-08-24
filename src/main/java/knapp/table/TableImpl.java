@@ -1,6 +1,5 @@
 package knapp.table;
 
-import knapp.history.Frequency;
 import knapp.table.derivation.LogDeriver;
 import knapp.table.derivation.ValueDeriver;
 import knapp.table.util.TableParser;
@@ -233,13 +232,13 @@ public class TableImpl implements Table {
     }
 
 
-    public double[][] toDoubleRows(int[] xColumns, LocalDate start, LocalDate end,
-                                   Frequency frequency, final GetMethod getMethod) {
-        return Util.toDoubleRows(xColumns,start,end,frequency,(date,col) -> {
-            double v =  getValue(date,col, getMethod);
-            return String.valueOf(v);
-        });
-    }
+//    public double[][] toDoubleRows(int[] xColumns, LocalDate start, LocalDate end,
+//                                   Frequency frequency, final GetMethod getMethod) {
+//        return Util.toDoubleRows(xColumns,start,end,frequency,(date,col) -> {
+//            double v =  getValue(date,col, getMethod);
+//            return String.valueOf(v);
+//        });
+//    }
 
     @Override
     public List<LocalDate> getAllDates(int column) {
@@ -316,8 +315,7 @@ public class TableImpl implements Table {
     public double[][] toDoubleColumns(int[] xColumns, LocalDate start, LocalDate end,
                                       Frequency frequency, final GetMethod getMethod) {
         return Util.toDoubleColumns(xColumns,start,end,frequency,(date,col) -> {
-            double v = getValue(date,col, getMethod);
-            return String.valueOf(v);
+            return getValue(date,col, getMethod);
         });
     }
 

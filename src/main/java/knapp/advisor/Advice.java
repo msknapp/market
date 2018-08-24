@@ -1,8 +1,7 @@
 package knapp.advisor;
 
-import knapp.predict.MarketSlice;
 import knapp.predict.Model;
-import knapp.simulation.Simulater;
+import knapp.simulation.SimulationResults;
 import knapp.simulation.functions.EvolvableFunction;
 import knapp.table.Table;
 
@@ -14,7 +13,7 @@ public interface Advice {
     Table getMarket();
     LocalDate getStart();
     double getCurrentMarketValue();
-    Simulater.SimulationResults getBestSimulationResults();
+    SimulationResults getBestSimulationResults();
     EvolvableFunction getBestFunction();
     double getRecommendedPercentStock();
     double getSigmas();
