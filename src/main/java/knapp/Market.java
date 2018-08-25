@@ -7,6 +7,7 @@ import knapp.predict.TrendFinder;
 import knapp.report.Reporter;
 import knapp.simulation.functions.Evolvable;
 import knapp.simulation.functions.EvolvableFunction;
+import knapp.simulation.functions.Normal;
 import knapp.simulation.functions.TriFunction;
 import knapp.simulation.strategy.*;
 import knapp.util.CurrentDirectory;
@@ -49,10 +50,10 @@ public class Market {
         StrategySupplier strategySupplier = new StrategySupplier() {
             @Override
             public InvestmentStrategy getStrategy(TrendFinder trendFinder, Evolvable evolvableFunction, Map<String, Integer> lags) {
-//                return new DirectFunctionStrategy(trendFinder,evolvableFunction, lags);
+                return new DirectFunctionStrategy(trendFinder, (EvolvableFunction) evolvableFunction, lags);
 //                return new OneDirectionFunctionStrategy(trendFinder,evolvableFunction, lags);
 //                return new MomentumFunctionStrategy(trendFinder,evolvableFunction, lags);
-                return new AllInStrategy();
+//                return new AllInStrategy();
 //                return new CumulativeDistributionStrategy(trendFinder, lags,false,25,100);
 //                return new NaiveMomentumStrategy(false);
 //                return new WiserStrategy(trendFinder,lags,1.5,-1);
@@ -63,7 +64,9 @@ public class Market {
 
         // most defaults are correct, I don't override them.
         AdvisorImpl advisorImpl = AdvisorImpl.define().strategySupplier(strategySupplier).requiredAccuracy(.01)
-                .initialFunction(TriFunction.initialTriFunction())
+//                .initialFunction(TriFunction.initialTriFunction())
+                .initialFunction(Normal.initialNormal())
+                .offsetDays(14)
                 .addInputs("M1SL", "UNRATE", "M1V", "UMCSENT", "IPMAN", "TTLCONS", "REVOLSL")
                 .addInputs("CE16OV", "RSAFS", "IPMAN", "CSUSHPISA", "REVOLSL")
                 .addInputs("EXUSEU", "CPIAUCSL", "INDPRO", "RSAFS", "M2V")

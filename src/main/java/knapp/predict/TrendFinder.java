@@ -28,6 +28,7 @@ public class TrendFinder {
         private LocalDate start;
         private LocalDate end;
         private Map<String,Integer> lags;
+        private int offsetDays;
 
         public AnalysisBuilder() {
 
@@ -78,13 +79,18 @@ public class TrendFinder {
             return this;
         }
 
+        public AnalysisBuilder offsetDays(int x) {
+            this.offsetDays = x;
+            return this;
+        }
+
         public AnalysisBuilder inputColumns(int[] inputColumns) {
             this.inputColumns = inputColumns;
             return this;
         }
 
         public Analasys build() {
-            return new Analasys(market,inputs,inputColumns,frequency,start,end, lags);
+            return new Analasys(market,inputs,inputColumns,frequency,start,end, lags,offsetDays);
         }
     }
 
@@ -96,9 +102,10 @@ public class TrendFinder {
         private final LocalDate start;
         private final LocalDate end;
         private final Map<String,Integer> lags;
+        private final int offsetDays;
 
         public Analasys(Table market, Table inputs, int[] inputColumns, Frequency frequency,LocalDate start,
-                        LocalDate end, Map<String,Integer> lags) {
+                        LocalDate end, Map<String,Integer> lags, int offsetDays) {
             if (market == null) {
                 throw new IllegalArgumentException("Market cannot be null");
             }
@@ -156,6 +163,7 @@ public class TrendFinder {
             this.start = start;
             this.end = end;
             this.lags = Collections.unmodifiableMap(new HashMap<>(lags));
+            this.offsetDays = offsetDays;
         }
 
         public NormalModel deriveModel() {
@@ -170,7 +178,8 @@ public class TrendFinder {
 
             // For the market price, it is safe to interpolate the value because it
             // was really known at that time.  People could have current market prices any day.
-            double[][] yy = TableUtil.toDoubleColumns(market,new int[]{0},start,end,frequency,
+            double[][] yy = TableUtil.toDoubleColumns(market,new int[]{0},start.plusDays(offsetDays),
+                    end.plusDays(offsetDays),frequency,
                     new InterpolatedValuesGetter());
             double[] y = yy[0];
             OLSMultipleLinearRegression regression = new OLSMultipleLinearRegression();

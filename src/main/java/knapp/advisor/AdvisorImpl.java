@@ -41,6 +41,7 @@ public class AdvisorImpl implements Advisor {
     private final List<String> allPossibleInputs;
     private final StrategySupplier strategySupplier;
     private final double requiredAccuracy;
+    private final int offsetDays;
 
     // these are established in the init function.
     private Table stockMarket;
@@ -73,7 +74,8 @@ public class AdvisorImpl implements Advisor {
             Evolvable initialFunction,
             List<String> allPossibleInputs,
             StrategySupplier strategySupplier,
-            double requiredAccuracy) {
+            double requiredAccuracy,
+            int offsetDays) {
         if (strategySupplier == null) {
             throw new IllegalArgumentException("Strategy supplier must be specified.");
         }
@@ -89,6 +91,7 @@ public class AdvisorImpl implements Advisor {
         this.allPossibleInputs = Collections.unmodifiableList(new ArrayList<>(allPossibleInputs));
         this.strategySupplier = strategySupplier;
         this.requiredAccuracy = requiredAccuracy;
+        this.offsetDays = offsetDays;
     }
 
     @Override
@@ -136,6 +139,7 @@ public class AdvisorImpl implements Advisor {
                 .start(marketStart)
                 .end(end)
                 .lags(inputs.getLags(LocalDate.now()))
+                .offsetDays(offsetDays)
                 .build();
         NormalModel model = analasys.deriveModel();
 
@@ -206,6 +210,7 @@ public class AdvisorImpl implements Advisor {
         private List<String> allPossibleInputs = new ArrayList<>();
         private StrategySupplier strategySupplier;
         private double requiredAccuracy = 0.01;
+        private int offsetDays;
 
         public AdvisorImplBuilder() {
 
@@ -266,13 +271,18 @@ public class AdvisorImpl implements Advisor {
             return this;
         }
 
+        public AdvisorImplBuilder offsetDays(int x) {
+            this.offsetDays = x;
+            return this;
+        }
+
         public AdvisorImpl build() {
             // remove duplicates
             Set<String> tmp = new HashSet<>(allPossibleInputs);
             allPossibleInputs = new ArrayList<>(tmp);
             Collections.sort(allPossibleInputs);
             return new AdvisorImpl(simulationInputStart,inputStart,marketStart,end,marketSymbol,initialFunction,
-                    allPossibleInputs,strategySupplier, requiredAccuracy);
+                    allPossibleInputs,strategySupplier, requiredAccuracy, offsetDays);
         }
         
     }
