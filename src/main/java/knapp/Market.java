@@ -62,7 +62,7 @@ public class Market {
         };
 
         // most defaults are correct, I don't override them.
-        AdvisorImpl advisorImpl = AdvisorImpl.define().strategySupplier(strategySupplier).requiredAccuracy(.05)
+        AdvisorImpl advisorImpl = AdvisorImpl.define().strategySupplier(strategySupplier).requiredAccuracy(.01)
                 .initialFunction(TriFunction.initialTriFunction())
                 .addInputs("M1SL", "UNRATE", "M1V", "UMCSENT", "IPMAN", "TTLCONS", "REVOLSL")
                 .addInputs("CE16OV", "RSAFS", "IPMAN", "CSUSHPISA", "REVOLSL")
