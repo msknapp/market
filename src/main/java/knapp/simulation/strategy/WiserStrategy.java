@@ -1,5 +1,6 @@
 package knapp.simulation.strategy;
 
+import knapp.predict.NormalModel;
 import knapp.predict.TrendFinder;
 import knapp.simulation.Account;
 import knapp.simulation.CurrentPrices;
@@ -24,24 +25,34 @@ public class WiserStrategy extends SigmaBasedStrategy {
     }
 
     @Override
-    public InvestmentAllocation chooseAllocation(LocalDate presentDay, Account account, Table inputs, Table stockMarket, Table bondMarket, CurrentPrices currentPrices, InvestmentAllocation current, double sigma) {
+    public AllocationAndThoughts chooseAllocation(LocalDate presentDay, Account account, Table inputs, Table stockMarket,
+                                                  Table bondMarket, CurrentPrices currentPrices,
+                                                  InvestmentAllocation current, double sigma, NormalModel model) {
+        MarketThoughts marketThoughts = new MarketThoughts();
         if (first) {
             first = false;
-            return new InvestmentAllocation(70,30,0);
+            InvestmentAllocation investmentAllocation = new InvestmentAllocation(70,30,0);
+            marketThoughts.setDecisionComment("Just entering the market");
+            return new AllocationAndThoughts(investmentAllocation, marketThoughts);
         }
 
 //        double sigmas = (estimate - lastMarketValue) / model.getStandardDeviation();
         // a positive sigma means it is undervalued.
+        InvestmentAllocation investmentAllocation = current;
         if (sigma < lowerLine) {
             // that means it is very overvalued.
             // you should sell.
-            return new InvestmentAllocation(0,100,0);
+            marketThoughts.setDecisionComment(String.format("The market is overvalued; Sigma is below %.1f;let's sell all stocks",lowerLine));
+            investmentAllocation = new InvestmentAllocation(0,100,0);
         } else if (sigma > upperLine) {
             // it is undervalued.
             // you should buy.
-            return new InvestmentAllocation(100,0,0);
+            marketThoughts.setDecisionComment(String.format("The market is undervalued; Sigma is above %.1f;let's buy all stocks",upperLine));
+            investmentAllocation = new InvestmentAllocation(100,0,0);
+        } else {
+            marketThoughts.setDecisionComment(String.format("The market is fairly priced; sigma is between %.1f and %.1f; let's just wait and see.",lowerLine, upperLine));
         }
-        return current;
+        return new AllocationAndThoughts(investmentAllocation, marketThoughts);
     }
 
     @Override

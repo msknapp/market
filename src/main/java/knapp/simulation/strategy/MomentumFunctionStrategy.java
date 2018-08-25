@@ -24,23 +24,37 @@ public class MomentumFunctionStrategy extends FunctionStrategy {
     }
 
     @Override
-    public InvestmentAllocation reassessAllocation(LocalDate presentDay, Account account, Table inputs,
+    public AllocationAndThoughts reassessAllocation(LocalDate presentDay, Account account, Table inputs,
                                                    Table stockMarket, Table bondMarket, CurrentPrices currentPrices,
                                                    InvestmentAllocation current, double sigma,
                                                    InvestmentAllocation ideal) {
 
+        MarketThoughts marketThoughts = new MarketThoughts();
         boolean rising = isRising(stockMarket);
+        marketThoughts.setRising(rising);
         boolean buyMoreStock = ideal.getPercentStock() > current.getPercentStock();
         boolean undervalued = sigma > 0;
+        marketThoughts.setOvervalued(sigma < 0);
 
         // if the prices are rising, and the market is undervalued, proceed
         // if the prices are falling, and the market is overvalued, proceed.
         // if the prices are rising but the market is overvalued, do nothing.
         // if the prices are falling but the market is undervalued, do nothing.
         if (rising == undervalued) {
-            return ideal;
+            if (rising) {
+                marketThoughts.setDecisionComment("the prices are rising, and the market is undervalued, proceed");
+            } else {
+                marketThoughts.setDecisionComment("the prices are falling, and the market is overvalued, proceed");
+            }
+            return new AllocationAndThoughts(ideal, marketThoughts);
+        } else {
+            if (rising) {
+                marketThoughts.setDecisionComment("the prices are rising but the market is overvalued, do nothing");
+            } else {
+                marketThoughts.setDecisionComment("the prices are falling but the market is undervalued, do nothing");
+            }
         }
-        return null;
+        return new AllocationAndThoughts(null, marketThoughts);
     }
 
     private boolean isRising(Table stockMarket) {

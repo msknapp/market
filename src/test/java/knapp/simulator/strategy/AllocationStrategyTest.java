@@ -1,7 +1,9 @@
 package knapp.simulator.strategy;
 
 import knapp.simulation.*;
+import knapp.simulation.strategy.AllocationAndThoughts;
 import knapp.simulation.strategy.AllocationStrategy;
+import knapp.simulation.strategy.MarketThoughts;
 import knapp.table.Table;
 import org.junit.Assert;
 import org.junit.Test;
@@ -148,7 +150,7 @@ public class AllocationStrategyTest {
         order = Order.BuyBonds(110);
         account = account.executeOrder(order,firstPrices,present.minusMonths(1));
 
-        Set<Order> orders = strat.rebalance(present, account, null, null, null, firstPrices);
+        Set<Order> orders = strat.rebalance(present, account, null, null, null, firstPrices).getOrders();
         Assert.assertEquals(2,orders.size());
         Map<AssetAndDate, Order> indexedOrders = indexOrders(orders);
         Order o1 = indexedOrders.get(new AssetAndDate(Asset.STOCK,null));
@@ -165,7 +167,7 @@ public class AllocationStrategyTest {
         strat.response = new InvestmentAllocation(15,75, 10);
 
         CurrentPrices laterPrices = new CurrentPrices(USDollars.dollars(110),USDollars.dollars(75));
-        orders = strat.rebalance(present.plusMonths(6), account, null, null, null, laterPrices);
+        orders = strat.rebalance(present.plusMonths(6), account, null, null, null, laterPrices).getOrders();
 
         account = Simulater.executeAllOrders(laterPrices, present.plusMonths(6), account, new ArrayList<>(), orders);
         reached = AllocationStrategy.approximateCurrentAllocation(account, laterPrices);
@@ -188,8 +190,8 @@ public class AllocationStrategyTest {
         public InvestmentAllocation response = new InvestmentAllocation(60,38,2);
 
         @Override
-        public InvestmentAllocation chooseAllocation(LocalDate presentDay, Account account, Table inputs, Table stockMarket, Table bondMarket, CurrentPrices currentPrices, InvestmentAllocation current) {
-            return response;
+        public AllocationAndThoughts chooseAllocation(LocalDate presentDay, Account account, Table inputs, Table stockMarket, Table bondMarket, CurrentPrices currentPrices, InvestmentAllocation current) {
+            return new AllocationAndThoughts(response, new MarketThoughts());
         }
 
         @Override

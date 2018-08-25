@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 public abstract class AllocationStrategy implements InvestmentStrategy {
 
 
-    public abstract InvestmentAllocation chooseAllocation(LocalDate presentDay, Account account, Table inputs,
+    public abstract AllocationAndThoughts chooseAllocation(LocalDate presentDay, Account account, Table inputs,
                                                    Table stockMarket, Table bondMarket, CurrentPrices currentPrices,
                                                   InvestmentAllocation current);
 
@@ -21,24 +21,29 @@ public abstract class AllocationStrategy implements InvestmentStrategy {
     }
 
     @Override
-    public final Set<Order> rebalance(LocalDate presentDay, Account account, Table inputs, Table stockMarket, Table bondMarket, CurrentPrices currentPrices) {
+    public final StrategyOrders rebalance(LocalDate presentDay, Account account, Table inputs,
+                                          Table stockMarket, Table bondMarket, CurrentPrices currentPrices) {
         InvestmentAllocation current = approximateCurrentAllocation(account,currentPrices);
-        InvestmentAllocation desired = chooseAllocation(presentDay,account,inputs,stockMarket,bondMarket,currentPrices, current);
+        AllocationAndThoughts allocationAndThoughts = chooseAllocation(presentDay,account,inputs,stockMarket,bondMarket,currentPrices, current);
+        InvestmentAllocation desired = allocationAndThoughts.getInvestmentAllocation();
+        MarketThoughts marketThoughts = allocationAndThoughts.getMarketThoughts();
         if (verbose) {
             System.out.println(String.format("Desired levels on %s is %d stock, %d bonds, %d cash", presentDay.toString(), desired.getPercentStock(),
                     desired.getPercentBond(), desired.getPercentCash()));
         }
         if (desired == null) {
             // this is an easy way that child classes can say to not trade anything.
-            return Collections.emptySet();
+            return new StrategyOrders(Collections.emptySet(),marketThoughts);
         }
 
 
         if (Math.abs(current.getPercentBond() - desired.getPercentBond()) < getMinimumPercentChange() &&
                 Math.abs(current.getPercentStock() - desired.getPercentStock()) < getMinimumPercentChange()) {
             // we must meet a minimum threshold for change.
-            return Collections.emptySet();
+            marketThoughts.setMeetsMinimumPercentChange(false);
+            return new StrategyOrders(Collections.emptySet(),marketThoughts);
         }
+        marketThoughts.setMeetsMinimumPercentChange(true);
 
         USDollars liquidValue = account.netValue(currentPrices,presentDay);
 
@@ -52,7 +57,9 @@ public abstract class AllocationStrategy implements InvestmentStrategy {
         Set<Order> orders = new HashSet<>();
         // focus on sales first so you have more money available to buy things.
         updateOrders(presentDay, account, currentPrices, moreStockDollars, moreBondDollars, simAccount, orders);
-        return orders;
+
+        // TODO maybe record much more in the marketThoughts right here.
+        return new StrategyOrders(orders, marketThoughts);
     }
 
     public static void updateOrders(LocalDate presentDay, Account account, CurrentPrices currentPrices,

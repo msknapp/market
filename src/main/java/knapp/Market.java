@@ -3,26 +3,20 @@ package knapp;
 import knapp.advisor.Advice;
 import knapp.advisor.AdvisorImpl;
 import knapp.advisor.MixedAdvisor;
-import knapp.download.DataRetriever;
-import knapp.simulation.USDollars;
-import knapp.simulation.functions.EvolvableFunction;
-import knapp.simulation.strategy.*;
-import knapp.table.Frequency;
 import knapp.predict.TrendFinder;
 import knapp.report.Reporter;
-import knapp.simulation.Account;
-import knapp.simulation.Simulater;
-import knapp.table.*;
-import knapp.table.util.TableParser;
-import knapp.table.wraps.TableWithoutColumn;
+import knapp.simulation.functions.Evolvable;
+import knapp.simulation.functions.EvolvableFunction;
+import knapp.simulation.functions.TriFunction;
+import knapp.simulation.strategy.*;
 import knapp.util.CurrentDirectory;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Collections;
+import java.util.Map;
 
 public class Market {
 
@@ -54,19 +48,22 @@ public class Market {
 
         StrategySupplier strategySupplier = new StrategySupplier() {
             @Override
-            public InvestmentStrategy getStrategy(TrendFinder trendFinder, EvolvableFunction evolvableFunction, Map<String, Integer> lags) {
+            public InvestmentStrategy getStrategy(TrendFinder trendFinder, Evolvable evolvableFunction, Map<String, Integer> lags) {
 //                return new DirectFunctionStrategy(trendFinder,evolvableFunction, lags);
 //                return new OneDirectionFunctionStrategy(trendFinder,evolvableFunction, lags);
 //                return new MomentumFunctionStrategy(trendFinder,evolvableFunction, lags);
-//                return new AllInStrategy();
-//                return new CumulativeDistributionStrategy(trendFinder, lags,true,25,100);
+                return new AllInStrategy();
+//                return new CumulativeDistributionStrategy(trendFinder, lags,false,25,100);
 //                return new NaiveMomentumStrategy(false);
-                return new WiserStrategy(trendFinder,lags,1.5,-1);
+//                return new WiserStrategy(trendFinder,lags,1.5,-1);
+//                return new SimpleSlopeStrategy(trendFinder, lags);
+//                return new TriFunctionSlopeStrategy(trendFinder,lags,(TriFunction)evolvableFunction);
             }
         };
 
         // most defaults are correct, I don't override them.
-        AdvisorImpl advisorImpl = AdvisorImpl.define().strategySupplier(strategySupplier).requiredAccuracy(.01)
+        AdvisorImpl advisorImpl = AdvisorImpl.define().strategySupplier(strategySupplier).requiredAccuracy(.05)
+                .initialFunction(TriFunction.initialTriFunction())
                 .addInputs("M1SL", "UNRATE", "M1V", "UMCSENT", "IPMAN", "TTLCONS", "REVOLSL")
                 .addInputs("CE16OV", "RSAFS", "IPMAN", "CSUSHPISA", "REVOLSL")
                 .addInputs("EXUSEU", "CPIAUCSL", "INDPRO", "RSAFS", "M2V")

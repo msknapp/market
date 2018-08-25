@@ -2,7 +2,7 @@ package knapp.advisor;
 
 import knapp.predict.Model;
 import knapp.simulation.SimulationResults;
-import knapp.simulation.functions.EvolvableFunction;
+import knapp.simulation.functions.Evolvable;
 import knapp.table.Table;
 
 import java.time.LocalDate;
@@ -14,7 +14,7 @@ public interface Advice {
     LocalDate getStart();
     double getCurrentMarketValue();
     SimulationResults getBestSimulationResults();
-    EvolvableFunction getBestFunction();
+    Evolvable getBestFunction();
     double getRecommendedPercentStock();
     double getSigmas();
 

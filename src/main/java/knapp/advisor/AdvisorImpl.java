@@ -4,6 +4,7 @@ import knapp.download.DataRetriever;
 import knapp.download.IEXRetriever;
 import knapp.simulation.SimulationResults;
 import knapp.simulation.USDollars;
+import knapp.simulation.functions.Evolvable;
 import knapp.simulation.functions.RangeLimitedFunction;
 import knapp.simulation.strategy.StrategySupplier;
 import knapp.table.Frequency;
@@ -36,7 +37,7 @@ public class AdvisorImpl implements Advisor {
     private final LocalDate marketStart;
     private final LocalDate end;
     private final String marketSymbol;
-    private final EvolvableFunction initialFunction;
+    private final Evolvable initialFunction;
     private final List<String> allPossibleInputs;
     private final StrategySupplier strategySupplier;
     private final double requiredAccuracy;
@@ -69,7 +70,7 @@ public class AdvisorImpl implements Advisor {
             LocalDate marketStart,
             LocalDate end,
             String marketSymbol,
-            EvolvableFunction initialFunction,
+            Evolvable initialFunction,
             List<String> allPossibleInputs,
             StrategySupplier strategySupplier,
             double requiredAccuracy) {
@@ -159,13 +160,13 @@ public class AdvisorImpl implements Advisor {
 
         Map<String,Integer> lags = inputs.getLags(LocalDate.now());
 
-        EvolvableFunction evolvableFunction = initialFunction;
+        Evolvable evolvableFunction = initialFunction;
         if (requiredAccuracy < 0.99) {
             Evolver evolver = new Evolver(sim, trendFinder, requiredAccuracy, lags, strategySupplier);
             System.out.println("Running the evolver to find the best investment strategy.");
             evolvableFunction = evolver.evolve(initialFunction);
 
-            Evolver.validateFunction(evolvableFunction);
+//            Evolver.validateFunction(evolvableFunction);
         }
 
         // TODO something is very wrong here.  The simulation is not using the input model
@@ -201,7 +202,7 @@ public class AdvisorImpl implements Advisor {
         private LocalDate marketStart = LocalDate.of(2000,6,1);
         private LocalDate end = LocalDate.now();
         private String marketSymbol = "IVE";
-        private EvolvableFunction initialFunction = Normal.initialNormal();
+        private Evolvable initialFunction = Normal.initialNormal();
         private List<String> allPossibleInputs = new ArrayList<>();
         private StrategySupplier strategySupplier;
         private double requiredAccuracy = 0.01;
@@ -245,7 +246,7 @@ public class AdvisorImpl implements Advisor {
             return this;
         }
 
-        public AdvisorImplBuilder initialFunction(EvolvableFunction x) {
+        public AdvisorImplBuilder initialFunction(Evolvable x) {
             this.initialFunction = x;
             return this;
         }

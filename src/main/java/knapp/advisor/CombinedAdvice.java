@@ -4,6 +4,7 @@ import knapp.predict.Model;
 import knapp.predict.ModelOfModels;
 import knapp.predict.WithWeight;
 import knapp.simulation.SimulationResults;
+import knapp.simulation.functions.Evolvable;
 import knapp.simulation.functions.EvolvableFunction;
 import knapp.simulation.functions.MixedFunction;
 import knapp.table.Table;
@@ -28,7 +29,7 @@ public class CombinedAdvice implements Advice {
         this.allAdvice = new HashMap<>(adviceList.size());
         this.allInputs = allInputs;
         List<Model> models = new ArrayList<>();
-        Map<EvolvableFunction,Double> weightedFunctions = new HashMap<>();
+        Map<Evolvable,Double> weightedFunctions = new HashMap<>();
         Advice f = null;
         for (Advice advice : adviceList) {
             if (f == null) {
@@ -46,7 +47,7 @@ public class CombinedAdvice implements Advice {
         this.model = new ModelOfModels(models);
 
 
-        this.mixedFunction = new MixedFunction(weightedFunctions);
+//        this.mixedFunction = new MixedFunction(weightedFunctions);
     }
 
     @Override

@@ -23,9 +23,9 @@ public abstract class FunctionStrategy extends SigmaBasedStrategy {
     }
 
     @Override
-    public final InvestmentAllocation chooseAllocation(LocalDate presentDay, Account account, Table inputs,
+    public final AllocationAndThoughts chooseAllocation(LocalDate presentDay, Account account, Table inputs,
                                                        Table stockMarket, Table bondMarket, CurrentPrices currentPrices,
-                                                       InvestmentAllocation current, double sigma) {
+                                                       InvestmentAllocation current, double sigma, NormalModel model) {
         double pctStock = this.evolvableFunction.apply(sigma);
         if (pctStock > 1.0) {
             pctStock = 1;
@@ -41,11 +41,15 @@ public abstract class FunctionStrategy extends SigmaBasedStrategy {
             ps = 100;
         }
         InvestmentAllocation ideal = new InvestmentAllocation(ps,100-ps,0);
-        return reassessAllocation(presentDay,account,inputs,stockMarket, bondMarket, currentPrices,
+        AllocationAndThoughts allocationAndThoughts = reassessAllocation(presentDay,account,inputs,stockMarket, bondMarket, currentPrices,
                 current, sigma, ideal);
+
+
+
+        return allocationAndThoughts;
     }
 
-    public abstract InvestmentAllocation reassessAllocation(LocalDate presentDay, Account account, Table inputs,
+    public abstract AllocationAndThoughts reassessAllocation(LocalDate presentDay, Account account, Table inputs,
                                                    Table stockMarket, Table bondMarket, CurrentPrices currentPrices,
                                                    InvestmentAllocation current, double sigma,
                                                    InvestmentAllocation ideal);

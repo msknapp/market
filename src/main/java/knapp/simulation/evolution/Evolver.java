@@ -3,6 +3,7 @@ package knapp.simulation.evolution;
 import knapp.predict.TrendFinder;
 import knapp.simulation.SimulationResults;
 import knapp.simulation.USDollars;
+import knapp.simulation.functions.Evolvable;
 import knapp.simulation.functions.EvolvableFunction;
 import knapp.simulation.functions.RangeLimitedFunction;
 import knapp.simulation.strategy.FunctionStrategy;
@@ -46,17 +47,19 @@ public class Evolver {
         this.strategySupplier = strategySupplier;
     }
 
-    public EvolvableFunction evolve() {
+    public Evolvable evolve() {
         return evolve(Line.slope(0.85).intercept(0.45).toLine());
     }
 
-    public EvolvableFunction evolve(EvolvableFunction initialFunction) {
-        validateFunction(initialFunction);
+    public Evolvable evolve(Evolvable initialFunction) {
+        if (initialFunction instanceof EvolvableFunction) {
+            validateFunction((EvolvableFunction) initialFunction);
+        }
         if (!isAcceptable(initialFunction)) {
             System.out.println("Warning: the initial function is not even acceptable.");
         }
 
-        EvolvableFunction currentBest = initialFunction;
+        Evolvable currentBest = initialFunction;
         double deviation = 1.0;
         USDollars bestFinalDollars = USDollars.dollars(-1);
         int iterations = 0;
@@ -64,7 +67,7 @@ public class Evolver {
         while (deviation > accuracy) {
             boolean improved = false;
             for (int i = 0;i<10;i++) {
-                EvolvableFunction spawn = currentBest.deviateRandomly(deviation);
+                Evolvable spawn = currentBest.deviateRandomly(deviation);
                 int attempts = 0;
                 while (!isAcceptable(spawn) && attempts < 20) {
                     spawn = currentBest.deviateRandomly(deviation);
@@ -100,8 +103,10 @@ public class Evolver {
             deviation = deviation * 0.6;
             System.out.println("Deviation is now: "+deviation);
         }
-        DoubleRange range = getRange(currentBest);
-        System.out.println(String.format("The best function ranges from %.3f to %.3f",range.getMin(),range.getMax()));
+        if (currentBest instanceof EvolvableFunction) {
+            DoubleRange range = getRange((EvolvableFunction) currentBest);
+            System.out.println(String.format("The best function ranges from %.3f to %.3f", range.getMin(), range.getMax()));
+        }
         return currentBest;
     }
 
@@ -137,6 +142,13 @@ public class Evolver {
         double low = ((RangeLimitedFunction) evolvableFunction).apply(-3.0);
         double high = ((RangeLimitedFunction) evolvableFunction).apply(3.0);
         return new DoubleRange(low,high);
+    }
+
+    public static boolean isAcceptable(Evolvable evolvableFunction) {
+        if (evolvableFunction instanceof EvolvableFunction) {
+            return isAcceptable((EvolvableFunction)evolvableFunction);
+        }
+        return true;
     }
 
     public static boolean isAcceptable(EvolvableFunction evolvableFunction) {

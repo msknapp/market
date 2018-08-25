@@ -15,8 +15,8 @@ public class Transaction {
         if (quantity < 0){
             throw new IllegalArgumentException("Quantity can't be negative");
         }
-        if (price == null) {
-            throw new IllegalArgumentException("Price cannot be null");
+        if (price == null || price.isDebt()) {
+            throw new IllegalArgumentException("Price cannot be null or negative");
         }
         this.purchase = purchase;
         this.price = price;

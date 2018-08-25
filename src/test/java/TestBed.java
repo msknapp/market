@@ -5,7 +5,6 @@ import knapp.simulation.USDollars;
 import knapp.simulation.strategy.AllInStrategy;
 import knapp.table.Frequency;
 import knapp.simulation.Simulater;
-import knapp.simulation.strategy.IntelligentStrategy;
 import knapp.simulation.strategy.InvestmentStrategy;
 import knapp.table.Table;
 import knapp.table.util.TableParser;
@@ -23,7 +22,7 @@ public class TestBed {
     private LocalDate trainingStart, trainingEnd, testStart, testEnd, tableStart;
     TrendFinder trendFinder = new TrendFinder();
     InvestmentStrategy holdForeverStrategy = new AllInStrategy();
-    InvestmentStrategy strategy = new IntelligentStrategy(trendFinder);
+    InvestmentStrategy strategy = new AllInStrategy();
 
     public TestBed() {
 
@@ -105,11 +104,11 @@ public class TestBed {
 
     public static void printWorthOverTime(SimulationResults simulationResults, String name) {
         System.out.println(String.format("The strategy '%s' had this worth over time:",name));
-        List<LocalDate> dates = new ArrayList<>(simulationResults.getWorthOverTime().keySet());
+        List<LocalDate> dates = new ArrayList<>(simulationResults.getHistory().keySet());
         Collections.sort(dates);
         System.out.println("Date,Value,Percent Stock");
         for (LocalDate d : dates) {
-            Stance v = simulationResults.getWorthOverTime().get(d);
+            Stance v = simulationResults.getHistory().get(d).getStance();
             System.out.println(d.toString()+","+v.getNetWorthDollars()+","+v.getPercentStock());
         }
     }

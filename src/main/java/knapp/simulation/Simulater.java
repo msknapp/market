@@ -1,5 +1,7 @@
 package knapp.simulation;
 
+import knapp.simulation.strategy.MarketThoughts;
+import knapp.simulation.strategy.StrategyOrders;
 import knapp.table.Frequency;
 import knapp.simulation.strategy.InvestmentStrategy;
 import knapp.table.values.GetMethod;
@@ -51,9 +53,10 @@ public class Simulater {
         final AccountPointer accountPointer = new AccountPointer();
         accountPointer.account = initialAccount;
         List<Transaction> transactions = new ArrayList<>();
-        Map<LocalDate, Stance> netWorthOverTime = new HashMap<>();
+        Map<LocalDate, HistoricRecord> history = new HashMap<>();
         Util.doWithDate(start, end, tradeFrequency, date -> {
-            runOneDate(investmentStrategy, accountPointer, transactions, netWorthOverTime, date);
+            HistoricRecord record = runOneDate(investmentStrategy, accountPointer, date);
+            history.put(date, record);
         });
 
 
@@ -71,11 +74,10 @@ public class Simulater {
         int years = (int) YEARS.between(start,end);
         double averageROI = calculateROI(endingDollars,initialDollars,years);
 
-        return new SimulationResults(endingDollars,endingAccount,transactions,averageROI,netWorthOverTime,tradeFrequency);
+        return new SimulationResults(endingDollars,endingAccount,averageROI,history,tradeFrequency);
     }
 
-    public void runOneDate(InvestmentStrategy investmentStrategy, AccountPointer accountPointer,
-                           List<Transaction> transactions, Map<LocalDate, Stance> netWorthOverTime,
+    public HistoricRecord runOneDate(InvestmentStrategy investmentStrategy, AccountPointer accountPointer,
                            LocalDate date) {
 
         double stockPrice = stockMarket.getValue(date,0,GetMethod.INTERPOLATE);
@@ -85,17 +87,17 @@ public class Simulater {
         }
         CurrentPrices currentPrices = new CurrentPrices(USDollars.dollars(stockPrice),USDollars.dollars(bondPrice));
 
-        List<Transaction> newTransactions = runOneDateCore(currentPrices,investmentStrategy,accountPointer,date);
-        transactions.addAll(newTransactions);
+        HistoricRecord historicRecord = runOneDateCore(currentPrices,investmentStrategy,accountPointer,date);
 
         Account account = accountPointer.account;
         USDollars netValue = account.netValue(currentPrices,date);
         int pctStock = determinePercentStock(account,currentPrices);
         Stance stance = new Stance(pctStock, netValue);
-        netWorthOverTime.put(date,stance);
+
+        return new HistoricRecord(date,historicRecord.getTransactions(),historicRecord.getMarketThoughts(),stance);
     }
 
-    public List<Transaction> runOneDateCore(CurrentPrices currentPrices, InvestmentStrategy investmentStrategy,
+    public HistoricRecord runOneDateCore(CurrentPrices currentPrices, InvestmentStrategy investmentStrategy,
                                AccountPointer accountPointer, LocalDate date) {
 
         // bonds pay dividends
@@ -120,12 +122,15 @@ public class Simulater {
 
         List<Transaction> outputTransactions = new ArrayList<>();
 
-        Set<Order> orders = investmentStrategy.rebalance(date, account, currentKnownInputs,
+        StrategyOrders orders = investmentStrategy.rebalance(date, account, currentKnownInputs,
                 currentKnownStockMarket, currentKnownBondMarket, currentPrices);
+        if (orders.getMarketThoughts() == null) {
+            throw new IllegalStateException("Market thoughts cannot be null.");
+        }
         // always do all sales first.
-        account = executeAllOrders(currentPrices, date, account, outputTransactions, orders);
+        account = executeAllOrders(currentPrices, date, account, outputTransactions, orders.getOrders());
         accountPointer.account = account;
-        return outputTransactions;
+        return new HistoricRecord(date,outputTransactions, orders.getMarketThoughts(),null);
     }
 
     public static Account executeAllOrders(CurrentPrices currentPrices, LocalDate date, Account account,
@@ -247,4 +252,5 @@ public class Simulater {
             return new Simulater(stockMarket,bondMarket,inputs,frameYears,bondROI, frequency);
         }
     }
+
 }

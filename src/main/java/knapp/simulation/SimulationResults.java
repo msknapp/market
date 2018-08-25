@@ -7,28 +7,23 @@ import java.util.*;
 
 public class SimulationResults {
     private final USDollars finalDollars;
-    private final List<Transaction> transactions;
     private final Account account;
     private final double averageROI;
-    private final Map<LocalDate,Stance> worthOverTime;
+    private final Map<LocalDate,HistoricRecord> history;
     private final Frequency tradeFrequency;
 
-    public SimulationResults(USDollars finalDollars, Account account, List<Transaction> transactions, double averageROI,
-                             Map<LocalDate,Stance> worthOverTime, Frequency tradeFrequency) {
+    public SimulationResults(USDollars finalDollars, Account account, double averageROI,
+                             Map<LocalDate,HistoricRecord> history, Frequency tradeFrequency) {
         if (finalDollars == null) {
             throw new IllegalArgumentException("Final dollars is null");
         }
         if (account == null) {
             throw new IllegalArgumentException("Account is null");
         }
-        if (transactions == null) {
-            throw new IllegalArgumentException("transactions is null.");
-        }
         this.finalDollars = finalDollars;
         this.account = account;
-        this.transactions = Collections.unmodifiableList(new ArrayList<>(transactions));
         this.averageROI = averageROI;
-        this.worthOverTime = Collections.unmodifiableMap(new HashMap<>(worthOverTime));
+        this.history = Collections.unmodifiableMap(new HashMap<>(history));
         this.tradeFrequency = tradeFrequency;
     }
 
@@ -40,8 +35,12 @@ public class SimulationResults {
         return finalDollars;
     }
 
-    public List<Transaction> getTransactions() {
-        return transactions;
+    public int getTransactionCount() {
+        int i = 0;
+        for (HistoricRecord historicRecord : history.values()) {
+            i += historicRecord.getTransactions().size();
+        }
+        return i;
     }
 
     public Account getAccount() {
@@ -52,7 +51,7 @@ public class SimulationResults {
         return averageROI;
     }
 
-    public Map<LocalDate, Stance> getWorthOverTime() {
-        return worthOverTime;
+    public Map<LocalDate, HistoricRecord> getHistory() {
+        return history;
     }
 }

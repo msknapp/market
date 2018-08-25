@@ -87,10 +87,9 @@ public class SimulatorTest {
         Simulater simulater = new Simulater.SimulaterBuilder().bondMarket(bondMarket).bondROI(0.02)
                 .frameYears(10).inputs(inputs).stockMarket(market).build();
 
-        Map<LocalDate, Stance> netWorthOverTime = new HashMap<>();
+        Map<LocalDate, HistoricRecord> history = new HashMap<>();
         AllocationStrategyTest.MyTestStrat strategy = new AllocationStrategyTest.MyTestStrat();
         strategy.response = new InvestmentAllocation(75,15,10);
-        List<Transaction> transactions = new ArrayList<>();
         Simulater.AccountPointer pointer = new Simulater.AccountPointer();
 
         LocalDate present = LocalDate.of(2000,1,1);
@@ -104,21 +103,24 @@ public class SimulatorTest {
         pointer.account = account;
 
         LocalDate testDate = LocalDate.of(2000,1,1);
-        simulater.runOneDate(strategy, pointer, transactions, netWorthOverTime, testDate);
+        HistoricRecord historicRecord = simulater.runOneDate(strategy, pointer, testDate);
+        history.put(testDate, historicRecord);
 
-        Assert.assertEquals(2,transactions.size());
-        Assert.assertEquals(1,netWorthOverTime.size());
-        Stance stance = netWorthOverTime.get(testDate);
+        Assert.assertEquals(2,historicRecord.getTransactions().size());
+        Assert.assertEquals(1,history.size());
+        Stance stance = history.get(testDate).getStance();
         Assert.assertTrue(Math.abs(75-stance.getPercentStock()) <= 1);
         Assert.assertEquals(USDollars.dollars(11429.52),stance.getNetWorthDollars());
 
         LocalDate testDate2 = testDate.plusMonths(3);
         strategy.response = new InvestmentAllocation(15,80,5);
-        simulater.runOneDate(strategy, pointer, transactions, netWorthOverTime, testDate2);
+        historicRecord = simulater.runOneDate(strategy, pointer, testDate2);
+        history.put(testDate2,historicRecord);
+        Assert.assertEquals(2,historicRecord.getTransactions().size());
 
-        Assert.assertEquals(4,transactions.size());
-        Assert.assertEquals(2,netWorthOverTime.size());
-        stance = netWorthOverTime.get(testDate2);
+//        Assert.assertEquals(4,transactions.size());
+        Assert.assertEquals(2,history.size());
+        stance = history.get(testDate2).getStance();
         Assert.assertTrue(Math.abs(15-stance.getPercentStock()) <= 1);
         Assert.assertEquals(USDollars.dollars(11903.71),stance.getNetWorthDollars());
     }

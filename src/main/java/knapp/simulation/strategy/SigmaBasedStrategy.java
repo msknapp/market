@@ -6,6 +6,7 @@ import knapp.predict.TrendFinder;
 import knapp.simulation.Account;
 import knapp.simulation.CurrentPrices;
 import knapp.simulation.InvestmentAllocation;
+import knapp.simulation.USDollars;
 import knapp.simulation.functions.EvolvableFunction;
 import knapp.table.Frequency;
 import knapp.table.Table;
@@ -25,8 +26,16 @@ public abstract class SigmaBasedStrategy extends AllocationStrategy {
         this.lags = Collections.unmodifiableMap(new HashMap<>(lags));
     }
 
+    public TrendFinder getTrendFinder() {
+        return trendFinder;
+    }
+
+    public Map<String, Integer> getLags() {
+        return lags;
+    }
+
     @Override
-    public final InvestmentAllocation chooseAllocation(LocalDate presentDay, Account account, Table inputs, Table stockMarket,
+    public final AllocationAndThoughts chooseAllocation(LocalDate presentDay, Account account, Table inputs, Table stockMarket,
                                                  Table bondMarket, CurrentPrices currentPrices,
                                                  InvestmentAllocation current) {
         LocalDate end = presentDay;
@@ -46,13 +55,23 @@ public abstract class SigmaBasedStrategy extends AllocationStrategy {
         }
         double lastMarketValue = stockMarket.getExactValues(ld)[0];
         double sigmas = (estimate - lastMarketValue) / model.getStandardDeviation();
-        return chooseAllocation(presentDay,account,inputs,stockMarket,
-                bondMarket,currentPrices,current, sigmas);
+        AllocationAndThoughts allocationAndThoughts = chooseAllocation(presentDay,account,inputs,stockMarket,
+                bondMarket,currentPrices,current, sigmas, model);
+
+        allocationAndThoughts.getMarketThoughts().setExpectedValue(USDollars.dollars(estimate));
+        allocationAndThoughts.getMarketThoughts().setActualValue(USDollars.dollars(lastMarketValue));
+        allocationAndThoughts.getMarketThoughts().setSigma(sigmas);
+        allocationAndThoughts.getMarketThoughts().setStandardDeviation(USDollars.dollars(model.getStandardDeviation()));
+        allocationAndThoughts.getMarketThoughts().setRsquared(model.getRsquared());
+
+        // TODO maybe record the market parameters here?
+
+        return allocationAndThoughts;
     }
 
-    public abstract InvestmentAllocation chooseAllocation(LocalDate presentDay, Account account, Table inputs, Table stockMarket,
+    public abstract AllocationAndThoughts chooseAllocation(LocalDate presentDay, Account account, Table inputs, Table stockMarket,
                                                           Table bondMarket, CurrentPrices currentPrices,
-                                                          InvestmentAllocation current,double sigma);
+                                                          InvestmentAllocation current,double sigma, NormalModel model);
 
     @Override
     public int getMinimumPercentChange() {

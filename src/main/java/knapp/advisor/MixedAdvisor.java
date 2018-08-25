@@ -1,5 +1,6 @@
 package knapp.advisor;
 
+import knapp.simulation.functions.EvolvableFunction;
 import knapp.table.Table;
 
 import java.util.ArrayList;
@@ -45,7 +46,9 @@ public class MixedAdvisor implements Advisor {
             AdvisorImpl advisor = (AdvisorImpl)core;
             Advice ad2 = advisor.getAdvice(advisor.getAllInputsTable(),advice.getModel());
             advice.setSimulationResults(ad2.getBestSimulationResults());
-            advice.setMixedFunction(ad2.getBestFunction());
+            if (ad2.getBestFunction() instanceof EvolvableFunction) {
+                advice.setMixedFunction((EvolvableFunction) ad2.getBestFunction());
+            }
         }
 
         return advice;

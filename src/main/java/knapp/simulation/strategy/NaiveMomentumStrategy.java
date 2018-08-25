@@ -18,34 +18,43 @@ public class NaiveMomentumStrategy extends AllocationStrategy {
     }
 
     @Override
-    public InvestmentAllocation chooseAllocation(LocalDate presentDay, Account account, Table inputs, Table stockMarket,
+    public AllocationAndThoughts chooseAllocation(LocalDate presentDay, Account account, Table inputs, Table stockMarket,
                                                  Table bondMarket, CurrentPrices currentPrices, InvestmentAllocation current) {
+        MarketThoughts marketThoughts = new MarketThoughts();
         if (first) {
             first = false;
-            return new InvestmentAllocation(70,30,0);
+            InvestmentAllocation investmentAllocation = new InvestmentAllocation(70,30,0);
+            marketThoughts.setDecisionComment("Just entering the market");
+            return new AllocationAndThoughts(investmentAllocation,marketThoughts);
         }
         TableColumnView view = stockMarket.getTableColumnView(0);
         LocalDate last = view.getLastDate();
         LocalDate secondLast = view.getDateBefore(last);
         double lastVal = view.getExactValue(last);
         double secondLastVal = view.getExactValue(secondLast);
+        marketThoughts.setRising(lastVal > secondLastVal);
 
         double chg = lastVal / secondLastVal - 1.0;
 
+        InvestmentAllocation investmentAllocation = null;
         if (chg > 0.01) {
             if (inverse) {
-                increaseStock(current);
+                marketThoughts.setDecisionComment("The market grew over 1% let's assume it has momentum and buy more.");
+                investmentAllocation = increaseStock(current);
             } else {
-                decreaseStock(current);
+                marketThoughts.setDecisionComment("The market grew over 1% let's sell off a bit of stock");
+                investmentAllocation = decreaseStock(current);
             }
         } else if (chg < -0.01) {
             if (inverse) {
-                decreaseStock(current);
+                marketThoughts.setDecisionComment("The market dropped over 1% let's sell off a bit of stock");
+                investmentAllocation = decreaseStock(current);
             } else {
-                increaseStock(current);
+                marketThoughts.setDecisionComment("The market dropped over 1% let's buy more stock.");
+                investmentAllocation = increaseStock(current);
             }
         }
-        return null;
+        return new AllocationAndThoughts(investmentAllocation, marketThoughts);
     }
 
     public InvestmentAllocation increaseStock(InvestmentAllocation current) {

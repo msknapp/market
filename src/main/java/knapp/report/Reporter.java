@@ -2,7 +2,10 @@ package knapp.report;
 
 import knapp.advisor.Advice;
 import knapp.advisor.CombinedAdvice;
+import knapp.simulation.HistoricRecord;
 import knapp.simulation.Stance;
+import knapp.simulation.functions.Evolvable;
+import knapp.simulation.functions.EvolvableFunction;
 import knapp.table.Frequency;
 import knapp.predict.*;
 import knapp.simulation.functions.Line;
@@ -96,7 +99,7 @@ public class Reporter {
             writer.write("Simulation Results:\n");
             writer.write(String.format("The simulation ended with: %s\n",advice.getBestSimulationResults().getFinalDollars().toString()));
             writer.write(String.format("The simulation had ROI: %.1f%%\n",advice.getBestSimulationResults().getAverageROI()*100.0));
-            writer.write(String.format("The simulation made %d transactions.\n",advice.getBestSimulationResults().getTransactions().size()));
+            writer.write(String.format("The simulation made %d transactions.\n",advice.getBestSimulationResults().getTransactionCount()));
 
 
             if (advice instanceof CombinedAdvice) {
@@ -127,14 +130,17 @@ public class Reporter {
         writer.accept(String.format("Advice type: %s",advice.getClass().getSimpleName()));
         writer.accept(String.format("The simulation's ROI was: %.1f%%",advice.getBestSimulationResults().getAverageROI() * 100.0));
         writer.accept(String.format("The simulation's ended with: %s",advice.getBestSimulationResults().getFinalDollars().toString()));
-        writer.accept(String.format("The simulation made %d transactions.",advice.getBestSimulationResults().getTransactions().size()));
+        writer.accept(String.format("The simulation made %d transactions.",advice.getBestSimulationResults().getTransactionCount()));
         writer.accept("");
 
         double recommendedPercentStock = Math.round(1000.0 * advice.getRecommendedPercentStock()) / 10.0;
         double sigma = advice.getSigmas();
 
         writer.accept(advice.getBestFunction().describe());
-        writer.accept(advice.getBestFunction().describe(sigma)+" = "+recommendedPercentStock);
+        if (advice.getBestFunction() instanceof EvolvableFunction) {
+            EvolvableFunction f = (EvolvableFunction) advice.getBestFunction();
+            writer.accept(f.describe(sigma) + " = " + recommendedPercentStock);
+        }
         if (advice.getModel() instanceof NormalModel) {
             writeSimpleModelToSummaryText(advice, (NormalModel) advice.getModel(),writer);
         }
@@ -224,10 +230,13 @@ public class Reporter {
         }
 
         writer.accept("");
-        writer.accept("Function Output:");
-        writer.accept("Sigma, Percent Stock:");
-        for (double x = -6; x <= 6; x+=0.5) {
-            writer.accept(String.format("%.1f,%.1f%%",x,advice.getBestFunction().apply(x)*100));
+        if (advice.getBestFunction() instanceof EvolvableFunction) {
+            EvolvableFunction f = (EvolvableFunction)advice.getBestFunction();
+            writer.accept("Function Output:");
+            writer.accept("Sigma, Percent Stock:");
+            for (double x = -6; x <= 6; x += 0.5) {
+                writer.accept(String.format("%.1f,%.1f%%", x, f.apply(x) * 100));
+            }
         }
     }
 
@@ -278,7 +287,9 @@ public class Reporter {
                     writer.write(",");
                     writer.write(String.format("%.4f",sigmas));
                     writer.write(",");
-                    writer.write(String.format("%.4f",advice.getBestFunction().apply(sigmas)));
+                    if (advice.getBestFunction() instanceof EvolvableFunction) {
+                        writer.write(String.format("%.4f", ((EvolvableFunction) advice.getBestFunction()).apply(sigmas)));
+                    }
                 }
             };
 
@@ -301,15 +312,73 @@ public class Reporter {
 
     private void writeSimulationText(CurrentDirectory currentDirectory, Advice advice) {
         String simText = Util.doWithWriter(writer -> {
-            writer.write("Date,Value,Percent Stock\n");
+            StringBuilder headerBuilder = new StringBuilder();
+            headerBuilder.append("Date,");
+            headerBuilder.append("Market Price,");
+            headerBuilder.append("Expected Price,");
+            headerBuilder.append("Account Value,");
+            headerBuilder.append("Percent Stock,");
+            headerBuilder.append("Transactions,");
+            headerBuilder.append("Sigma,");
+            headerBuilder.append("Percentile,");
+            headerBuilder.append("RSquared,");
+            headerBuilder.append("Standard Deviation,");
+            headerBuilder.append("Overvalued,");
+            headerBuilder.append("Rising,");
+            headerBuilder.append("meets min %Chg,");
+            headerBuilder.append("Did expected,");
+            headerBuilder.append("Decision Comment");
+            headerBuilder.append("\n");
+            writer.write(headerBuilder.toString());
             // must go in chronological order.
-            List<LocalDate> dates = new ArrayList<>(advice.getBestSimulationResults().getWorthOverTime().keySet());
+            List<LocalDate> dates = new ArrayList<>(advice.getBestSimulationResults().getHistory().keySet());
             Collections.sort(dates);
             for (LocalDate date : dates) {
-                Stance stance = advice.getBestSimulationResults().getWorthOverTime().get(date);
-                writer.write(String.format("%s,%s,%d%%\n",date.toString(),
-                        stance.getNetWorthDollars().toString(),
-                        stance.getPercentStock()));
+                HistoricRecord historicRecord = advice.getBestSimulationResults().getHistory().get(date);
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.append(date.toString()).append(",");
+
+                if (historicRecord.getMarketThoughts() != null) {
+                    stringBuilder.append(historicRecord.getMarketThoughts().getActualValue()).append(",");
+                    stringBuilder.append(historicRecord.getMarketThoughts().getExpectedValue()).append(",");
+                } else {
+                    stringBuilder.append(",,");
+                }
+
+                Stance stance = historicRecord.getStance();
+                if (stance != null) {
+                    stringBuilder.append(stance.getNetWorthDollars().toString()).append(",");
+                    stringBuilder.append(stance.getPercentStock()).append(",");
+                } else {
+                    stringBuilder.append(",,");
+                }
+                if (historicRecord.getTransactions() != null) {
+                    stringBuilder.append(historicRecord.getTransactions().size()).append(",");
+                } else {
+                    stringBuilder.append(",");
+                }
+                if (historicRecord.getMarketThoughts() != null) {
+                    String sgma = String.format("%.2f",historicRecord.getMarketThoughts().getSigma());
+                    stringBuilder.append(sgma).append(",");
+                    String pctl = String.format("%.2f",historicRecord.getMarketThoughts().getPercentile());
+                    stringBuilder.append(pctl).append(",");
+                    String rsq = String.format("%.2f",historicRecord.getMarketThoughts().getRsquared());
+                    stringBuilder.append(rsq).append(",");
+                    stringBuilder.append(historicRecord.getMarketThoughts().getStandardDeviation()).append(",");
+                    stringBuilder.append(historicRecord.getMarketThoughts().isOvervalued()).append(",");
+                    stringBuilder.append(historicRecord.getMarketThoughts().isRising()).append(",");
+                    stringBuilder.append(historicRecord.getMarketThoughts().isMeetsMinimumPercentChange()).append(",");
+                    stringBuilder.append(historicRecord.getMarketThoughts().isDidWhatIExpected()).append(",");
+                    String comment = historicRecord.getMarketThoughts().getDecisionComment();
+                    if (comment != null) {
+                        comment = comment.replaceAll(",", ";");
+                    }
+                    stringBuilder.append(comment);
+                } else {
+                    stringBuilder.append(",,,,,,,,,");
+                }
+                stringBuilder.append("\n");
+                writer.write(stringBuilder.toString());
             }
         });
         File simFile = currentDirectory.toFile(filePrefix+"simulation.csv");

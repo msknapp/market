@@ -22,8 +22,8 @@ public class PurchaseInfo {
         if (initialQuantity < currentQuantity) {
             throw new IllegalArgumentException("Initial quantity must not be less than current.");
         }
-        if (price == null) {
-            throw new IllegalArgumentException("Price must not be null");
+        if (price == null || price.isDebt()) {
+            throw new IllegalArgumentException("Price must not be null or negative");
         }
         if (asset == null) {
             throw new IllegalArgumentException("Asset must not be null");

@@ -17,10 +17,10 @@ public class DirectFunctionStrategy extends FunctionStrategy {
     }
 
     @Override
-    public InvestmentAllocation reassessAllocation(LocalDate presentDay, Account account, Table inputs, Table stockMarket,
+    public AllocationAndThoughts reassessAllocation(LocalDate presentDay, Account account, Table inputs, Table stockMarket,
                                                    Table bondMarket, CurrentPrices currentPrices, InvestmentAllocation current,
                                                    double sigma, InvestmentAllocation ideal) {
-        return ideal;
+        return new AllocationAndThoughts(ideal, new MarketThoughts());
     }
 
     @Override

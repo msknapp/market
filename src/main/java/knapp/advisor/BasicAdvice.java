@@ -4,6 +4,7 @@ import knapp.predict.MarketSlice;
 import knapp.predict.Model;
 import knapp.predict.NormalModel;
 import knapp.simulation.SimulationResults;
+import knapp.simulation.functions.Evolvable;
 import knapp.simulation.functions.EvolvableFunction;
 import knapp.table.Table;
 
@@ -21,11 +22,11 @@ public class BasicAdvice implements Advice {
     private final LocalDate start;
     private final double currentValue;
     private final SimulationResults simulationResults;
-    private final EvolvableFunction bestFunction;
+    private final Evolvable bestFunction;
     private final Map<String,Integer> lags;
 
     BasicAdvice(Model model, Table inputs, Table market, LocalDate start, double currentValue,
-                SimulationResults simulationResults, EvolvableFunction bestFunction) {
+                SimulationResults simulationResults, Evolvable bestFunction) {
         this.model = model;
         this.inputs = inputs;
         this.market = market;
@@ -72,13 +73,17 @@ public class BasicAdvice implements Advice {
     }
 
     @Override
-    public EvolvableFunction getBestFunction() {
+    public Evolvable getBestFunction() {
         return bestFunction;
     }
 
     @Override
     public double getRecommendedPercentStock() {
-        return getBestFunction().apply(getSigmas());
+        if (getBestFunction() instanceof EvolvableFunction) {
+
+            return ((EvolvableFunction)getBestFunction()).apply(getSigmas());
+        }
+        return 0;
     }
 
     @Override
@@ -103,7 +108,7 @@ public class BasicAdvice implements Advice {
         private LocalDate start;
         private double currentValue;
         private SimulationResults simulationResults;
-        private EvolvableFunction bestFunction;
+        private Evolvable bestFunction;
 
         public BasicAdviceBuilder() {
 
@@ -139,7 +144,7 @@ public class BasicAdvice implements Advice {
             return this;
         }
 
-        public BasicAdviceBuilder bestFunction(EvolvableFunction x) {
+        public BasicAdviceBuilder bestFunction(Evolvable x) {
             this.bestFunction = x;
             return this;
         }
