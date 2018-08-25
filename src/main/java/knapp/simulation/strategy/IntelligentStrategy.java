@@ -58,4 +58,8 @@ public class IntelligentStrategy extends AllocationStrategy implements Investmen
         return 10;
     }
 
+    @Override
+    public boolean canEvolve() {
+        return false;
+    }
 }

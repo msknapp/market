@@ -4,6 +4,8 @@ import knapp.download.DataRetriever;
 import knapp.download.IEXRetriever;
 import knapp.simulation.SimulationResults;
 import knapp.simulation.USDollars;
+import knapp.simulation.functions.RangeLimitedFunction;
+import knapp.simulation.strategy.StrategySupplier;
 import knapp.table.Frequency;
 import knapp.indicator.Indicator;
 import knapp.predict.Model;
@@ -36,6 +38,8 @@ public class AdvisorImpl implements Advisor {
     private final String marketSymbol;
     private final EvolvableFunction initialFunction;
     private final List<String> allPossibleInputs;
+    private final StrategySupplier strategySupplier;
+    private final double requiredAccuracy;
 
     // these are established in the init function.
     private Table stockMarket;
@@ -66,7 +70,15 @@ public class AdvisorImpl implements Advisor {
             LocalDate end,
             String marketSymbol,
             EvolvableFunction initialFunction,
-            List<String> allPossibleInputs) {
+            List<String> allPossibleInputs,
+            StrategySupplier strategySupplier,
+            double requiredAccuracy) {
+        if (strategySupplier == null) {
+            throw new IllegalArgumentException("Strategy supplier must be specified.");
+        }
+        if (requiredAccuracy < 0 || requiredAccuracy > 1 ) {
+            throw new IllegalArgumentException("Required accuracy must be between 0 and 1.");
+        }
         this.simulationInputStart = simulationInputStart;
         this.inputStart = inputStart;
         this.marketStart = marketStart;
@@ -74,6 +86,8 @@ public class AdvisorImpl implements Advisor {
         this.marketSymbol = marketSymbol;
         this.initialFunction = initialFunction;
         this.allPossibleInputs = Collections.unmodifiableList(new ArrayList<>(allPossibleInputs));
+        this.strategySupplier = strategySupplier;
+        this.requiredAccuracy = requiredAccuracy;
     }
 
     @Override
@@ -145,9 +159,14 @@ public class AdvisorImpl implements Advisor {
 
         Map<String,Integer> lags = inputs.getLags(LocalDate.now());
 
-        Evolver evolver = new Evolver(sim, trendFinder,0.01,lags);
-        System.out.println("Running the evolver to find the best investment strategy.");
-        EvolvableFunction evolvableFunction = evolver.evolve(initialFunction);
+        EvolvableFunction evolvableFunction = initialFunction;
+        if (requiredAccuracy < 0.99) {
+            Evolver evolver = new Evolver(sim, trendFinder, requiredAccuracy, lags, strategySupplier);
+            System.out.println("Running the evolver to find the best investment strategy.");
+            evolvableFunction = evolver.evolve(initialFunction);
+
+            Evolver.validateFunction(evolvableFunction);
+        }
 
         // TODO something is very wrong here.  The simulation is not using the input model
         // somehow that is supposed to influence the results here.
@@ -156,7 +175,8 @@ public class AdvisorImpl implements Advisor {
         // that it's not needed to evolve the function.
         // I think I meant to provide an evolved function here instead of a model.
 
-        FunctionStrategy strategy = new FunctionStrategy(trendFinder,evolvableFunction, lags);
+        InvestmentStrategy strategy = strategySupplier.getStrategy(trendFinder,evolvableFunction, lags);
+//        strategy.setVerbose(true);
         SimulationResults results = simulater.simulate(simStart, end, USDollars.dollars(10000), strategy);
 
         return BasicAdvice.define()
@@ -170,6 +190,7 @@ public class AdvisorImpl implements Advisor {
                 .build();
     }
 
+
     public static AdvisorImplBuilder define() {
         return new AdvisorImplBuilder();
     }
@@ -182,6 +203,8 @@ public class AdvisorImpl implements Advisor {
         private String marketSymbol = "IVE";
         private EvolvableFunction initialFunction = Normal.initialNormal();
         private List<String> allPossibleInputs = new ArrayList<>();
+        private StrategySupplier strategySupplier;
+        private double requiredAccuracy = 0.01;
 
         public AdvisorImplBuilder() {
 
@@ -194,6 +217,16 @@ public class AdvisorImpl implements Advisor {
 
         public AdvisorImplBuilder inputStart(LocalDate x) {
             this.inputStart = x;
+            return this;
+        }
+
+        public AdvisorImplBuilder strategySupplier(StrategySupplier x) {
+            this.strategySupplier = x;
+            return this;
+        }
+
+        public AdvisorImplBuilder requiredAccuracy(double x) {
+            this.requiredAccuracy = x;
             return this;
         }
 
@@ -237,7 +270,8 @@ public class AdvisorImpl implements Advisor {
             Set<String> tmp = new HashSet<>(allPossibleInputs);
             allPossibleInputs = new ArrayList<>(tmp);
             Collections.sort(allPossibleInputs);
-            return new AdvisorImpl(simulationInputStart,inputStart,marketStart,end,marketSymbol,initialFunction, allPossibleInputs);
+            return new AdvisorImpl(simulationInputStart,inputStart,marketStart,end,marketSymbol,initialFunction,
+                    allPossibleInputs,strategySupplier, requiredAccuracy);
         }
         
     }

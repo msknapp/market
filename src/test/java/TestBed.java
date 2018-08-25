@@ -2,9 +2,9 @@ import knapp.predict.TrendFinder;
 import knapp.simulation.SimulationResults;
 import knapp.simulation.Stance;
 import knapp.simulation.USDollars;
+import knapp.simulation.strategy.AllInStrategy;
 import knapp.table.Frequency;
 import knapp.simulation.Simulater;
-import knapp.simulation.strategy.AllStockStrategy;
 import knapp.simulation.strategy.IntelligentStrategy;
 import knapp.simulation.strategy.InvestmentStrategy;
 import knapp.table.Table;
@@ -22,7 +22,7 @@ public class TestBed {
     private Simulater simulater;
     private LocalDate trainingStart, trainingEnd, testStart, testEnd, tableStart;
     TrendFinder trendFinder = new TrendFinder();
-    InvestmentStrategy holdForeverStrategy = new AllStockStrategy();
+    InvestmentStrategy holdForeverStrategy = new AllInStrategy();
     InvestmentStrategy strategy = new IntelligentStrategy(trendFinder);
 
     public TestBed() {
@@ -71,7 +71,7 @@ public class TestBed {
                 trainingEnd,Frequency.Monthly);
 
         List<String> series = Arrays.asList("INDPRO","UNRATE","TCU","WPRIME","WTB3MS");
-        Table inputs = InputLoader.loadInputsTableFromClasspath(series,tableStart, testEnd,Frequency.Monthly);
+        Table inputs = InputLoader.loadInputsTableFromClasspath(series);
 
         this.simulater = new Simulater.SimulaterBuilder().stockMarket(stockMarket)
                 .bondMarket(bondMarket).bondROI(0.04).frameYears(20).inputs(inputs).build();

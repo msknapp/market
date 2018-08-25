@@ -1,12 +1,19 @@
 package knapp.simulator;
 
 import knapp.simulation.*;
+import knapp.simulation.strategy.InvestmentStrategy;
 import knapp.simulator.function.NormalTest;
+import knapp.simulator.strategy.AllocationStrategyTest;
 import knapp.table.Frequency;
+import knapp.table.Table;
+import knapp.table.util.TableParser;
+import knapp.table.util.TableUtil;
+import knapp.util.InputLoader;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.time.LocalDate;
+import java.util.*;
 
 public class SimulatorTest {
 
@@ -73,6 +80,46 @@ public class SimulatorTest {
 
     @Test
     public void runOneDate() {
-        // TODO test this.
+        Table market = InputLoader.loadTableFromClasspath("/market/IVE.csv");
+        Table inputs = InputLoader.loadInputsTableFromClasspath(Arrays.asList("M1SL","UNRATE","IPMAN"));
+        Table bondMarket = TableParser.produceConstantTable(100,LocalDate.of(1990,1,1),
+                LocalDate.of(2018,1,1),Frequency.Weekly);
+        Simulater simulater = new Simulater.SimulaterBuilder().bondMarket(bondMarket).bondROI(0.02)
+                .frameYears(10).inputs(inputs).stockMarket(market).build();
+
+        Map<LocalDate, Stance> netWorthOverTime = new HashMap<>();
+        AllocationStrategyTest.MyTestStrat strategy = new AllocationStrategyTest.MyTestStrat();
+        strategy.response = new InvestmentAllocation(75,15,10);
+        List<Transaction> transactions = new ArrayList<>();
+        Simulater.AccountPointer pointer = new Simulater.AccountPointer();
+
+        LocalDate present = LocalDate.of(2000,1,1);
+        CurrentPrices firstPrices = new CurrentPrices(USDollars.dollars(90),USDollars.dollars(80));
+        Account account = BasicAccount.createAccount(10000,0.2);
+
+        Order order = Order.BuyStock(10);
+        account = account.executeOrder(order,firstPrices,present.minusMonths(1));
+        order = Order.BuyBonds(110);
+        account = account.executeOrder(order,firstPrices,present.minusMonths(1));
+        pointer.account = account;
+
+        LocalDate testDate = LocalDate.of(2000,1,1);
+        simulater.runOneDate(strategy, pointer, transactions, netWorthOverTime, testDate);
+
+        Assert.assertEquals(2,transactions.size());
+        Assert.assertEquals(1,netWorthOverTime.size());
+        Stance stance = netWorthOverTime.get(testDate);
+        Assert.assertTrue(Math.abs(75-stance.getPercentStock()) <= 1);
+        Assert.assertEquals(USDollars.dollars(11429.52),stance.getNetWorthDollars());
+
+        LocalDate testDate2 = testDate.plusMonths(3);
+        strategy.response = new InvestmentAllocation(15,80,5);
+        simulater.runOneDate(strategy, pointer, transactions, netWorthOverTime, testDate2);
+
+        Assert.assertEquals(4,transactions.size());
+        Assert.assertEquals(2,netWorthOverTime.size());
+        stance = netWorthOverTime.get(testDate2);
+        Assert.assertTrue(Math.abs(15-stance.getPercentStock()) <= 1);
+        Assert.assertEquals(USDollars.dollars(11903.71),stance.getNetWorthDollars());
     }
 }

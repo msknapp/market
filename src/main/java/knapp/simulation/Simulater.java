@@ -197,8 +197,8 @@ public class Simulater {
         return paymentDollars;
     }
 
-    private static class AccountPointer {
-        Account account;
+    public static class AccountPointer {
+        public Account account;
     }
 
     public static class SimulaterBuilder {

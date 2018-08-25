@@ -18,7 +18,6 @@ public class InputLoader {
     public static String loadTextFromClasspath(String cp) {
         InputStream in = InputLoader.class.getResourceAsStream(cp);
         if (in == null) {
-//            System.out.println("The resource does not exist: "+cp);
             return "";
         }
         String text = "";
@@ -39,50 +38,16 @@ public class InputLoader {
         return TableParser.parse(text,true,Frequency.Monthly);
     }
 
-    public static Table loadInputsTableFromClasspath(List<String> series, LocalDate start, LocalDate end, Frequency frequency) {
-        return loadTableFromClasspath(series,start,end,frequency,new String[]{"/best-inputs/","/good-inputs/","/inputs/"},0);
+    public static Table loadInputsTableFromClasspath(List<String> series) {
+        return loadTableFromClasspath(series,Arrays.asList("/best-inputs/","/good-inputs/","/inputs/"));
     }
 
-    public static Table loadMarketTableFromClasspath(String market, LocalDate start, LocalDate end, Frequency frequency) {
-        return loadTableFromClasspath(Arrays.asList(market),start,end,frequency,new String[]{"/market/"},5);
+    public static Table loadMarketTableFromClasspath(String market) {
+        return loadTableFromClasspath(Arrays.asList(market),Arrays.asList("/market/"));
     }
 
-    public static Table loadTableFromClasspath(List<String> series, LocalDate start, LocalDate end, Frequency frequency,
-                                               String[] prefixes, int column) {
-        Map<String,Table> tables = new HashMap<>();
-        TableImpl.TableBuilder tableBuilder = TableImpl.newBuilder().frequency(frequency);
-        for (String s : series) {
-            Table table = null;
-            for (String prefix : prefixes) {
-                table = loadTableFromClasspath(prefix + s + ".csv");
-                if (table != null) {
-                    tables.put(s, table);
-                    tableBuilder.column(s);
-                    break;
-                }
-            }
-            if (table == null) {
-                System.out.println("The table "+s+" DNE");
-                throw new RuntimeException("The table " + s + " DNE");
-            }
-        }
-
-        GetMethod tgm = GetMethod.INTERPOLATE;
-        if (frequency == Frequency.Weekly || frequency == Frequency.Daily) {
-            tgm = GetMethod.LAST_KNOWN_VALUE;
-        }
-        GetMethod gm = tgm;
-        Util.doWithDate(start,end,frequency,date -> {
-            double[] values = new double[series.size()];
-            int i = 0;
-            for (String s : series) {
-                Table t = tables.get(s);
-                double v = t.getValue(date,0,gm);
-                values[i++] = v;
-            }
-            tableBuilder.addRow(date,values);
-        });
-        return tableBuilder.build();
+    public static Table loadTableFromClasspath(Collection<String> series, Collection<String> prefixes) {
+        return loadExactTableFromClasspath(series, prefixes);
     }
 
     public static Table loadExactTableFromClasspath(Collection<String> series, Collection<String> prefixes) {

@@ -183,9 +183,9 @@ public class AllocationStrategyTest {
         return out;
     }
 
-    private static class MyTestStrat extends AllocationStrategy {
+    public static class MyTestStrat extends AllocationStrategy {
 
-        InvestmentAllocation response = new InvestmentAllocation(60,38,2);
+        public InvestmentAllocation response = new InvestmentAllocation(60,38,2);
 
         @Override
         public InvestmentAllocation chooseAllocation(LocalDate presentDay, Account account, Table inputs, Table stockMarket, Table bondMarket, CurrentPrices currentPrices, InvestmentAllocation current) {
@@ -195,6 +195,11 @@ public class AllocationStrategyTest {
         @Override
         public int getMinimumPercentChange() {
             return 5;
+        }
+
+        @Override
+        public boolean canEvolve() {
+            return false;
         }
     }
 

@@ -35,6 +35,9 @@ public class MixedAdvisor implements Advisor {
             Advice advice = core.getAdvice(inputs);
             allAdvice.add(advice);
         }
+        if (allAdvice.size() == 1) {
+            return allAdvice.get(0);
+        }
 
         CombinedAdvice advice = new CombinedAdvice(allAdvice,core.getAllInputsTable());
 

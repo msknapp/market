@@ -1,10 +1,10 @@
 
 * write some more unit tests
-  - Simulater needs a lot of tests
   - MixedAdvisor
   - TrendFinder
   - tests for all the value getters
   - test for DefaultTableColumnView, and BeforeTableColumnView
   - test the AfterTable - not used.
+  - Simulater may need a little more testing.
 
 * Currently it keeps concluding that the best strategy is to always have 100% stock.

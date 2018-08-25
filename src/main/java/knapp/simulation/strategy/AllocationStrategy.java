@@ -14,11 +14,20 @@ public abstract class AllocationStrategy implements InvestmentStrategy {
                                                    Table stockMarket, Table bondMarket, CurrentPrices currentPrices,
                                                   InvestmentAllocation current);
 
+    private boolean verbose = false;
+
+    public void setVerbose(boolean x) {
+        this.verbose = x;
+    }
 
     @Override
     public final Set<Order> rebalance(LocalDate presentDay, Account account, Table inputs, Table stockMarket, Table bondMarket, CurrentPrices currentPrices) {
         InvestmentAllocation current = approximateCurrentAllocation(account,currentPrices);
         InvestmentAllocation desired = chooseAllocation(presentDay,account,inputs,stockMarket,bondMarket,currentPrices, current);
+        if (verbose) {
+            System.out.println(String.format("Desired levels on %s is %d stock, %d bonds, %d cash", presentDay.toString(), desired.getPercentStock(),
+                    desired.getPercentBond(), desired.getPercentCash()));
+        }
         if (desired == null) {
             // this is an easy way that child classes can say to not trade anything.
             return Collections.emptySet();

@@ -154,7 +154,8 @@ public class BasicAccount implements Account {
         boolean longTerm = DAYS.between(purchaseInfo.getDateExchanged(),presentDay) >= 365;
         double taxRate = (longTerm) ? getLongTermTaxRate() : getShortTermTaxRate();
         USDollars tax = capitalGains.times(taxRate);
-        return valueAfterFee.minus(tax);
+        USDollars netGain = valueAfterFee.minus(tax);
+        return netGain;
     }
 
     @Override
